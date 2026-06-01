@@ -1,0 +1,1403 @@
+<!doctype html>
+
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OptionFlow — Telegram Mini App</title>
+  <meta name="theme-color" content="#229ED9" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0e1621" media="(prefers-color-scheme: dark)" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <style>
+    :root {
+      --tg-blue: #229ED9;
+      --tg-blue-dark: #168AC2;
+      --bg: #f3f7fb;
+      /* Safe-area helpers: учитываем и iOS notch и Telegram header */
+      --safe-top: max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px));
+      --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
+      --surface: #ffffff;
+      --surface-soft: #f7fafd;
+      --surface-2: #eaf2f8;
+      --text: #0f1720;
+      --muted: #6c7a89;
+      --muted-2: #91a0ad;
+      --line: rgba(15, 23, 32, .08);
+      --green: #17b26a;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --shadow: 0 18px 42px rgba(31, 45, 61, .10);
+      --radius: 22px;
+      --nav-height: 82px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+    }
+
+```
+[data-theme="dark"], html[data-theme="dark"] {
+  --bg: #0e1621;
+  --surface: #17212b;
+  --surface-soft: #1b2733;
+  --surface-2: #202e3a;
+  --text: #f4f8fb;
+  --muted: #97a8b8;
+  --muted-2: #738596;
+  --line: rgba(255, 255, 255, .08);
+  --shadow: 0 18px 42px rgba(0, 0, 0, .24);
+}
+
+* { box-sizing: border-box; }
+html {
+  height: 100%;
+  /* Закрашиваем overscroll-зону: цвет подхватится из body через JS-класс */
+  background: var(--bg);
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  overscroll-behavior: none; /* убирает белый bounce при скролле */
+  background:
+    radial-gradient(circle at 0% -8%, rgba(34,158,217,.20), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(23,178,106,.10), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 86%, #fff 14%), var(--bg));
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+button, input { font: inherit; }
+button { border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+input { border: 0; outline: none; }
+
+.app {
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 0 14px calc(var(--nav-height) + var(--safe-bottom) + 18px);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* padding-top учитывает Telegram header + iOS notch */
+  padding: calc(14px + var(--safe-top)) 2px 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, transparent), color-mix(in srgb, var(--bg) 72%, transparent));
+  backdrop-filter: blur(18px);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--tg-blue), #72d8ff);
+  box-shadow: 0 10px 24px rgba(34,158,217,.30);
+  font-weight: 900;
+  letter-spacing: -.04em;
+  flex: 0 0 auto;
+}
+
+.brand h1 { margin: 0; font-size: 18px; line-height: 1.1; letter-spacing: -.035em; }
+.brand span { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.chip, .icon-btn, .plain-btn {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--text);
+  box-shadow: 0 8px 22px rgba(0,0,0,.05);
+}
+
+.chip {
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+}
+
+.screen { display: none; animation: fadeIn .16s ease; }
+.screen.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  padding: 22px;
+  color: #fff;
+  background:
+    linear-gradient(145deg, rgba(34,158,217,.98), rgba(22,138,194,.92)),
+    var(--tg-blue);
+  box-shadow: var(--shadow);
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -92px;
+  top: -88px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.16);
+}
+.hero small {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  color: rgba(255,255,255,.92);
+  font-size: 12px;
+  font-weight: 750;
+}
+.hero h2 {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 8px;
+  max-width: 330px;
+  font-size: 31px;
+  line-height: .98;
+  letter-spacing: -.06em;
+}
+.hero p { position: relative; z-index: 1; margin: 0; max-width: 350px; color: rgba(255,255,255,.82); line-height: 1.45; font-size: 14px; }
+
+.hero-actions, .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hero-actions { position: relative; z-index: 1; margin-top: 20px; }
+
+.primary, .secondary, .danger, .ghost {
+  height: 48px;
+  border-radius: 17px;
+  font-weight: 850;
+}
+.primary { background: var(--tg-blue); color: #fff; box-shadow: 0 12px 24px rgba(34,158,217,.25); }
+.hero .primary { background: #fff; color: var(--tg-blue-dark); box-shadow: none; }
+.secondary { color: #fff; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.18); }
+.ghost { color: var(--text); background: var(--surface-2); border: 1px solid var(--line); }
+.danger { color: #fff; background: linear-gradient(135deg, #ef4444, #fb7185); }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+.card {
+  border-radius: var(--radius);
+  padding: 16px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 26px rgba(0,0,0,.045);
+}
+
+.stat .label { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.stat .value { font-size: 22px; font-weight: 900; letter-spacing: -.045em; }
+.stat .delta { margin-top: 6px; font-size: 12px; font-weight: 800; }
+.up { color: var(--green); } .down { color: var(--red); }
+
+.section-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 2px 10px;
+}
+.section-title h3 { margin: 0; font-size: 19px; letter-spacing: -.035em; }
+.section-title span, .section-title a { color: var(--muted); font-size: 12px; font-weight: 700; text-decoration: none; }
+
+.market-list { display: grid; gap: 10px; }
+.market-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  transition: transform .16s ease, border-color .16s ease;
+}
+.market-card:active { transform: scale(.985); }
+.asset { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.asset-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 950;
+  background: linear-gradient(135deg, #ffb347, #ff7a59);
+  flex: 0 0 auto;
+}
+.asset-icon.eth { background: linear-gradient(135deg, #7c8cff, #5162d6); }
+.asset-icon.ton { background: linear-gradient(135deg, #27a7e7, #80ddff); }
+.asset h4 { margin: 0; font-size: 15px; letter-spacing: -.02em; }
+.asset span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.quote { text-align: right; }
+.quote strong { display: block; font-size: 15px; letter-spacing: -.025em; }
+.quote span { display: block; margin-top: 4px; font-size: 12px; font-weight: 850; }
+
+.badge-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.mini-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 5px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.segmented.two { grid-template-columns: 1fr 1fr; }
+.segmented.four { grid-template-columns: repeat(4, 1fr); }
+.seg {
+  min-height: 40px;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 850;
+  font-size: 13px;
+}
+.seg.active { background: var(--surface); color: var(--text); box-shadow: 0 7px 16px rgba(0,0,0,.06); }
+
+.terminal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 2px 10px; }
+.back-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 999px; color: var(--text); background: var(--surface); border: 1px solid var(--line); font-weight: 850; }
+.terminal-title { text-align: right; }
+.terminal-title strong { display: block; font-size: 17px; letter-spacing: -.03em; }
+.terminal-title span { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+.terminal-card {
+  border-radius: 28px;
+  padding: 14px;
+  background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--surface) 84%, var(--surface-2) 16%));
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.terminal-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 12px; }
+.metric {
+  padding: 12px;
+  border-radius: 18px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.metric span { color: var(--muted); display: block; font-size: 11px; font-weight: 800; margin-bottom: 5px; }
+.metric strong { display: block; font-size: 14px; letter-spacing: -.025em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chart-wrap {
+  height: 210px;
+  border-radius: 24px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tg-blue) 7%, transparent), transparent 46%),
+    linear-gradient(180deg, var(--surface-soft), var(--surface));
+  border: 1px solid var(--line);
+  position: relative;
+}
+.chart-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--muted) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--muted) 14%, transparent) 1px, transparent 1px);
+  background-size: 54px 100%, 100% 42px;
+  opacity: .38;
+  pointer-events: none;
+}
+.chart-wrap svg { position: relative; width: 100%; height: 100%; display: block; }
+.chart-label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 7px 9px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.orderbook {
+  margin-top: 12px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+.book-head, .book-row {
+  display: grid;
+  grid-template-columns: 1fr .9fr .8fr;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+}
+.book-head { color: var(--muted); font-size: 11px; font-weight: 900; background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+.book-row { position: relative; font-size: 12px; border-top: 1px solid var(--line); font-weight: 800; }
+.book-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--bar, 20%); opacity: .12; background: var(--bar-color, var(--green)); }
+.book-row > * { position: relative; z-index: 1; }
+.book-row .qty { text-align: right; color: var(--muted); }
+
+.trade-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.field { display: grid; gap: 7px; }
+.field.full { grid-column: 1 / -1; }
+.field label { color: var(--muted); font-size: 12px; font-weight: 850; }
+.input {
+  width: 100%;
+  height: 48px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 13px;
+  font-weight: 850;
+}
+
+.direction-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.direction {
+  min-height: 62px;
+  border-radius: 20px;
+  color: #fff;
+  font-weight: 950;
+  box-shadow: 0 10px 22px rgba(0,0,0,.13);
+  display: grid;
+  place-items: center;
+  line-height: 1.1;
+}
+.direction small { display: block; margin-top: 4px; font-size: 12px; font-weight: 850; opacity: .88; }
+.direction.up-btn { background: linear-gradient(135deg, #17b26a, #45d99a); }
+.direction.down-btn { background: linear-gradient(135deg, #ef4444, #fb7185); }
+
+.notice {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  color: color-mix(in srgb, var(--amber) 70%, var(--text));
+  background: color-mix(in srgb, var(--amber) 13%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--amber) 24%, transparent);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.portfolio-top {
+  border-radius: 30px;
+  padding: 18px;
+  color: #fff;
+  background: linear-gradient(145deg, #1f2937, #111827 70%);
+  box-shadow: var(--shadow);
+}
+.portfolio-top span { color: rgba(255,255,255,.64); font-size: 12px; font-weight: 750; }
+.portfolio-top h2 { margin: 8px 0 4px; font-size: 34px; letter-spacing: -.06em; }
+.portfolio-top .pnl { font-size: 13px; font-weight: 850; }
+.portfolio-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+
+.pnl-chart {
+  height: 170px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  position: relative;
+}
+.pnl-chart svg { width: 100%; height: 100%; display: block; }
+
+.empty {
+  padding: 18px;
+  color: var(--muted);
+  text-align: center;
+  border-radius: 20px;
+  background: var(--surface-soft);
+  border: 1px dashed var(--line);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.position, .history-row {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.position-head, .history-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.position-head strong, .history-head strong { font-size: 15px; letter-spacing: -.025em; }
+.position-head span, .history-head span { color: var(--muted); font-size: 12px; font-weight: 800; }
+.position-meta, .history-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.meta-cell { padding: 10px; border-radius: 15px; background: var(--surface-soft); border: 1px solid var(--line); }
+.meta-cell span { display: block; color: var(--muted); font-size: 10px; font-weight: 850; margin-bottom: 4px; }
+.meta-cell strong { display: block; font-size: 12px; letter-spacing: -.02em; }
+
+.setting-block { display: grid; gap: 12px; }
+.setting-row {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 22px rgba(0,0,0,.04);
+}
+.setting-row h4 { margin: 0; font-size: 15px; letter-spacing: -.02em; }
+.setting-row p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+#ton-connect { min-height: 42px; display: flex; align-items: center; }
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 70;
+  transform: translateX(-50%);
+  width: min(480px, 100%);
+  padding: 10px 14px calc(10px + var(--safe-bottom));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(22px);
+  border-top: 1px solid var(--line);
+}
+.nav-inner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 5px; border-radius: 22px; background: var(--surface-2); }
+.nav-item {
+  height: 52px;
+  border-radius: 17px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+.nav-item svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.nav-item.active { color: var(--tg-blue); background: var(--surface); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.38);
+  padding: 16px;
+}
+.modal.show { display: flex; }
+.sheet {
+  width: min(450px, 100%);
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  animation: pop .18s ease-out;
+}
+@keyframes pop { from { transform: translateY(12px); opacity: .4; } to { transform: translateY(0); opacity: 1; } }
+.sheet h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -.04em; }
+.sheet p { margin: 0 0 16px; color: var(--muted); line-height: 1.45; font-size: 14px; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+@media (min-width: 760px) {
+  body { display: grid; place-items: center; }
+  .app {
+    width: 480px;
+    min-height: 900px;
+    max-height: 940px;
+    overflow-y: auto;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+  .bottom-nav { border-radius: 26px 26px 0 0; }
+}
+
+@media (max-width: 380px) {
+  .terminal-meta, .position-meta, .history-meta { grid-template-columns: 1fr; }
+  .hero h2 { font-size: 27px; }
+  .brand span { display: none; }
+}
+```
+
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">OF</div>
+        <div>
+          <h1>OptionFlow</h1>
+          <span>Telegram Mini App prototype</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="chip" id="walletChip" type="button" onclick="go('settings')">TON</button>
+      </div>
+    </header>
+
+```
+<section class="screen active" id="screen-home">
+  <div class="hero">
+    <small>● Frontend demo · без backend</small>
+    <h2>Опционные рынки внутри Telegram</h2>
+    <p>Демо-интерфейс: рынки 5м/15м, терминал с ордербуком, портфель, история и настройки TON Connect.</p>
+    <div class="hero-actions">
+      <button class="primary" type="button" onclick="go('markets')">Открыть рынки</button>
+      <button class="secondary" type="button" onclick="go('portfolio')">Портфель</button>
+    </div>
+  </div>
+
+  <section class="grid" aria-label="Статистика">
+    <article class="card stat">
+      <div class="label">Баланс</div>
+      <div class="value" id="homeBalance">$0.00</div>
+      <div class="delta" id="homePnl">PnL $0.00</div>
+    </article>
+    <article class="card stat">
+      <div class="label">Позиции</div>
+      <div class="value" id="homePositions">0</div>
+      <div class="delta down" id="homeExpiring">0 истекают скоро</div>
+    </article>
+  </section>
+
+  <div class="section-title">
+    <h3>Быстрый доступ</h3>
+    <span>Demo flow</span>
+  </div>
+  <section class="market-list" id="homeMarkets"></section>
+</section>
+
+<section class="screen" id="screen-markets">
+  <div class="section-title" style="margin-top:8px">
+    <h3>Рынки</h3>
+    <span>Опционы 5м / 15м</span>
+  </div>
+  <div class="segmented two" style="margin-bottom:12px">
+    <button class="seg active" type="button" data-filter-expiry="all" onclick="filterMarkets('all', this)">Все</button>
+    <button class="seg" type="button" data-filter-expiry="5м" onclick="filterMarkets('5м', this)">5м</button>
+  </div>
+  <div class="segmented two" style="margin-bottom:12px">
+    <button class="seg" type="button" data-filter-expiry="15м" onclick="filterMarkets('15м', this)">15м</button>
+    <button class="seg" type="button" onclick="resetMarketPrices()">Сброс 50¢</button>
+  </div>
+  <section class="market-list" id="marketsList"></section>
+</section>
+
+<section class="screen" id="screen-terminal">
+  <div class="terminal-head">
+    <button class="back-btn" type="button" onclick="go('markets')">← Рынки</button>
+    <div class="terminal-title">
+      <strong id="terminalAsset">BTC/USD</strong>
+      <span id="terminalExpiry">Экспирация 5м</span>
+    </div>
+  </div>
+
+  <section class="terminal-card">
+    <div class="terminal-meta">
+      <div class="metric"><span>Цена актива</span><strong id="terminalPrice">$0.00</strong></div>
+      <div class="metric"><span>Цена открытия</span><strong id="terminalOpenPrice">$0.00</strong></div>
+      <div class="metric"><span>Рынок</span><strong id="terminalMarketName">BTC/USD 5м</strong></div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-label" id="chartLabel">Mock candles · 1m</div>
+      <svg id="terminalChart" viewBox="0 0 360 210" role="img" aria-label="График цены">
+        <path id="terminalArea" d="" fill="url(#terminalAreaGradient)"></path>
+        <path id="terminalLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="4" stroke-linecap="round"></path>
+        <circle id="terminalDot" cx="0" cy="0" r="5" fill="var(--tg-blue)"></circle>
+        <defs>
+          <linearGradient id="terminalAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#229ED9" stop-opacity=".22"></stop>
+            <stop offset="100%" stop-color="#229ED9" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="orderbook" aria-label="Ордербук">
+      <div class="book-head"><span>Прогноз</span><span>Покупка share</span><span style="text-align:right">Заявки</span></div>
+      <div id="orderbookRows"></div>
+    </div>
+
+    <div class="trade-form">
+      <div class="field">
+        <label>Сумма сделки</label>
+        <input class="input" id="tradeAmount" inputmode="decimal" value="50" />
+      </div>
+      <div class="field">
+        <label>Shares примерно</label>
+        <input class="input" id="sharesPreview" readonly value="100.00" />
+      </div>
+    </div>
+
+    <div class="direction-actions">
+      <button class="direction up-btn" type="button" onclick="placeOrder('UP')">Вверх <small id="upButtonPrice">50¢ за share</small></button>
+      <button class="direction down-btn" type="button" onclick="placeOrder('DOWN')">Вниз <small id="downButtonPrice">50¢ за share</small></button>
+    </div>
+
+    <div class="notice">Цена share — демо-модель из ордербука. По умолчанию новый рынок открывается с ценой 50¢ на «Вверх» и 50¢ на «Вниз». После демо-заявок цена меняется локально.</div>
+  </section>
+</section>
+
+<section class="screen" id="screen-portfolio">
+  <section class="portfolio-top">
+    <span>Баланс портфеля</span>
+    <h2 id="portfolioBalance">$0.00</h2>
+    <div class="pnl" id="portfolioPnl">PnL $0.00</div>
+    <div class="portfolio-actions">
+      <button class="primary" type="button" onclick="demoDeposit()">Депозит</button>
+      <button class="secondary" type="button" onclick="demoWithdraw()">Вывод</button>
+    </div>
+  </section>
+
+  <div class="section-title">
+    <h3>История баланса</h3>
+    <span>Profit / Loss</span>
+  </div>
+  <div class="pnl-chart card" style="padding:0">
+    <svg id="balanceChart" viewBox="0 0 360 170" role="img" aria-label="График баланса">
+      <path id="balanceArea" d="" fill="url(#balanceAreaGradient)"></path>
+      <path id="balanceLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="4" stroke-linecap="round"></path>
+      <defs>
+        <linearGradient id="balanceAreaGradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#229ED9" stop-opacity=".20"></stop>
+          <stop offset="100%" stop-color="#229ED9" stop-opacity="0"></stop>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="section-title">
+    <h3>Позиции</h3>
+    <a href="#" onclick="settleAllOpen(); return false;">Закрыть демо</a>
+  </div>
+  <section id="positionsList"></section>
+
+  <div class="section-title">
+    <h3>История</h3>
+    <a href="#" onclick="clearHistory(); return false;">Очистить</a>
+  </div>
+  <section id="historyList"></section>
+</section>
+
+<section class="screen" id="screen-settings">
+  <div class="section-title" style="margin-top:8px">
+    <h3>Настройки</h3>
+    <span>Тема, TON, демо-данные</span>
+  </div>
+
+  <div class="setting-block">
+    <div class="setting-row">
+      <h4>Тема интерфейса</h4>
+      <p>Смена темы находится здесь, а не в верхней панели.</p>
+      <div class="segmented three" id="themeSegments">
+        <button class="seg" type="button" onclick="setThemeMode('system', this)">System</button>
+        <button class="seg" type="button" onclick="setThemeMode('light', this)">Light</button>
+        <button class="seg" type="button" onclick="setThemeMode('dark', this)">Dark</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <h4>TON Connect</h4>
+      <p>Для реального подключения нужен публичный manifest по HTTPS. В демо можно использовать кнопку ниже или включить локальный demo wallet.</p>
+      <div id="ton-connect"></div>
+      <div class="field full">
+        <label>Manifest URL</label>
+        <input class="input" id="manifestUrl" value="" />
+      </div>
+      <div class="two-col">
+        <button class="ghost" type="button" onclick="saveManifestUrl()">Сохранить</button>
+        <button class="primary" type="button" onclick="toggleDemoWallet()" id="demoWalletBtn">Demo wallet</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <h4>Демо-данные</h4>
+      <p>Сделки, позиции, история баланса и локальный demo wallet хранятся в localStorage.</p>
+      <div class="two-col">
+        <button class="ghost" type="button" onclick="resetPortfolio()">Сброс портфеля</button>
+        <button class="danger" type="button" onclick="resetAll()">Сброс всего</button>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <h4>Production checklist</h4>
+      <p>Перед реальным запуском нужны backend, серверная проверка заявок, риск-дисклеймеры, KYC/AML, лимиты, антифрод и юридическая модель.</p>
+    </div>
+  </div>
+</section>
+```
+
+  </main>
+
+  <nav class="bottom-nav" aria-label="Навигация">
+    <div class="nav-inner">
+      <button class="nav-item active" type="button" data-nav="home" onclick="go('home')">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></svg>
+        Главная
+      </button>
+      <button class="nav-item" type="button" data-nav="markets" onclick="go('markets')">
+        <svg viewBox="0 0 24 24"><path d="M4 18V6"></path><path d="M10 18V9"></path><path d="M16 18V4"></path><path d="M22 18H2"></path></svg>
+        Рынки
+      </button>
+      <button class="nav-item" type="button" data-nav="portfolio" onclick="go('portfolio')">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"></path><path d="M8 7V5h8v2"></path></svg>
+        Портфель
+      </button>
+      <button class="nav-item" type="button" data-nav="settings" onclick="go('settings')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7.1 4l.1.1a1.7 1.7 0 0 0 1.9.3h0A1.7 1.7 0 0 0 10 2.9V3a2 2 0 1 1 4 0v-.1a1.7 1.7 0 0 0 1 1.6h0a1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></svg>
+        Настройки
+      </button>
+    </div>
+  </nav>
+
+  <div class="modal" id="modal" onclick="hideModal(event)">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Заголовок</h3>
+      <p id="modalText">Текст</p>
+      <div class="sheet-actions" id="modalActions">
+        <button class="ghost" type="button" onclick="closeModal()">Закрыть</button>
+        <button class="primary" type="button" onclick="closeModal()">Понятно</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    const storageKey = "optionflow_v3_state";
+    const defaultManifest = "https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json";
+
+    const markets = [
+      { id: "BTC-USD-5", asset: "BTC/USD", expiry: "5м", minutes: 5, price: 67420.50, change: 1.84, icon: "₿", iconClass: "" },
+      { id: "BTC-USD-15", asset: "BTC/USD", expiry: "15м", minutes: 15, price: 67428.90, change: 1.61, icon: "₿", iconClass: "" },
+      { id: "ETH-USD-5", asset: "ETH/USD", expiry: "5м", minutes: 5, price: 3512.18, change: -0.42, icon: "Ξ", iconClass: "eth" },
+      { id: "ETH-USD-15", asset: "ETH/USD", expiry: "15м", minutes: 15, price: 3517.44, change: 0.27, icon: "Ξ", iconClass: "eth" },
+      { id: "TON-USD-5", asset: "TON/USD", expiry: "5м", minutes: 5, price: 6.84, change: 3.11, icon: "T", iconClass: "ton" },
+      { id: "TON-USD-15", asset: "TON/USD", expiry: "15м", minutes: 15, price: 6.87, change: 2.76, icon: "T", iconClass: "ton" }
+    ];
+
+    const defaultState = () => ({
+      balance: 12480,
+      initialBalance: 12480,
+      positions: [],
+      history: [],
+      balanceHistory: seedBalanceHistory(),
+      marketState: {},
+      currentMarketId: markets[0].id,
+      filterExpiry: "all",
+      themeMode: "system",
+      manifestUrl: defaultManifest,
+      demoWallet: false
+    });
+
+    let state = loadState();
+    let tonConnectUI = null;
+
+    function seedBalanceHistory() {
+      const now = Date.now();
+      return [
+        { t: now - 6 * 86400000, value: 12000 },
+        { t: now - 5 * 86400000, value: 12120 },
+        { t: now - 4 * 86400000, value: 11980 },
+        { t: now - 3 * 86400000, value: 12340 },
+        { t: now - 2 * 86400000, value: 12210 },
+        { t: now - 86400000, value: 12410 },
+        { t: now, value: 12480 }
+      ];
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return defaultState();
+        return { ...defaultState(), ...JSON.parse(raw) };
+      } catch (error) {
+        return defaultState();
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function money(value) {
+      return "$" + Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function cents(value) {
+      return Math.max(1, Math.min(99, Math.round(value))) + "¢";
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function getMarket(id) {
+      return markets.find(m => m.id === id) || markets[0];
+    }
+
+    function getMarketState(id) {
+      if (!state.marketState[id]) {
+        state.marketState[id] = {
+          upCents: 50,
+          openPrice: getMarket(id).price,
+          currentPrice: getMarket(id).price,
+          openedAt: Date.now()
+        };
+        saveState();
+      }
+      return state.marketState[id];
+    }
+
+    function getSidePrice(marketId, side) {
+      const ms = getMarketState(marketId);
+      const up = clamp(ms.upCents, 1, 99);
+      return side === "UP" ? up : clamp(100 - up, 1, 99);
+    }
+
+    function getOrderbook(marketId) {
+      const market = getMarket(marketId);
+      const ms = getMarketState(marketId);
+      const up = getSidePrice(marketId, "UP");
+      const down = getSidePrice(marketId, "DOWN");
+      const seed = market.id.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+      const mkQty = (base, i) => Math.round(base + ((seed + i * 37 + ms.upCents * 11) % 170));
+      return [
+        { side: "UP", label: "Вверх", price: up, qty: mkQty(340, 1), color: "var(--green)" },
+        { side: "UP", label: "Вверх", price: clamp(up + 1, 1, 99), qty: mkQty(220, 2), color: "var(--green)" },
+        { side: "UP", label: "Вверх", price: clamp(up + 2, 1, 99), qty: mkQty(160, 3), color: "var(--green)" },
+        { side: "DOWN", label: "Вниз", price: down, qty: mkQty(340, 4), color: "var(--red)" },
+        { side: "DOWN", label: "Вниз", price: clamp(down + 1, 1, 99), qty: mkQty(220, 5), color: "var(--red)" },
+        { side: "DOWN", label: "Вниз", price: clamp(down + 2, 1, 99), qty: mkQty(160, 6), color: "var(--red)" }
+      ];
+    }
+
+    function applyTheme() {
+      const mode = state.themeMode || "system";
+      const systemDark = tg?.colorScheme === "dark" || window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+      const resolved = mode === "system" ? (systemDark ? "dark" : "light") : mode;
+      document.body.dataset.theme = resolved;
+      document.documentElement.dataset.theme = resolved; // html тоже, чтобы overscroll-зона совпадала
+
+      // Красим нативные зоны Telegram под цвет нашего фона
+      const bgColor = resolved === "dark" ? "#0e1621" : "#f3f7fb";
+      tg?.setHeaderColor?.(bgColor);
+      tg?.setBackgroundColor?.(bgColor);
+      tg?.setBottomBarColor?.(resolved === "dark" ? "#17212b" : "#ffffff");
+
+      document.querySelectorAll("#themeSegments .seg").forEach(btn => btn.classList.toggle("active", btn.textContent.toLowerCase() === mode));
+    }
+
+    function setThemeMode(mode, button) {
+      state.themeMode = mode;
+      saveState();
+      applyTheme();
+      showToast("Тема обновлена", "Режим интерфейса: " + mode + ".");
+    }
+
+    function initTelegram() {
+      if (!tg) return;
+      tg.ready();
+      tg.expand();
+      // Fullscreen mode: убирает нативные кнопки TG над хедером (поддерживается с Bot API 8.0+)
+      tg.requestFullscreen?.();
+      // НЕ перезаписываем --tg-blue цветом темы Telegram — он может быть серым в кастомных темах.
+      // Цвет хедера и фона устанавливаем через applyTheme() ниже.
+    }
+
+    function initTonConnect() {
+      document.getElementById("manifestUrl").value = state.manifestUrl || defaultManifest;
+      if (!window.TON_CONNECT_UI?.TonConnectUI) {
+        document.getElementById("ton-connect").innerHTML = "<span class='mini-badge'>Ton Connect CDN недоступен</span>";
+        return;
+      }
+      try {
+        tonConnectUI = new window.TON_CONNECT_UI.TonConnectUI({
+          manifestUrl: state.manifestUrl || defaultManifest,
+          buttonRootId: "ton-connect"
+        });
+        tonConnectUI.onStatusChange(wallet => {
+          state.demoWallet = false;
+          saveState();
+          updateWalletChip(wallet?.account?.address ? "TON подключен" : "TON");
+        });
+      } catch (error) {
+        document.getElementById("ton-connect").innerHTML = "<span class='mini-badge'>Проверьте manifest URL</span>";
+      }
+      updateWalletChip();
+    }
+
+    function updateWalletChip(label) {
+      const chip = document.getElementById("walletChip");
+      if (state.demoWallet) chip.textContent = "Demo wallet";
+      else chip.textContent = label || "TON";
+      const demoBtn = document.getElementById("demoWalletBtn");
+      if (demoBtn) demoBtn.textContent = state.demoWallet ? "Отключить demo" : "Demo wallet";
+    }
+
+    function saveManifestUrl() {
+      const value = document.getElementById("manifestUrl").value.trim() || defaultManifest;
+      state.manifestUrl = value;
+      saveState();
+      showToast("Manifest сохранён", "Чтобы Ton Connect UI переинициализировался чисто, перезагрузите страницу после смены manifest URL.");
+    }
+
+    function toggleDemoWallet() {
+      state.demoWallet = !state.demoWallet;
+      saveState();
+      updateWalletChip();
+      showToast(state.demoWallet ? "Demo wallet включён" : "Demo wallet отключён", "Это локальная заглушка без подписи транзакций и backend.");
+    }
+
+    function go(screen) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.getElementById("screen-" + screen).classList.add("active");
+      document.querySelectorAll(".nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.nav === screen || (screen === "terminal" && btn.dataset.nav === "markets")));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      renderAll();
+      haptic("selection");
+    }
+
+    function filterMarkets(expiry, button) {
+      state.filterExpiry = expiry;
+      saveState();
+      document.querySelectorAll("[data-filter-expiry]").forEach(btn => btn.classList.remove("active"));
+      if (button) button.classList.add("active");
+      renderMarkets();
+    }
+
+    function resetMarketPrices() {
+      markets.forEach(m => {
+        const ms = getMarketState(m.id);
+        ms.upCents = 50;
+      });
+      saveState();
+      renderMarkets();
+      renderTerminal();
+      showToast("Рынки сброшены", "Цены share снова 50¢ на «Вверх» и 50¢ на «Вниз».");
+    }
+
+    function openTerminal(id) {
+      state.currentMarketId = id;
+      const market = getMarket(id);
+      state.marketState[id] = {
+        upCents: 50,
+        openPrice: market.price,
+        currentPrice: market.price,
+        openedAt: Date.now()
+      };
+      saveState();
+      go("terminal");
+    }
+
+    function renderMarkets() {
+      const filter = state.filterExpiry || "all";
+      const list = markets.filter(m => filter === "all" || m.expiry === filter);
+      const html = list.map(m => marketCardHtml(m)).join("");
+      document.getElementById("marketsList").innerHTML = html;
+      document.getElementById("homeMarkets").innerHTML = markets.slice(0, 3).map(m => marketCardHtml(m)).join("");
+    }
+
+    function marketCardHtml(m) {
+      const up = getSidePrice(m.id, "UP");
+      const down = getSidePrice(m.id, "DOWN");
+      const changeClass = m.change >= 0 ? "up" : "down";
+      const changeText = (m.change >= 0 ? "+" : "") + m.change.toFixed(2) + "%";
+      return `
+        <article class="card market-card" onclick="openTerminal('${m.id}')">
+          <div>
+            <div class="asset">
+              <div class="asset-icon ${m.iconClass}">${m.icon}</div>
+              <div>
+                <h4>${m.asset} · ${m.expiry}</h4>
+                <span>Binary options · shares 1–99¢</span>
+              </div>
+            </div>
+            <div class="badge-row">
+              <span class="mini-badge up">Вверх ${cents(up)}</span>
+              <span class="mini-badge down">Вниз ${cents(down)}</span>
+            </div>
+          </div>
+          <div class="quote">
+            <strong>${m.price > 100 ? money(m.price) : "$" + m.price.toFixed(2)}</strong>
+            <span class="${changeClass}">${changeText}</span>
+          </div>
+        </article>`;
+    }
+
+    function renderTerminal() {
+      const market = getMarket(state.currentMarketId);
+      const ms = getMarketState(market.id);
+      updateMockPrice(market.id);
+
+      document.getElementById("terminalAsset").textContent = market.asset;
+      document.getElementById("terminalExpiry").textContent = "Экспирация " + market.expiry;
+      document.getElementById("terminalMarketName").textContent = market.asset + " " + market.expiry;
+      document.getElementById("terminalPrice").textContent = ms.currentPrice > 100 ? money(ms.currentPrice) : "$" + ms.currentPrice.toFixed(3);
+      document.getElementById("terminalOpenPrice").textContent = ms.openPrice > 100 ? money(ms.openPrice) : "$" + ms.openPrice.toFixed(3);
+      document.getElementById("chartLabel").textContent = market.asset + " · mock candles · " + market.expiry;
+
+      const upPrice = getSidePrice(market.id, "UP");
+      const downPrice = getSidePrice(market.id, "DOWN");
+      document.getElementById("upButtonPrice").textContent = cents(upPrice) + " за share";
+      document.getElementById("downButtonPrice").textContent = cents(downPrice) + " за share";
+      renderSharesPreview();
+
+      const rows = getOrderbook(market.id);
+      const maxQty = Math.max(...rows.map(r => r.qty));
+      document.getElementById("orderbookRows").innerHTML = rows.map(row => `
+        <div class="book-row" style="--bar:${Math.round(row.qty / maxQty * 100)}%; --bar-color:${row.color}">
+          <span class="${row.side === 'UP' ? 'up' : 'down'}">${row.label}</span>
+          <span>${cents(row.price)}</span>
+          <span class="qty">${row.qty.toLocaleString('ru-RU')}</span>
+        </div>`).join("");
+
+      drawTerminalChart(market.id);
+    }
+
+    function updateMockPrice(marketId) {
+      const market = getMarket(marketId);
+      const ms = getMarketState(marketId);
+      const elapsed = (Date.now() - ms.openedAt) / 1000;
+      const wave = Math.sin(elapsed / 7 + market.price) * 0.0017;
+      const bias = (ms.upCents - 50) / 50 * 0.002;
+      ms.currentPrice = market.price * (1 + wave + bias);
+    }
+
+    function renderSharesPreview() {
+      const amount = Number(document.getElementById("tradeAmount")?.value || 0);
+      const upPrice = getSidePrice(state.currentMarketId, "UP");
+      const shares = amount > 0 ? amount / (upPrice / 100) : 0;
+      const preview = document.getElementById("sharesPreview");
+      if (preview) preview.value = shares.toFixed(2);
+    }
+
+    function drawTerminalChart(marketId) {
+      const market = getMarket(marketId);
+      const ms = getMarketState(marketId);
+      const points = [];
+      for (let i = 0; i < 22; i++) {
+        const x = 12 + i * 16;
+        const trend = (ms.upCents - 50) * -0.45;
+        const y = 106 + Math.sin(i * 0.72 + market.price) * 26 + Math.cos(i * 0.31) * 13 - trend - i * 0.55;
+        points.push([x, clamp(y, 24, 182)]);
+      }
+      const d = points.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(" ");
+      const area = d + ` L${points[points.length - 1][0]},210 L${points[0][0]},210 Z`;
+      document.getElementById("terminalLine").setAttribute("d", d);
+      document.getElementById("terminalArea").setAttribute("d", area);
+      document.getElementById("terminalDot").setAttribute("cx", points[points.length - 1][0]);
+      document.getElementById("terminalDot").setAttribute("cy", points[points.length - 1][1]);
+    }
+
+    function placeOrder(side) {
+      const market = getMarket(state.currentMarketId);
+      const ms = getMarketState(market.id);
+      const amount = Number(document.getElementById("tradeAmount").value || 0);
+      if (!amount || amount <= 0) {
+        showToast("Проверьте сумму", "Введите сумму сделки больше нуля.");
+        return;
+      }
+      if (amount > state.balance) {
+        showToast("Недостаточно средств", "В демо-балансе нет такой суммы.");
+        return;
+      }
+
+      const priceCents = getSidePrice(market.id, side);
+      const shares = amount / (priceCents / 100);
+      const now = Date.now();
+      const position = {
+        id: "pos_" + now,
+        marketId: market.id,
+        asset: market.asset,
+        expiry: market.expiry,
+        side,
+        amount,
+        sharePrice: priceCents,
+        shares,
+        openAssetPrice: ms.currentPrice,
+        openedAt: now,
+        expiresAt: now + market.minutes * 60000,
+        status: "open"
+      };
+
+      state.balance -= amount;
+      state.positions.unshift(position);
+      state.history.unshift({
+        id: "hist_" + now,
+        type: "BUY",
+        text: `${side === "UP" ? "Вверх" : "Вниз"} · ${market.asset} ${market.expiry}`,
+        amount: -amount,
+        time: now,
+        meta: `${cents(priceCents)} · ${shares.toFixed(2)} shares`
+      });
+
+      const shift = amount >= 100 ? 4 : amount >= 50 ? 3 : 2;
+      ms.upCents = clamp(ms.upCents + (side === "UP" ? shift : -shift), 1, 99);
+      pushBalancePoint();
+      saveState();
+      renderAll();
+      showToast("Демо-заявка создана", `${market.asset} ${market.expiry} · ${side === "UP" ? "Вверх" : "Вниз"} · ${cents(priceCents)} за share · ${money(amount)}.`);
+      haptic("success");
+    }
+
+    function demoDeposit() {
+      state.balance += 1000;
+      state.history.unshift({ id: "hist_" + Date.now(), type: "DEPOSIT", text: "Демо-депозит", amount: 1000, time: Date.now(), meta: "localStorage" });
+      pushBalancePoint();
+      saveState();
+      renderAll();
+      showToast("Депозит добавлен", "На демо-баланс зачислено $1,000.00.");
+    }
+
+    function demoWithdraw() {
+      const amount = Math.min(500, state.balance);
+      if (amount <= 0) {
+        showToast("Вывод недоступен", "На демо-балансе нет средств.");
+        return;
+      }
+      state.balance -= amount;
+      state.history.unshift({ id: "hist_" + Date.now(), type: "WITHDRAW", text: "Демо-вывод", amount: -amount, time: Date.now(), meta: "localStorage" });
+      pushBalancePoint();
+      saveState();
+      renderAll();
+      showToast("Вывод создан", `Демо-вывод ${money(amount)}. Реального платежа нет.`);
+    }
+
+    function settleAllOpen() {
+      const open = state.positions.filter(p => p.status === "open");
+      if (!open.length) {
+        showToast("Нет открытых позиций", "Откройте сделку на экране рынков.");
+        return;
+      }
+      open.forEach(settlePosition);
+      pushBalancePoint();
+      saveState();
+      renderAll();
+      showToast("Позиции закрыты", "Демо-экспирация рассчитана локально.");
+    }
+
+    function settlePosition(position) {
+      const market = getMarket(position.marketId);
+      const ms = getMarketState(position.marketId);
+      updateMockPrice(position.marketId);
+      const wentUp = ms.currentPrice >= position.openAssetPrice;
+      const win = (position.side === "UP" && wentUp) || (position.side === "DOWN" && !wentUp);
+      const payout = win ? position.shares : 0;
+      const pnl = payout - position.amount;
+      position.status = win ? "won" : "lost";
+      position.closedAt = Date.now();
+      position.payout = payout;
+      position.pnl = pnl;
+      state.balance += payout;
+      state.history.unshift({
+        id: "hist_" + Date.now() + Math.random(),
+        type: win ? "WIN" : "LOSS",
+        text: `${win ? "Win" : "Loss"} · ${market.asset} ${market.expiry}`,
+        amount: pnl,
+        time: Date.now(),
+        meta: `${position.side === "UP" ? "Вверх" : "Вниз"} · payout ${money(payout)}`
+      });
+    }
+
+    function pushBalancePoint() {
+      state.balanceHistory.push({ t: Date.now(), value: Number(state.balance.toFixed(2)) });
+      state.balanceHistory = state.balanceHistory.slice(-28);
+    }
+
+    function renderPortfolio() {
+      const pnl = state.balance - state.initialBalance;
+      document.getElementById("portfolioBalance").textContent = money(state.balance);
+      const pnlEl = document.getElementById("portfolioPnl");
+      pnlEl.textContent = `PnL ${pnl >= 0 ? "+" : ""}${money(pnl)}`;
+      pnlEl.className = "pnl " + (pnl >= 0 ? "up" : "down");
+
+      const positions = state.positions;
+      document.getElementById("positionsList").innerHTML = positions.length ? positions.map(positionHtml).join("") : `<div class="empty">Открытых позиций пока нет. Перейдите в Рынки и выберите BTC/USD, ETH/USD или TON/USD.</div>`;
+
+      document.getElementById("historyList").innerHTML = state.history.length ? state.history.slice(0, 30).map(historyHtml).join("") : `<div class="empty">История операций появится после депозита, сделки, вывода или демо-закрытия позиции.</div>`;
+      drawBalanceChart();
+    }
+
+    function positionHtml(p) {
+      const direction = p.side === "UP" ? "Вверх" : "Вниз";
+      const statusClass = p.status === "open" ? "mini-badge" : (p.status === "won" ? "mini-badge up" : "mini-badge down");
+      const statusText = p.status === "open" ? "Открыта" : (p.status === "won" ? "Win" : "Loss");
+      return `
+        <article class="card position">
+          <div class="position-head">
+            <strong>${p.asset} · ${p.expiry}</strong>
+            <span class="${statusClass}">${statusText}</span>
+          </div>
+          <div class="position-meta">
+            <div class="meta-cell"><span>Прогноз</span><strong>${direction}</strong></div>
+            <div class="meta-cell"><span>Сумма</span><strong>${money(p.amount)}</strong></div>
+            <div class="meta-cell"><span>Share</span><strong>${cents(p.sharePrice)}</strong></div>
+          </div>
+          <div class="position-meta">
+            <div class="meta-cell"><span>Shares</span><strong>${p.shares.toFixed(2)}</strong></div>
+            <div class="meta-cell"><span>Открытие</span><strong>${p.openAssetPrice > 100 ? money(p.openAssetPrice) : "$" + p.openAssetPrice.toFixed(3)}</strong></div>
+            <div class="meta-cell"><span>Экспирация</span><strong>${new Date(p.expiresAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</strong></div>
+          </div>
+        </article>`;
+    }
+
+    function historyHtml(item) {
+      const className = item.amount >= 0 ? "up" : "down";
+      const amountText = `${item.amount >= 0 ? "+" : ""}${money(item.amount)}`;
+      return `
+        <article class="card history-row">
+          <div class="history-head">
+            <strong>${item.text}</strong>
+            <span class="${className}">${amountText}</span>
+          </div>
+          <div class="history-meta">
+            <div class="meta-cell"><span>Тип</span><strong>${item.type}</strong></div>
+            <div class="meta-cell"><span>Время</span><strong>${new Date(item.time).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}</strong></div>
+            <div class="meta-cell"><span>Детали</span><strong>${item.meta || "—"}</strong></div>
+          </div>
+        </article>`;
+    }
+
+    function drawBalanceChart() {
+      const points = state.balanceHistory.length ? state.balanceHistory : seedBalanceHistory();
+      const values = points.map(p => p.value);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const pad = Math.max((max - min) * .15, 200);
+      const low = min - pad;
+      const high = max + pad;
+      const coords = points.map((p, i) => {
+        const x = points.length === 1 ? 180 : 14 + (i / (points.length - 1)) * 332;
+        const y = 150 - ((p.value - low) / (high - low)) * 126;
+        return [x, y];
+      });
+      const d = coords.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(" ");
+      const area = d + ` L${coords[coords.length - 1][0]},170 L${coords[0][0]},170 Z`;
+      document.getElementById("balanceLine").setAttribute("d", d);
+      document.getElementById("balanceArea").setAttribute("d", area);
+    }
+
+    function renderHome() {
+      const openPositions = state.positions.filter(p => p.status === "open").length;
+      const soon = state.positions.filter(p => p.status === "open" && p.expiresAt - Date.now() < 5 * 60000).length;
+      const pnl = state.balance - state.initialBalance;
+      document.getElementById("homeBalance").textContent = money(state.balance);
+      const homePnl = document.getElementById("homePnl");
+      homePnl.textContent = `PnL ${pnl >= 0 ? "+" : ""}${money(pnl)}`;
+      homePnl.className = "delta " + (pnl >= 0 ? "up" : "down");
+      document.getElementById("homePositions").textContent = openPositions;
+      document.getElementById("homeExpiring").textContent = `${soon} истекают скоро`;
+    }
+
+    function renderAll() {
+      renderMarkets();
+      renderTerminal();
+      renderPortfolio();
+      renderHome();
+      updateWalletChip();
+    }
+
+    function resetPortfolio() {
+      state.balance = 12480;
+      state.initialBalance = 12480;
+      state.positions = [];
+      state.history = [];
+      state.balanceHistory = seedBalanceHistory();
+      saveState();
+      renderAll();
+      showToast("Портфель сброшен", "Баланс, позиции и история очищены.");
+    }
+
+    function clearHistory() {
+      state.history = [];
+      saveState();
+      renderPortfolio();
+      showToast("История очищена", "Позиции и баланс не изменены.");
+    }
+
+    function resetAll() {
+      localStorage.removeItem(storageKey);
+      state = defaultState();
+      applyTheme();
+      renderAll();
+      showToast("Данные сброшены", "Прототип вернулся к начальному состоянию.");
+    }
+
+    function showToast(title, text) {
+      document.getElementById("modalTitle").textContent = title;
+      document.getElementById("modalText").textContent = text;
+      document.getElementById("modalActions").innerHTML = `<button class="ghost" type="button" onclick="closeModal()">Закрыть</button><button class="primary" type="button" onclick="closeModal()">Понятно</button>`;
+      document.getElementById("modal").classList.add("show");
+    }
+
+    function closeModal() {
+      document.getElementById("modal").classList.remove("show");
+    }
+
+    function hideModal(event) {
+      if (event.target.id === "modal") closeModal();
+    }
+
+    function haptic(type) {
+      if (!tg?.HapticFeedback) return;
+      if (type === "success") tg.HapticFeedback.notificationOccurred("success");
+      else tg.HapticFeedback.selectionChanged();
+    }
+
+    document.addEventListener("input", event => {
+      if (event.target.id === "tradeAmount") renderSharesPreview();
+    });
+
+    window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
+      if (state.themeMode === "system") applyTheme();
+    });
+
+    // Повторно применяем тему при смене темы Telegram
+    tg?.onEvent?.("themeChanged", () => {
+      if (state.themeMode === "system") applyTheme();
+    });
+
+    // При выходе из fullscreen снова запрашиваем его
+    tg?.onEvent?.("fullscreenFailed", () => {
+      tg.expand();
+    });
+
+    initTelegram();
+    applyTheme();
+    initTonConnect();
+    renderAll();
+    setInterval(() => {
+      if (document.getElementById("screen-terminal").classList.contains("active")) renderTerminal();
+    }, 5000);
+  </script>
+
+</body>
+</html>
