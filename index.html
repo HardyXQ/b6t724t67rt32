@@ -1525,18 +1525,80 @@
     }
     .trm-level-target strong { color: var(--tg-blue); }
 
-    /* Вопрос сделки */
-    .trm-question {
+    /* Мои позиции */
+    .trm-positions { display: grid; gap: 8px; }
+    .trm-positions:empty { display: none; }
+    .trm-pos-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       margin: 2px 2px 0;
-      color: var(--muted);
-      font-size: clamp(13px, 3.6vw, 15px);
-      line-height: 1.45;
-      font-weight: 750;
-      text-align: center;
-      text-wrap: balance;
     }
-    .trm-question b { color: var(--text); font-weight: 900; }
-    .trm-question .trm-q-hl { color: var(--tg-blue); }
+    .trm-pos-head span { color: var(--muted); font-size: 13px; font-weight: 850; }
+    .trm-pos-head b {
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      color: #fff;
+      background: var(--tg-blue);
+      font-size: 11px;
+      font-weight: 950;
+    }
+    .trm-pos {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      transition: transform .1s ease;
+    }
+    .trm-pos:active { transform: scale(.985); }
+    .trm-pos-side {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px 5px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: -.01em;
+    }
+    .trm-pos-side svg { width: 13px; height: 13px; }
+    .trm-pos-side.up { color: var(--green); background: color-mix(in srgb, var(--green) 13%, transparent); }
+    .trm-pos-side.down { color: var(--red); background: color-mix(in srgb, var(--red) 13%, transparent); }
+    .trm-pos-main { min-width: 0; }
+    .trm-pos-main strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .trm-pos-main span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trm-pos-pct {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
 
     /* Сумма */
     .trm-amount { display: grid; gap: 10px; }
@@ -1996,10 +2058,8 @@
           </article>
         </section>
 
-        <!-- Вопрос сделки -->
-        <p class="trm-question">
-          Будет ли <b id="trmQAsset">BTC/USD</b> <b class="trm-q-hl">выше</b> <b id="trmQTarget">$0.00</b> через <b id="trmQExpiry">5м</b>?
-        </p>
+        <!-- Мои позиции по рынку -->
+        <section class="trm-positions" id="terminalPositions"></section>
 
         <!-- Сумма -->
         <section class="trm-amount">
@@ -2666,7 +2726,7 @@
     }
 
     function filterMarkets(expiry, button) {
-      haptic("selection");
+      haptic("soft");
       state.filterExpiry = expiry;
       saveState();
       // syncMarketFilter is called inside renderMarkets(false)
@@ -2893,11 +2953,6 @@
         changeEl.className = "trm-change " + (up ? "up" : "down");
       }
 
-      // Вопрос сделки
-      setText("trmQAsset", market.asset);
-      setText("trmQTarget", targetLabel);
-      setText("trmQExpiry", market.expiry);
-
       // Доступный баланс
       setText("trmAvailable", money(state.balance));
 
@@ -2920,6 +2975,16 @@
       setText("upButtonPrice", upPrice + "%");
       setText("downButtonPrice", downPrice + "%");
       renderSharesPreview();
+
+      // Открытые позиции по этому рынку
+      const posEl = document.getElementById("terminalPositions");
+      if (posEl) {
+        const myPositions = state.positions.filter(p => p.marketId === market.id && p.status === "open");
+        posEl.innerHTML = myPositions.length
+          ? `<div class="trm-pos-head"><span>Мои позиции</span><b>${myPositions.length}</b></div>` +
+            myPositions.map(terminalPositionHtml).join("")
+          : "";
+      }
 
       const rows = getOrderbook(market.id);
       const maxQty = Math.max(...rows.map(r => r.qty));
@@ -3407,6 +3472,24 @@
       drawBalanceChart();
     }
 
+    function terminalPositionHtml(p) {
+      const dir = p.side === "UP" ? "Вверх" : "Вниз";
+      const sideClass = p.side === "UP" ? "up" : "down";
+      const expiry = new Date(p.expiresAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: getTimezoneValue(state.timezone) });
+      return `
+        <div class="trm-pos" onclick="go('portfolio')">
+          <span class="trm-pos-side ${sideClass}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${p.side === "UP" ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>'}</svg>
+            ${dir}
+          </span>
+          <div class="trm-pos-main">
+            <strong>${money(p.amount)}</strong>
+            <span>выплата ${money(p.shares)} · до ${expiry}</span>
+          </div>
+          <span class="trm-pos-pct">${cents(p.sharePrice)}</span>
+        </div>`;
+    }
+
     function positionHtml(p) {
       const market = getMarket(p.marketId);
       const direction = p.side === "UP" ? "Вверх" : "Вниз";
@@ -3587,6 +3670,7 @@
       if (!tg?.HapticFeedback) return;
       if (type === "success") tg.HapticFeedback.notificationOccurred("success");
       else if (type === "error") tg.HapticFeedback.notificationOccurred("error");
+      else if (type === "soft") tg.HapticFeedback.impactOccurred?.("soft");
       else tg.HapticFeedback.selectionChanged();
     }
 
