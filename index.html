@@ -28,17 +28,20 @@
       --shadow: 0 18px 44px rgba(31, 45, 61, .105);
       --shadow-soft: 0 8px 22px rgba(31, 45, 61, .055);
       --app-max: 430px;
-      --app-height: 100dvh;
-      --tg-safe-top: env(safe-area-inset-top, 0px);
-      --tg-safe-right: env(safe-area-inset-right, 0px);
-      --tg-safe-bottom: env(safe-area-inset-bottom, 0px);
-      --tg-safe-left: env(safe-area-inset-left, 0px);
       --page-gutter: 14px;
       --radius-lg: 24px;
       --radius: 18px;
       --radius-sm: 12px;
       --tap: 48px;
       --nav-height: 82px;
+      /* Safe-area / Telegram fullscreen insets.
+         Fallback to CSS env(); overridden from JS with Telegram's
+         safeAreaInset / contentSafeAreaInset when running in a Mini App. */
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --content-top: 0px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
@@ -63,24 +66,17 @@
     }
     *::-webkit-scrollbar { display: none; }
     html {
-      width: 100%;
-      height: 100%;
-      min-height: var(--app-height, 100dvh);
+      min-height: 100%;
       background: var(--bg);
       overscroll-behavior: none;
     }
     body {
-      width: 100%;
       min-height: 100%;
-      min-height: var(--app-height, 100dvh);
+      min-height: 100dvh;
       margin: 0;
       color: var(--text);
       overscroll-behavior: none;
-      background:
-        radial-gradient(circle at 0% -8%, rgba(34,158,217,.20), transparent 32%),
-        radial-gradient(circle at 104% 0%, rgba(23,178,106,.11), transparent 26%),
-        linear-gradient(180deg, color-mix(in srgb, var(--bg) 88%, #fff 12%), var(--bg));
-      background-attachment: fixed;
+      background: var(--bg);
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
       overflow-x: hidden;
@@ -88,11 +84,26 @@
       -webkit-user-select: none;
       -webkit-touch-callout: none;
     }
+    /* Fixed background layer — covers the whole viewport (incl. the area
+       behind Telegram's fullscreen UI) and stays put while scrolling.
+       Replaces `background-attachment: fixed`, which jitters/breaks in the
+       Telegram webview in fullscreen mode. */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 0% -8%, rgba(34,158,217,.20), transparent 32%),
+        radial-gradient(circle at 104% 0%, rgba(23,178,106,.11), transparent 26%),
+        linear-gradient(180deg, color-mix(in srgb, var(--bg) 88%, #fff 12%), var(--bg));
+    }
 
     body.no-scroll {
       overflow: hidden;
       height: 100vh;
-      height: var(--app-height, 100dvh);
+      height: 100dvh;
     }
 
     body, button, input { font: inherit; }
@@ -113,9 +124,9 @@
     .app {
       width: min(100%, var(--app-max));
       min-height: 100vh;
-      min-height: var(--app-height, 100dvh);
+      min-height: 100dvh;
       margin: 0 auto;
-      padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--tg-safe-bottom, 0px));
+      padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
     }
 
     .topbar {
@@ -129,7 +140,9 @@
       min-height: 64px;
       margin: 0 calc(var(--page-gutter) * -1) 6px;
       padding: 10px var(--page-gutter) 8px;
-      padding-top: max(10px, var(--tg-safe-top, 0px));
+      /* Push the header below the device notch + Telegram's fullscreen
+         controls (close / menu). In non-fullscreen these insets are 0. */
+      padding-top: calc(10px + var(--safe-top) + var(--content-top));
       background: linear-gradient(180deg,
         color-mix(in srgb, var(--bg) 95%, transparent) 0%,
         color-mix(in srgb, var(--bg) 80%, transparent) 100%);
@@ -930,7 +943,7 @@
       z-index: 70;
       transform: translateX(-50%);
       width: min(var(--app-max), 100%);
-      padding: 9px max(var(--page-gutter), var(--tg-safe-left, 0px)) calc(10px + var(--tg-safe-bottom, 0px)) max(var(--page-gutter), var(--tg-safe-right, 0px));
+      padding: 9px var(--page-gutter) calc(10px + var(--safe-bottom));
       background: color-mix(in srgb, var(--surface) 89%, transparent);
       -webkit-backdrop-filter: blur(22px);
       backdrop-filter: blur(22px);
@@ -1234,17 +1247,15 @@
 
 
 
-    /* App-native prediction terminal screen */
+    /* App-native prediction terminal screen.
+       Background is handled by the fixed body::before layer above, so the
+       per-screen rules only keep the app container transparent. */
     body[data-screen="terminal"],
     body[data-screen="portfolio"],
     body[data-screen="markets"],
     body[data-screen="home"],
     body[data-screen="settings"] {
-      background:
-        radial-gradient(circle at 0% -8%, rgba(34,158,217,.20), transparent 32%),
-        radial-gradient(circle at 104% 0%, rgba(23,178,106,.11), transparent 26%),
-        linear-gradient(180deg, color-mix(in srgb, var(--bg) 88%, #fff 12%), var(--bg));
-      background-attachment: fixed;
+      background: var(--bg);
     }
 
     body[data-screen="terminal"] .app,
@@ -1253,7 +1264,7 @@
     body[data-screen="home"] .app,
     body[data-screen="settings"] .app {
       width: min(100%, var(--app-max));
-      padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--tg-safe-bottom, 0px));
+      padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
       background: transparent;
     }
 
@@ -1874,69 +1885,6 @@
         position: absolute;
       }
     }
-
-    /* Telegram fullscreen on real phones/tablets: no desktop phone frame, no 430px cap. */
-    @media (max-width: 759px), (hover: none) and (pointer: coarse) {
-      :root {
-        --app-max: 100vw;
-      }
-      html,
-      body {
-        width: 100%;
-        height: var(--app-height, 100dvh);
-        min-height: var(--app-height, 100dvh);
-      }
-      body {
-        display: block;
-        place-items: initial;
-        padding: 0;
-        background:
-          radial-gradient(circle at 0% -8%, rgba(34,158,217,.20), transparent 32%),
-          radial-gradient(circle at 104% 0%, rgba(23,178,106,.11), transparent 26%),
-          linear-gradient(180deg, color-mix(in srgb, var(--bg) 88%, #fff 12%), var(--bg));
-        background-attachment: fixed;
-      }
-      .app,
-      body[data-screen="terminal"] .app,
-      body[data-screen="portfolio"] .app,
-      body[data-screen="markets"] .app,
-      body[data-screen="home"] .app,
-      body[data-screen="settings"] .app {
-        width: 100%;
-        max-width: none;
-        min-height: var(--app-height, 100dvh);
-        height: auto;
-        max-height: none;
-        margin: 0;
-        overflow: visible;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-        background: transparent;
-        padding-left: max(var(--page-gutter), var(--tg-safe-left, 0px));
-        padding-right: max(var(--page-gutter), var(--tg-safe-right, 0px));
-        padding-bottom: calc(var(--nav-height) + 18px + var(--tg-safe-bottom, 0px));
-      }
-      .topbar {
-        margin-left: calc(max(var(--page-gutter), var(--tg-safe-left, 0px)) * -1);
-        margin-right: calc(max(var(--page-gutter), var(--tg-safe-right, 0px)) * -1);
-        padding-left: max(var(--page-gutter), var(--tg-safe-left, 0px));
-        padding-right: max(var(--page-gutter), var(--tg-safe-right, 0px));
-      }
-      .bottom-nav {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        max-width: none;
-        transform: none;
-        border-radius: 0;
-      }
-      .toast-container {
-        bottom: calc(var(--nav-height) + 24px + var(--tg-safe-bottom, 0px));
-      }
-    }
   </style>
 </head>
 
@@ -2501,6 +2449,14 @@
       const systemDark = tg?.colorScheme === "dark" || window.matchMedia?.("(prefers-color-scheme: dark)").matches;
       const resolved = mode === "system" ? (systemDark ? "dark" : "light") : mode;
       document.body.dataset.theme = resolved;
+      // Match Telegram's own chrome (header + background behind the fullscreen
+      // controls) to our background so nothing shows through as a broken strip.
+      const bg = resolved === "dark" ? "#0e1621" : "#f4f7fb";
+      try {
+        tg?.setBackgroundColor?.(bg);
+        tg?.setHeaderColor?.(bg);
+        tg?.setBottomBarColor?.(bg);
+      } catch (e) { /* color setters unsupported on older clients */ }
       document.querySelectorAll("#themeSegments .seg").forEach(btn => {
         const isActive = btn.textContent.toLowerCase() === mode;
         btn.classList.toggle("active", isActive);
@@ -2658,83 +2614,49 @@
       showToast("Manifest updated", "Please reload the app to apply the new TonConnect manifest.");
     }
 
-    function setViewportVars() {
-      const root = document.documentElement;
-      const height = tg?.viewportStableHeight || tg?.viewportHeight || window.innerHeight;
-      if (height) {
-        root.style.setProperty("--app-height", `${height}px`);
-      }
-
-      const safe = tg?.safeAreaInset || {};
-      const contentSafe = tg?.contentSafeAreaInset || {};
-      const insets = {
-        top: Math.max(safe.top || 0, contentSafe.top || 0),
-        right: Math.max(safe.right || 0, contentSafe.right || 0),
-        bottom: Math.max(safe.bottom || 0, contentSafe.bottom || 0),
-        left: Math.max(safe.left || 0, contentSafe.left || 0),
-      };
-
-      Object.entries(insets).forEach(([side, value]) => {
-        if (value > 0) {
-          root.style.setProperty(`--tg-safe-${side}`, `${value}px`);
-        }
-      });
-    }
-
-    function requestTelegramFullscreen() {
+    // Push Telegram's safe-area + content-safe-area insets into CSS vars so the
+    // header clears the device notch and Telegram's fullscreen controls.
+    function applySafeAreas() {
       if (!tg) return;
-      try { tg.expand?.(); } catch (err) {}
-      try { tg.setHeaderColor?.("bg_color"); } catch (err) {}
-      try { tg.setBackgroundColor?.("bg_color"); } catch (err) {}
-      try { tg.setBottomBarColor?.("bottom_bar_bg_color"); } catch (err) {}
-
-      const canFullscreen = typeof tg.requestFullscreen === "function" && (!tg.isVersionAtLeast || tg.isVersionAtLeast("8.0"));
-      if (canFullscreen && !tg.isFullscreen) {
-        try { tg.requestFullscreen(); } catch (err) {}
+      const root = document.documentElement.style;
+      const sa = tg.safeAreaInset;
+      const csa = tg.contentSafeAreaInset;
+      // Only override the env() fallbacks when the client actually reports
+      // insets (Bot API 8.0+); otherwise keep the CSS env() values.
+      const set = (name, v) => {
+        if (typeof v === "number") root.setProperty(name, v + "px");
+      };
+      if (sa) {
+        set("--safe-top", sa.top);
+        set("--safe-bottom", sa.bottom);
+        set("--safe-left", sa.left);
+        set("--safe-right", sa.right);
       }
-
-      const canDisableSwipes = typeof tg.disableVerticalSwipes === "function" && (!tg.isVersionAtLeast || tg.isVersionAtLeast("7.7"));
-      if (canDisableSwipes) {
-        try { tg.disableVerticalSwipes(); } catch (err) {}
-      }
-
-      setTimeout(setViewportVars, 50);
-      setTimeout(setViewportVars, 300);
-    }
-
-    function bindTelegramViewportEvents() {
-      if (!tg?.onEvent) return;
-      ["viewportChanged", "fullscreenChanged", "safeAreaChanged", "contentSafeAreaChanged"].forEach(eventName => {
-        try { tg.onEvent(eventName, setViewportVars); } catch (err) {}
-      });
-      try {
-        tg.onEvent("fullscreenFailed", () => {
-          setViewportVars();
-        });
-      } catch (err) {}
+      // contentSafeAreaInset is measured relative to the safe area, so the
+      // header offset is safe-top + content-top.
+      if (csa) set("--content-top", csa.top);
     }
 
     function initTelegram() {
-      setViewportVars();
-      window.addEventListener("resize", setViewportVars, { passive: true });
-      window.addEventListener("orientationchange", () => setTimeout(setViewportVars, 250), { passive: true });
-
-      if (!tg) {
-        initTonConnect();
-        return;
-      }
-
+      if (!tg) return;
       tg.ready();
-      requestTelegramFullscreen();
-      bindTelegramViewportEvents();
+      tg.expand();
       initTonConnect();
 
-      // Some clients reject the initial fullscreen request until the first user gesture.
-      window.addEventListener("pointerdown", requestTelegramFullscreen, { once: true, passive: true });
+      // Enter fullscreen when the client supports it (Bot API 8.0+).
+      try {
+        if (typeof tg.requestFullscreen === "function") {
+          tg.requestFullscreen();
+        }
+      } catch (e) { /* not supported — fall back to expanded mode */ }
 
-      if (tg.themeParams?.button_color) {
-        document.documentElement.style.setProperty("--tg-blue", tg.themeParams.button_color);
-      }
+      // Initial insets + live updates as the layout changes.
+      applySafeAreas();
+      tg.onEvent?.("safeAreaChanged", applySafeAreas);
+      tg.onEvent?.("contentSafeAreaChanged", applySafeAreas);
+      tg.onEvent?.("fullscreenChanged", applySafeAreas);
+      tg.onEvent?.("viewportChanged", applySafeAreas);
+
       // Disable double tap to zoom as a fail-safe
       let lastTouchEnd = 0;
       document.addEventListener('touchend', (event) => {
