@@ -148,15 +148,25 @@
         color-mix(in srgb, var(--bg) 80%, transparent) 100%);
       -webkit-backdrop-filter: blur(18px);
       backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
     }
 
     .brand { display: flex; align-items: center; gap: 10px; min-width: 0; cursor: pointer; user-select: none; }
     .logo {
       flex: 0 0 auto;
-      color: var(--tg-blue);
-      font-weight: 950;
-      font-size: 22px;
-      letter-spacing: -.045em;
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--tg-blue), var(--tg-blue-dark));
+      box-shadow: 0 6px 14px rgba(34,158,217,.30);
+    }
+    .logo svg {
+      width: 56%;
+      height: 56%;
+      display: block;
     }
     .brand h1 {
       margin: 0;
@@ -1279,28 +1289,18 @@
       display: block;
     }
 
-    .poly-terminal-shell {
-      display: grid;
-      gap: 12px;
-      min-height: auto;
-      padding: 0;
-      color: var(--text);
-      background: transparent;
-    }
+    /* ===== Terminal (экран сделки) ===== */
+    .trm { display: grid; gap: 12px; color: var(--text); }
 
-    .poly-topbar { display: none; }
-
-    .poly-contract-row {
+    /* Верхняя панель */
+    .trm-top {
       display: grid;
       grid-template-columns: 42px minmax(0, 1fr) 42px;
       align-items: center;
       gap: 10px;
-      margin: 0 0 2px;
-      padding: 2px 0 6px;
-      border: 0;
+      padding: 2px 0 4px;
     }
-    .poly-back,
-    .poly-more {
+    .trm-icon-btn {
       width: 42px;
       height: 42px;
       border-radius: var(--radius-sm);
@@ -1310,479 +1310,423 @@
       background: color-mix(in srgb, var(--surface) 94%, transparent);
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
-      font-size: 18px;
-      font-weight: 950;
+      transition: transform .1s ease;
     }
-    .poly-more {
-      color: var(--muted);
+    .trm-icon-btn:active { transform: scale(.94); }
+    .trm-icon-btn svg { width: 20px; height: 20px; }
+    .trm-fav { color: var(--muted-2); }
+    .trm-fav.active { color: var(--amber); }
+    .trm-fav.active svg { fill: currentColor; }
+    .trm-top-title { text-align: center; min-width: 0; }
+    .trm-top-title strong {
+      display: block;
       font-size: 16px;
-      letter-spacing: .06em;
-    }
-    .poly-contract-copy { min-width: 0; }
-    .poly-contract-copy h2 {
-      margin: 0;
-      color: var(--text);
-      font-size: 19px;
-      line-height: 1.1;
       font-weight: 950;
-      letter-spacing: -.045em;
+      letter-spacing: -.03em;
+      line-height: 1.1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .poly-contract-copy span {
+    .trm-top-title span {
       display: block;
-      margin-top: 4px;
+      margin-top: 2px;
       color: var(--muted);
       font-size: 12px;
-      line-height: 1.15;
       font-weight: 800;
     }
 
-    .poly-market-head {
+    /* Цена актива + таймер */
+    .trm-hero {
       display: grid;
-      grid-template-columns: 66px minmax(0, 1fr) auto;
+      grid-template-columns: 52px minmax(0, 1fr) auto;
       align-items: center;
       gap: 13px;
-      padding: 14px;
+      padding: 15px;
       border-radius: var(--radius-lg);
       background:
-        radial-gradient(circle at 98% 0%, color-mix(in srgb, var(--tg-blue) 13%, transparent), transparent 40%),
-        color-mix(in srgb, var(--surface) 94%, transparent);
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--tg-blue) 12%, transparent), transparent 42%),
+        color-mix(in srgb, var(--surface) 95%, transparent);
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
     }
     .poly-coin {
-      width: 66px;
-      height: 66px;
-      border-radius: var(--radius);
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-sm);
       display: grid;
       place-items: center;
       flex: 0 0 auto;
       color: #fff;
       background: linear-gradient(135deg, #ffb347, #ff7a59);
-      font-size: 38px;
+      font-size: 30px;
       line-height: 1;
       font-weight: 950;
-      box-shadow: 0 14px 30px rgba(255,122,89,.22);
+      box-shadow: 0 10px 22px rgba(255, 122, 89, .22);
+      overflow: hidden;
     }
-    .poly-coin.eth { background: linear-gradient(135deg, #7c8cff, #5162d6); box-shadow: 0 14px 30px rgba(81,98,214,.20); }
-    .poly-coin.ton { background: linear-gradient(135deg, #27a7e7, #80ddff); box-shadow: 0 14px 30px rgba(34,158,217,.20); }
+    .poly-coin.eth { background: linear-gradient(135deg, #7c8cff, #5162d6); box-shadow: 0 10px 22px rgba(81, 98, 214, .20); }
+    .poly-coin.ton { background: linear-gradient(135deg, #27a7e7, #80ddff); box-shadow: 0 10px 22px rgba(34, 158, 217, .20); }
     .poly-coin.svg-icon { background: none; box-shadow: none; }
-    .poly-coin.svg-icon svg { width: 100%; height: 100%; border-radius: var(--radius); }
-    .poly-market-copy { min-width: 0; }
-    .poly-market-copy strong {
-      display: block;
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1.1;
+    .poly-coin.svg-icon svg { width: 100%; height: 100%; border-radius: var(--radius-sm); }
+    .trm-hero-main { min-width: 0; }
+    .trm-hero-price {
+      font-size: clamp(19px, 6.2vw, 25px);
       font-weight: 950;
-      letter-spacing: -.04em;
+      letter-spacing: -.05em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .poly-market-copy span {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.2;
-      font-weight: 850;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .poly-market-copy p {
-      margin: 7px 0 0;
-      color: var(--muted-2);
-      font-size: 12px;
-      line-height: 1.2;
-      font-weight: 800;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .poly-countdown {
-      display: grid;
-      grid-template-columns: auto auto;
-      gap: 8px;
-      align-self: stretch;
+    .trm-hero-sub {
+      display: flex;
       align-items: center;
-      padding: 8px 10px;
-      border-radius: var(--radius-sm);
+      gap: 8px;
+      margin-top: 7px;
+      min-width: 0;
+    }
+    .trm-change { flex: 0 0 auto; font-size: 13px; font-weight: 900; letter-spacing: -.01em; }
+    .trm-change.up { color: var(--green); }
+    .trm-change.down { color: var(--red); }
+    .trm-hero-sub #terminalAssetName {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trm-timer {
+      flex: 0 0 auto;
       text-align: center;
+      padding: 8px clamp(8px, 2.6vw, 12px);
+      border-radius: var(--radius-sm);
       background: color-mix(in srgb, var(--red) 9%, var(--surface));
       border: 1px solid color-mix(in srgb, var(--red) 18%, transparent);
-      color: var(--muted);
     }
-    .poly-countdown strong {
+    .trm-timer span {
       display: block;
+      color: var(--muted);
+      font-size: 9.5px;
+      font-weight: 900;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .trm-timer strong {
+      display: block;
+      margin-top: 4px;
       color: var(--red);
-      font-size: 24px;
-      line-height: .95;
+      font-size: clamp(17px, 5vw, 20px);
       font-weight: 950;
-      letter-spacing: -.055em;
+      letter-spacing: -.04em;
       font-variant-numeric: tabular-nums;
     }
-    .poly-countdown span {
-      display: block;
-      margin-top: 5px;
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1;
-      font-weight: 900;
-      letter-spacing: .045em;
-    }
 
-    .poly-price-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin: 0;
-    }
-    .poly-price-strip article {
-      min-width: 0;
-      min-height: auto;
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      background: color-mix(in srgb, var(--surface) 94%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-soft);
-    }
-    .poly-price-strip span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.15;
-      font-weight: 900;
-      letter-spacing: -.01em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .poly-price-strip strong {
-      display: block;
-      margin-top: 8px;
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1.05;
-      font-weight: 950;
-      letter-spacing: -.045em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .poly-price-strip article:first-child span,
-    .poly-price-strip article:first-child strong { color: color-mix(in srgb, var(--amber) 82%, var(--text)); }
-
-    .poly-terminal-card {
-      display: grid;
-      gap: 12px;
-      margin: 0;
-      padding: 0;
-    }
-    .poly-chart-wrap {
-      height: 322px;
+    /* График */
+    .trm-chart {
+      position: relative;
+      height: 200px;
       border-radius: var(--radius-lg);
       overflow: hidden;
       border: 1px solid var(--line);
       background:
-        linear-gradient(180deg, color-mix(in srgb, var(--tg-blue) 7%, transparent), transparent 45%),
+        linear-gradient(180deg, color-mix(in srgb, var(--tg-blue) 6%, transparent), transparent 50%),
         linear-gradient(180deg, var(--surface-soft), var(--surface));
-      box-shadow: var(--shadow);
-      position: relative;
+      box-shadow: var(--shadow-soft);
     }
-    .poly-chart-wrap::before {
+    .trm-chart::before {
       content: "";
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(to right, color-mix(in srgb, var(--muted) 14%, transparent) 1px, transparent 1px),
-        linear-gradient(to bottom, color-mix(in srgb, var(--muted) 14%, transparent) 1px, transparent 1px);
-      background-size: 64px 100%, 100% 50px;
-      opacity: .48;
+        linear-gradient(to right, color-mix(in srgb, var(--muted) 12%, transparent) 1px, transparent 1px),
+        linear-gradient(to bottom, color-mix(in srgb, var(--muted) 12%, transparent) 1px, transparent 1px);
+      background-size: 60px 100%, 100% 48px;
+      opacity: .4;
       pointer-events: none;
     }
-    .poly-chart-wrap .chart-label {
-      top: 12px;
-      left: 12px;
-      max-width: 62%;
-      color: var(--muted);
-      background: color-mix(in srgb, var(--surface) 88%, transparent);
-      border-color: var(--line);
-    }
-    .poly-chart-wrap svg {
+    .trm-chart svg {
       position: absolute;
-      inset: 52px 0 66px 0;
+      inset: 0;
       width: 100%;
-      height: calc(100% - 118px);
-      overflow: visible;
+      height: 100%;
       display: block;
     }
-    .poly-chart-wrap #terminalLine { stroke: var(--amber); stroke-width: 3.2; }
-    .poly-chart-wrap #terminalDot { fill: var(--amber); }
-    .poly-target-svg-line {
-      stroke: color-mix(in srgb, var(--text) 50%, transparent);
-      stroke-width: 1.5;
-      stroke-dasharray: 8 8;
-    }
-    .poly-grid-svg-line {
-      stroke: color-mix(in srgb, var(--muted) 20%, transparent);
-      stroke-width: 1;
-    }
-    .poly-axis-label {
+    .trm-chart-tag,
+    .trm-chart-now {
       position: absolute;
-      right: 12px;
-      z-index: 3;
-      padding: 3px 6px;
+      z-index: 2;
+      padding: 5px 9px;
       border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      border: 1px solid var(--line);
+      font-variant-numeric: tabular-nums;
+    }
+    .trm-chart-tag {
+      top: 11px;
+      left: 11px;
       color: var(--muted);
       background: color-mix(in srgb, var(--surface) 86%, transparent);
-      border: 1px solid var(--line);
-      font-size: 12px;
-      line-height: 1;
-      font-weight: 850;
-      font-variant-numeric: tabular-nums;
-      text-align: right;
-    }
-    .poly-axis-top { top: 72px; }
-    .poly-axis-mid { top: 164px; }
-    .poly-axis-low { top: 256px; }
-    .poly-current-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 76px;
-      z-index: 2;
-      border-top: 1px dashed color-mix(in srgb, var(--amber) 50%, transparent);
-    }
-    .poly-current-price {
-      position: absolute;
-      right: 12px;
-      bottom: 69px;
-      z-index: 3;
-      padding: 4px 7px;
-      border-radius: 999px;
-      color: color-mix(in srgb, var(--amber) 82%, var(--text));
-      background: var(--surface);
-      border: 1px solid var(--line);
-      font-size: 12px;
-      line-height: 1;
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
-    }
-    .poly-chart-tools {
-      position: absolute;
-      left: 12px;
-      bottom: 48px;
-      z-index: 4;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      min-height: 38px;
-      padding: 4px;
-      border-radius: var(--radius-sm);
-      background: color-mix(in srgb, var(--surface) 88%, transparent);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-soft);
-      backdrop-filter: blur(12px);
-    }
-    .poly-tool {
-      width: 31px;
-      height: 30px;
-      border-radius: calc(var(--radius-sm) - 4px);
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      background: transparent;
-      font-size: 15px;
-      font-weight: 950;
-    }
-    .poly-tool.active {
-      color: var(--tg-blue);
-      background: color-mix(in srgb, var(--tg-blue) 12%, var(--surface));
-    }
-    .poly-tool svg { width: 18px; height: 18px; }
-
-    .poly-time-row {
-      display: flex;
-      gap: 9px;
-      align-items: center;
-      overflow-x: auto;
-      padding: 1px 0 2px;
-      scrollbar-width: none;
-    }
-    .poly-time-row::-webkit-scrollbar { display: none; }
-    .poly-time-chip {
-      min-width: max-content;
-      min-height: 42px;
-      padding: 0 14px;
-      border-radius: 999px;
-      color: var(--muted);
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      font-size: 13px;
-      line-height: 1;
-      font-weight: 900;
+      max-width: 60%;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .poly-time-chip.selected {
-      color: var(--text);
-      background: var(--surface);
+    .trm-chart-now {
+      top: 11px;
+      right: 11px;
+      color: var(--tg-blue);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+    }
+    #terminalLine { stroke: var(--tg-blue); }
+    #terminalDot { fill: var(--tg-blue); }
+
+    /* Ключевые уровни */
+    .trm-levels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .trm-levels article {
+      min-width: 0;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
     }
-    .poly-time-chip.active {
-      color: var(--text);
-      background: color-mix(in srgb, var(--surface) 94%, transparent);
-    }
-    .poly-dots {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 13px;
-    }
-    .poly-dots span,
-    .poly-dots span::before,
-    .poly-dots span::after {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+    .trm-levels span {
       display: block;
-      background: var(--green);
-      box-shadow: 0 0 0 5px color-mix(in srgb, var(--green) 12%, transparent);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .poly-dots span::before,
-    .poly-dots span::after { content: none; }
+    .trm-levels strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(15px, 4.6vw, 18px);
+      font-weight: 950;
+      letter-spacing: -.04em;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trm-level-target {
+      background: color-mix(in srgb, var(--tg-blue) 8%, var(--surface)) !important;
+      border-color: color-mix(in srgb, var(--tg-blue) 24%, var(--line)) !important;
+    }
+    .trm-level-target strong { color: var(--tg-blue); }
 
-    .poly-orderbook {
-      margin-top: 2px;
+    /* Вопрос сделки */
+    .trm-question {
+      margin: 2px 2px 0;
+      color: var(--muted);
+      font-size: clamp(13px, 3.6vw, 15px);
+      line-height: 1.45;
+      font-weight: 750;
+      text-align: center;
+      text-wrap: balance;
+    }
+    .trm-question b { color: var(--text); font-weight: 900; }
+    .trm-question .trm-q-hl { color: var(--tg-blue); }
+
+    /* Сумма */
+    .trm-amount { display: grid; gap: 10px; }
+    .trm-amount-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 2px;
+    }
+    .trm-amount-head label { color: var(--muted); font-size: 13px; font-weight: 850; }
+    .trm-available { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .trm-available b { color: var(--text); font-weight: 950; }
+    .trm-amount-input {
+      position: relative;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      padding: 0 8px 0 16px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .trm-amount-input:focus-within {
+      border-color: color-mix(in srgb, var(--tg-blue) 45%, var(--line));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tg-blue) 12%, transparent);
+    }
+    .trm-amount-input.invalid {
+      border-color: var(--red);
+      background: color-mix(in srgb, var(--red) 5%, var(--surface-2));
+    }
+    .trm-cur { color: var(--muted); font-size: 20px; font-weight: 950; }
+    .trm-amount-input input {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--text);
+      font-size: clamp(18px, 5.4vw, 22px);
+      font-weight: 950;
+      letter-spacing: -.03em;
+      padding: 0 8px;
+      font-variant-numeric: tabular-nums;
+    }
+    .trm-amount-input input::-webkit-outer-spin-button,
+    .trm-amount-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .trm-max {
+      flex: 0 0 auto;
+      height: 38px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--tg-blue);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 950;
+      box-shadow: var(--shadow-soft);
+    }
+    .trm-max:active { transform: scale(.95); }
+    .trm-chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .trm-chips button {
+      min-height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 900;
+      transition: transform .1s ease, background .15s ease;
+    }
+    .trm-chips button:active { transform: scale(.95); background: var(--surface); }
+
+    /* Стакан заявок */
+    .trm-orderbook {
       border-radius: var(--radius);
       overflow: hidden;
       background: color-mix(in srgb, var(--surface) 94%, transparent);
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
     }
-    .poly-book-summary {
-      min-height: 66px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
+    .trm-ob-head {
+      display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      min-height: 52px;
       padding: 0 16px;
     }
-    .poly-book-summary strong {
-      color: var(--text);
-      font-size: 17px;
-      line-height: 1;
-      font-weight: 950;
-      letter-spacing: -.035em;
-    }
-    .poly-book-summary strong span {
-      width: 17px;
-      height: 17px;
-      margin-left: 5px;
-      border-radius: 50%;
-      display: inline-grid;
-      place-items: center;
-      color: var(--surface);
-      background: var(--muted-2);
-      font-size: 11px;
+    .trm-ob-head strong { font-size: 14px; font-weight: 950; letter-spacing: -.02em; }
+    .trm-ob-head em {
+      flex: 1;
+      color: var(--muted-2);
       font-style: normal;
-      vertical-align: 1px;
-    }
-    .poly-book-summary em {
-      color: var(--muted);
-      font-style: normal;
-      font-size: 14px;
-      font-weight: 850;
-      letter-spacing: -.02em;
-    }
-    .poly-book-summary b {
-      color: var(--muted);
-      font-size: 22px;
-      line-height: 1;
+      font-size: 12px;
       font-weight: 800;
-      transition: transform .16s ease;
     }
-    .poly-orderbook.open .poly-book-summary b { transform: rotate(180deg); }
-    .poly-orderbook-body {
+    .trm-ob-head b {
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 800;
+      transition: transform .18s ease;
+    }
+    .trm-orderbook.open .trm-ob-head b { transform: rotate(180deg); }
+    .trm-ob-body {
       max-height: 0;
       overflow: hidden;
-      transition: max-height .18s ease;
-      border-top: 1px solid transparent;
+      transition: max-height .2s ease;
     }
-    .poly-orderbook.open .poly-orderbook-body {
-      max-height: 270px;
-      border-top-color: var(--line);
+    .trm-orderbook.open .trm-ob-body { max-height: 360px; border-top: 1px solid var(--line); }
+    .trm-ob-cols {
+      display: grid;
+      grid-template-columns: 1fr .9fr .8fr;
+      gap: 8px;
+      padding: 9px 16px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      background: color-mix(in srgb, var(--surface-2) 60%, transparent);
     }
-    .poly-orderbook .book-row {
+    .trm-ob-cols .qty { text-align: right; }
+    .trm-orderbook .book-row {
       min-height: 36px;
       padding: 9px 16px;
-      color: var(--text);
-      border-top-color: var(--line);
-      background: var(--surface);
-    }
-    .poly-orderbook .book-row:first-child { border-top: 0; }
-
-    .poly-ticket {
-      display: grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 10px;
-      margin-top: 0;
-      padding: 0;
-    }
-    .poly-ticket .field { gap: 7px; }
-    .poly-ticket label {
-      color: var(--muted);
       font-size: 12px;
-      line-height: 1;
       font-weight: 850;
+      border-top: 1px solid var(--line);
     }
-    .poly-ticket .input {
-      height: 48px;
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      font-size: 15px;
-      font-weight: 900;
-    }
-    .poly-ticket .input:focus {
-      border-color: color-mix(in srgb, var(--tg-blue) 42%, var(--line));
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tg-blue) 10%, transparent);
-    }
+    .trm-orderbook .book-row .up { color: var(--green); }
+    .trm-orderbook .book-row .down { color: var(--red); }
 
-    .poly-actions {
+    /* Кнопки направления (липкий CTA) */
+    .trm-actions {
       position: sticky;
-      bottom: calc(var(--nav-height) + 12px);
+      bottom: calc(var(--nav-height) + 10px + var(--safe-bottom));
       z-index: 20;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 2px;
-      padding: 6px 0 0;
+      padding-top: 4px;
     }
-    .poly-actions .direction {
-      min-height: 60px;
+    .trm-dir {
+      display: grid;
+      gap: 6px;
+      padding: 13px clamp(11px, 3.4vw, 14px);
       border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
       color: #fff;
-      box-shadow: 0 12px 22px rgba(0,0,0,.13);
-      font-size: 16px;
-      font-weight: 950;
-      letter-spacing: -.03em;
+      text-align: left;
+      min-width: 0;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, .16);
+      transition: transform .12s ease, opacity .12s ease;
     }
-    .poly-actions .direction strong {
-      color: rgba(255,255,255,.94);
-      font-size: 17px;
-      font-weight: 950;
+    .trm-dir:active { transform: scale(.97); opacity: .92; }
+    .trm-dir.up { background: linear-gradient(135deg, #17b26a, #34c97f); }
+    .trm-dir.down { background: linear-gradient(135deg, #ef4444, #f4607a); }
+    .trm-dir-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .trm-dir-ico {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, .2);
     }
-    .poly-actions .up-btn { background: linear-gradient(135deg, #17b26a, #45d99a); }
-    .poly-actions .down-btn { background: linear-gradient(135deg, #ef4444, #fb7185); }
+    .trm-dir-ico svg { width: 15px; height: 15px; }
+    .trm-dir-name { font-size: clamp(14px, 4.2vw, 16px); font-weight: 950; letter-spacing: -.02em; }
+    .trm-dir-pct {
+      flex: 0 0 auto;
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .2);
+      font-variant-numeric: tabular-nums;
+    }
+    .trm-dir-payout {
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, .85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .trm-dir-payout b { color: #fff; font-weight: 950; font-variant-numeric: tabular-nums; }
 
     @media (max-width: 480px) {
       :root {
@@ -1799,16 +1743,6 @@
       .hero h2 {
         font-size: 28px;
       }
-      .poly-price-strip {
-        gap: 8px;
-      }
-      .poly-price-strip article {
-        padding: 10px;
-        min-height: 68px;
-      }
-      .poly-price-strip strong {
-        font-size: 16px;
-      }
       .nav-item {
         font-size: 10px;
       }
@@ -1820,10 +1754,9 @@
 
     @media (max-width: 400px) {
       .hero-actions, .portfolio-actions, .two-col, .trade-form, .direction-actions { gap: 8px; }
-      .poly-price-strip { grid-template-columns: 1fr 1fr; }
-      .poly-price-strip article:last-child { grid-column: 1 / -1; }
       .terminal-meta, .position-meta { grid-template-columns: 1fr 1fr; }
       .terminal-meta article:last-child, .position-meta .meta-cell:last-child { grid-column: 1 / -1; }
+      .trm-chips { gap: 6px; }
     }
 
     @media (max-width: 380px) {
@@ -1836,12 +1769,9 @@
       .card { padding: 12px; }
       .asset-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); }
       .asset h4, .quote strong { font-size: 14px; }
-      .poly-market-head { grid-template-columns: 52px 1fr; padding: 12px; }
-      .poly-coin { width: 52px; height: 52px; border-radius: var(--radius-sm); font-size: 28px; }
-      .poly-countdown { grid-column: 1 / -1; justify-content: space-between; padding: 6px 12px; }
-      .poly-countdown strong { font-size: 20px; }
-      .poly-axis-label { font-size: 10px; }
-      .poly-chart-wrap { height: 280px; }
+      .trm-hero { grid-template-columns: 46px minmax(0,1fr) auto; gap: 10px; padding: 13px; }
+      .poly-coin { width: 46px; height: 46px; border-radius: var(--radius-sm); font-size: 26px; }
+      .trm-chart { height: 180px; }
     }
 
     @media (max-width: 350px) {
@@ -1853,6 +1783,19 @@
       .check-box svg { width: 34px; height: 34px; }
       .terminal-meta, .position-meta { grid-template-columns: 1fr; }
       .terminal-meta article:last-child, .position-meta .meta-cell:last-child { grid-column: auto; }
+      /* Таймер переносится под цену, чтобы ничего не сжималось */
+      .trm-hero { grid-template-columns: 44px minmax(0, 1fr); }
+      .trm-timer {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px;
+      }
+      .trm-timer span { margin: 0; }
+      .trm-timer strong { margin: 0; }
+      .trm-chips { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (min-width: 760px) {
@@ -1892,7 +1835,12 @@
   <main class="app">
     <header class="topbar">
       <div class="brand" onclick="go('home')">
-        <div class="logo">OP</div>
+        <div class="logo" aria-label="Opton">
+          <svg viewBox="0 0 805 832" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M545.467 252.058C553.2 256.591 559.333 265.658 561.333 275.391C563.467 285.258 562.4 335.925 560 342.858C557.6 349.525 550.267 357.925 543.467 361.525C538.267 364.325 535.867 364.458 502 365.125C464.133 365.791 461.733 366.191 458.4 372.191C457.067 374.458 456.533 409.925 456 540.058L455.333 704.858L451.333 710.725C448.667 714.458 444.8 717.658 440.133 720.058C432.933 723.791 432.8 723.791 404.4 723.791C388.267 723.791 373.333 723.125 370.133 722.325C362.667 720.458 355.6 714.591 352.133 707.391C349.333 701.658 349.333 701.258 349.333 539.658C349.333 388.191 349.2 377.525 346.933 373.125C343.2 365.525 341.467 365.125 305.2 365.125C268.8 365.125 262.933 364.191 254.4 357.125C251.733 354.858 247.867 349.658 245.733 345.391L242 337.791V306.325V274.991L246 267.125C250.4 258.591 256.933 252.591 264.8 249.791C269.2 248.191 292.533 247.925 404.667 248.191L539.333 248.458L545.467 252.058Z"/>
+            <path d="M580.933 1.12459C586.267 1.79126 595.333 3.92455 600.933 5.79121C625.2 13.9245 640.933 27.6579 664.533 61.1246C672.533 72.4579 682 85.658 685.333 90.458C688.8 95.258 704.4 117.658 720 140.458C735.733 163.125 753.067 188.058 758.533 195.791C790.133 240.058 797.067 252.458 802 273.125C804.933 285.791 805.067 819.258 802.133 824.991C797.333 834.191 784.933 833.658 777.067 824.058C775.467 821.925 757.2 802.191 736.533 780.191C704.8 746.191 698.4 738.591 694.267 730.325C684.933 711.925 685.333 722.591 685.333 510.991C685.333 324.591 685.333 319.925 682.667 309.791C681.2 304.058 678.4 296.591 676.4 293.258C672.533 286.458 619.067 210.058 592 172.458C582.533 159.258 572.133 146.191 569.067 143.391C561.333 136.591 549.2 130.858 538.667 129.125C532.8 128.058 487.733 127.791 396.667 128.058L263.333 128.458L255.333 131.658C238.8 138.325 235.067 142.058 211.6 175.125C203.333 186.858 187.867 208.725 177.2 223.791C140.4 275.391 132.267 287.391 128.133 295.391C119.6 312.458 120 302.191 120 511.525C120 723.658 120.4 711.791 110.667 731.125C106.267 739.658 101.467 745.791 86.2668 762.058C75.8668 773.125 57.4667 792.725 45.4667 805.658C33.4667 818.458 21.8667 829.658 19.8667 830.591C14.2667 832.858 7.46674 831.125 3.46674 826.325L6.57241e-05 822.191V554.725C6.57241e-05 293.925 0.133419 286.858 2.66675 275.125C6.26675 258.591 14.1334 243.525 33.7334 215.791C42.6667 202.991 61.6001 176.191 75.4667 156.458C89.4667 136.591 112 104.591 125.6 85.2579C156.933 40.8579 165.867 29.6579 176.267 21.7912C190.8 10.7245 210.133 3.12456 230 0.724564C239.2 -0.475436 572 -0.0754113 580.933 1.12459Z"/>
+          </svg>
+        </div>
         <div>
           <h1>Opton</h1>
           <span>Рынок прогнозов</span>
@@ -1988,112 +1936,122 @@
     </section>
 
     <section class="screen" id="screen-terminal">
-      <section class="poly-terminal-shell" aria-label="Терминал рынка">
-        <header class="poly-topbar">
-          <button class="poly-brand" type="button" onclick="go('markets')" aria-label="Вернуться к рынкам">
-            <span class="poly-brand-dot">OP</span>
-            <span class="poly-brand-name">OPTON</span>
+      <section class="trm" aria-label="Терминал рынка">
+        <!-- Верхняя панель -->
+        <div class="trm-top">
+          <button class="trm-icon-btn" type="button" onclick="go('markets')" aria-label="Назад к рынкам">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-        </header>
-
-        <div class="poly-contract-row">
-          <button class="poly-back" type="button" onclick="go('markets')">←</button>
-          <div class="poly-contract-copy">
-            <h2 id="polyContractTitle">BTC 5м прогноз</h2>
-            <span id="terminalExpiry">Экспирация 5м</span>
+          <div class="trm-top-title">
+            <strong id="terminalAsset">BTC/USD</strong>
+            <span id="terminalExpiry">Прогноз · 5м</span>
           </div>
-          <button class="poly-more" type="button" aria-label="Дополнительно">•••</button>
+          <button class="trm-icon-btn trm-fav" type="button" id="terminalFavBtn" onclick="toggleFavorite(state.currentMarketId, event)" aria-label="В избранное">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
         </div>
 
-        <section class="poly-market-head">
-          <div class="poly-coin" id="terminalIcon"></div>
-          <div class="poly-market-copy">
-            <strong id="terminalAsset">BTC/USD</strong>
-            <span id="terminalMarketName">BTC/USD 5м прогноз</span>
-            <p id="polySchedule">May 31, 6–6:05 PM ET</p>
+        <!-- Цена актива + таймер -->
+        <section class="trm-hero">
+          <div class="trm-hero-coin" id="terminalIcon"></div>
+          <div class="trm-hero-main">
+            <div class="trm-hero-price" id="terminalPrice">$0.00</div>
+            <div class="trm-hero-sub">
+              <span id="terminalChange" class="trm-change up">+0.00%</span>
+              <span id="terminalAssetName">BTC/USD</span>
+            </div>
           </div>
-          <div class="poly-countdown" aria-label="До экспирации">
-            <div><strong id="polyMinutes">04</strong><span>MINS</span></div>
-            <div><strong id="polySeconds">52</strong><span>SECS</span></div>
+          <div class="trm-timer" aria-label="До закрытия">
+            <span>До закрытия</span>
+            <strong><b id="polyMinutes">00</b>:<b id="polySeconds">00</b></strong>
           </div>
         </section>
 
-        <section class="poly-price-strip" aria-label="Параметры рынка">
-          <article>
-            <span>Текущая цена</span>
-            <strong id="terminalPrice">$0.00</strong>
-          </article>
-          <article>
-            <span>Целевая цена</span>
-            <strong id="polyTargetPrice">$0.00</strong>
-          </article>
+        <!-- График -->
+        <section class="trm-chart">
+          <div class="trm-chart-tag" id="chartLabel">Демо-график</div>
+          <div class="trm-chart-now" id="polyCurrentLabel">$0.00</div>
+          <svg id="terminalChart" viewBox="0 0 360 210" preserveAspectRatio="none" role="img" aria-label="График цены">
+            <path id="terminalArea" d="" fill="url(#terminalAreaGradient)"></path>
+            <path id="terminalLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle id="terminalDot" cx="0" cy="0" r="4.5" fill="var(--tg-blue)"></circle>
+            <defs>
+              <linearGradient id="terminalAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#229ED9" stop-opacity=".18"></stop>
+                <stop offset="100%" stop-color="#229ED9" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+          </svg>
+        </section>
+
+        <!-- Ключевые уровни -->
+        <section class="trm-levels">
           <article>
             <span>Цена открытия</span>
             <strong id="terminalOpenPrice">$0.00</strong>
           </article>
+          <article class="trm-level-target">
+            <span>Целевая цена</span>
+            <strong id="polyTargetPrice">$0.00</strong>
+          </article>
         </section>
 
-        <section class="poly-terminal-card">
-          <div class="chart-wrap poly-chart-wrap">
-            <div class="chart-label" id="chartLabel">Mock chart · 1m</div>
-            <div class="poly-axis-label poly-axis-top" id="polyAxisHigh">$0.00</div>
-            <div class="poly-axis-label poly-axis-mid" id="polyAxisMid">$0.00</div>
-            <div class="poly-axis-label poly-axis-low" id="polyAxisLow">$0.00</div>
-            <div class="poly-current-line" aria-hidden="true"></div>
-            <div class="poly-current-price" id="polyCurrentLabel">$0.00</div>
-            <svg id="terminalChart" viewBox="0 0 360 210" role="img" aria-label="График цены">
-              <line x1="0" y1="76" x2="360" y2="76" class="poly-target-svg-line"></line>
-              <line x1="0" y1="154" x2="360" y2="154" class="poly-grid-svg-line"></line>
-              <path id="terminalArea" d="" fill="url(#terminalAreaGradient)"></path>
-              <path id="terminalLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="4" stroke-linecap="round"></path>
-              <circle id="terminalDot" cx="0" cy="0" r="5" fill="var(--tg-blue)"></circle>
-              <defs>
-                <linearGradient id="terminalAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#f59e0b" stop-opacity=".20"></stop>
-                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"></stop>
-                </linearGradient>
-              </defs>
-            </svg>
-            <div class="poly-chart-tools" aria-label="Инструменты графика">
-              <button type="button" class="poly-tool active" id="terminalToolIcon">₿</button>
-              <button type="button" class="poly-tool">▥</button>
-              <button type="button" class="poly-tool">⌁</button>
-            </div>
-          </div>
+        <!-- Вопрос сделки -->
+        <p class="trm-question">
+          Будет ли <b id="trmQAsset">BTC/USD</b> <b class="trm-q-hl">выше</b> <b id="trmQTarget">$0.00</b> через <b id="trmQExpiry">5м</b>?
+        </p>
 
-          <div class="poly-time-row" aria-label="Периоды">
-            <button class="poly-time-chip active" type="button">Прошлое ✓</button>
-            <button class="poly-time-chip poly-dots" type="button"><span></span><span></span><span></span></button>
-            <button class="poly-time-chip" type="button">6:00 PM</button>
-            <button class="poly-time-chip selected" type="button">6:05 PM</button>
-            <button class="poly-time-chip" type="button">6:10 PM</button>
+        <!-- Сумма -->
+        <section class="trm-amount">
+          <div class="trm-amount-head">
+            <label for="tradeAmount">Сумма сделки</label>
+            <span class="trm-available">Доступно: <b id="trmAvailable">$0.00</b></span>
           </div>
-
-          <div class="orderbook poly-orderbook" aria-label="Ордербук" onclick="this.classList.toggle('open')">
-            <div class="poly-book-summary">
-              <strong>Ордербук <span>i</span></strong>
-              <em>$0 объём</em>
-              <b>⌄</b>
-            </div>
-            <div class="poly-orderbook-body" id="orderbookRows"></div>
+          <div class="trm-amount-input">
+            <span class="trm-cur">$</span>
+            <input id="tradeAmount" inputmode="decimal" value="50" oninput="renderSharesPreview()" aria-label="Сумма сделки" />
+            <button type="button" class="trm-max" onclick="setTradeAmount('max')">Макс</button>
           </div>
-
-          <div class="trade-form poly-ticket">
-            <div class="field poly-amount-field">
-              <label>Сумма сделки</label>
-              <input class="input" id="tradeAmount" inputmode="decimal" value="50" />
-            </div>
-            <div class="field poly-shares-field">
-              <label>Shares примерно</label>
-              <input class="input" id="sharesPreview" readonly value="100.00" />
-            </div>
-          </div>
-
-          <div class="direction-actions poly-actions">
-            <button class="direction up-btn" type="button" onclick="placeOrder('UP')"><span>Вверх</span> <strong id="upButtonPrice">50¢</strong></button>
-            <button class="direction down-btn" type="button" onclick="placeOrder('DOWN')"><span>Вниз</span> <strong id="downButtonPrice">50¢</strong></button>
+          <div class="trm-chips">
+            <button type="button" onclick="setTradeAmount(10)">$10</button>
+            <button type="button" onclick="setTradeAmount(25)">$25</button>
+            <button type="button" onclick="setTradeAmount(50)">$50</button>
+            <button type="button" onclick="setTradeAmount(100)">$100</button>
           </div>
         </section>
+
+        <!-- Стакан (детали рынка) -->
+        <div class="trm-orderbook" aria-label="Стакан заявок" onclick="this.classList.toggle('open')">
+          <div class="trm-ob-head">
+            <strong>Стакан заявок</strong>
+            <em>детали рынка</em>
+            <b>⌄</b>
+          </div>
+          <div class="trm-ob-body">
+            <div class="trm-ob-cols"><span>Сторона</span><span>Цена</span><span class="qty">Объём</span></div>
+            <div id="orderbookRows"></div>
+          </div>
+        </div>
+
+        <!-- Кнопки направления -->
+        <div class="trm-actions">
+          <button class="trm-dir up" type="button" onclick="placeOrder('UP')">
+            <span class="trm-dir-head">
+              <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+              <span class="trm-dir-name">Вверх</span>
+              <span class="trm-dir-pct" id="upButtonPrice">50%</span>
+            </span>
+            <span class="trm-dir-payout">выплата <b id="upButtonReturn">$0.00</b></span>
+          </button>
+          <button class="trm-dir down" type="button" onclick="placeOrder('DOWN')">
+            <span class="trm-dir-head">
+              <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span>
+              <span class="trm-dir-name">Вниз</span>
+              <span class="trm-dir-pct" id="downButtonPrice">50%</span>
+            </span>
+            <span class="trm-dir-payout">выплата <b id="downButtonReturn">$0.00</b></span>
+          </button>
+        </div>
       </section>
     </section>
 
@@ -2650,6 +2608,12 @@
         }
       } catch (e) { /* not supported — fall back to expanded mode */ }
 
+      // Stop the swipe-down gesture from closing/minimizing the app while the
+      // user is just scrolling content (Bot API 7.7+).
+      try {
+        tg.disableVerticalSwipes?.();
+      } catch (e) { /* unsupported on older clients */ }
+
       // Initial insets + live updates as the layout changes.
       applySafeAreas();
       tg.onEvent?.("safeAreaChanged", applySafeAreas);
@@ -2702,6 +2666,7 @@
     }
 
     function filterMarkets(expiry, button) {
+      haptic("selection");
       state.filterExpiry = expiry;
       saveState();
       // syncMarketFilter is called inside renderMarkets(false)
@@ -2902,58 +2867,71 @@
       const ms = getMarketState(market.id);
       updateMockPrice(market.id);
 
-      const assetShort = shortAssetName(market.asset);
       const targetPrice = ms.openPrice * (market.price > 100 ? 1.0003 : 1.006);
       const remainingMs = Math.max(0, ms.openedAt + market.minutes * 60000 - Date.now());
       const remainingMinutes = Math.floor(remainingMs / 60000);
       const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
       const priceLabel = marketPriceText(ms.currentPrice);
       const targetLabel = marketPriceText(targetPrice);
-      const highLabel = marketPriceText(Math.max(ms.currentPrice, targetPrice, ms.openPrice) * 1.00055);
-      const midLabel = marketPriceText((ms.currentPrice + targetPrice) / 2);
-      const lowLabel = marketPriceText(Math.min(ms.currentPrice, targetPrice, ms.openPrice) * .99945);
 
       setText("terminalAsset", market.asset);
-      setText("terminalExpiry", "Экспирация " + market.expiry);
-      setText("terminalMarketName", market.asset + " · " + market.expiry + " прогноз");
-      setText("polyContractTitle", `${assetShort} ${market.expiry} прогноз: выше цели?`);
-      setText("polySchedule", formatMarketSchedule(ms.openedAt, market.minutes));
+      setText("terminalExpiry", "Прогноз · " + market.expiry);
+      setText("terminalAssetName", market.asset);
       setText("polyMinutes", String(remainingMinutes).padStart(2, "0"));
       setText("polySeconds", String(remainingSeconds).padStart(2, "0"));
       setText("terminalPrice", priceLabel);
       setText("terminalOpenPrice", marketPriceText(ms.openPrice));
       setText("polyTargetPrice", targetLabel);
-      setText("polyAxisHigh", highLabel);
-      setText("polyAxisMid", midLabel);
-      setText("polyAxisLow", lowLabel);
       setText("polyCurrentLabel", priceLabel);
-      setText("chartLabel", market.asset + " · демо-график · " + market.expiry);
+      setText("chartLabel", market.asset + " · демо");
+
+      // Изменение цены актива
+      const changeEl = document.getElementById("terminalChange");
+      if (changeEl) {
+        const up = (market.change || 0) >= 0;
+        changeEl.textContent = (up ? "▲ +" : "▼ ") + Math.abs(market.change || 0).toFixed(2) + "%";
+        changeEl.className = "trm-change " + (up ? "up" : "down");
+      }
+
+      // Вопрос сделки
+      setText("trmQAsset", market.asset);
+      setText("trmQTarget", targetLabel);
+      setText("trmQExpiry", market.expiry);
+
+      // Доступный баланс
+      setText("trmAvailable", money(state.balance));
+
+      // Кнопка избранного
+      const favBtn = document.getElementById("terminalFavBtn");
+      if (favBtn) {
+        const isFav = (state.favorites || []).includes(market.id);
+        favBtn.classList.toggle("active", isFav);
+      }
 
       const terminalIcon = document.getElementById("terminalIcon");
       if (terminalIcon) {
         terminalIcon.innerHTML = market.icon;
         terminalIcon.className = "poly-coin " + (market.iconClass || "");
       }
-      const terminalToolIcon = document.getElementById("terminalToolIcon");
-      if (terminalToolIcon) {
-        terminalToolIcon.innerHTML = market.icon;
-        terminalToolIcon.className = "poly-tool active " + (market.iconClass?.includes("eth-svg") ? "eth-svg" : "");
-      }
 
       const upPrice = getSidePrice(market.id, "UP");
       const downPrice = getSidePrice(market.id, "DOWN");
-      setText("upButtonPrice", cents(upPrice));
-      setText("downButtonPrice", cents(downPrice));
+      // Цена в центах ≈ вероятность по рынку — показываем в процентах
+      setText("upButtonPrice", upPrice + "%");
+      setText("downButtonPrice", downPrice + "%");
       renderSharesPreview();
 
       const rows = getOrderbook(market.id);
       const maxQty = Math.max(...rows.map(r => r.qty));
-      document.getElementById("orderbookRows").innerHTML = rows.map(row => `
-        <div class="book-row" style="--bar:${Math.round(row.qty / maxQty * 100)}%; --bar-color:${row.color}">
-          <span class="${row.side === 'UP' ? 'up' : 'down'}">${row.label}</span>
-          <span>${cents(row.price)}</span>
-          <span class="qty">${row.qty.toLocaleString('ru-RU')}</span>
-        </div>`).join("");
+      const orderbookEl = document.getElementById("orderbookRows");
+      if (orderbookEl) {
+        orderbookEl.innerHTML = rows.map(row => `
+          <div class="book-row" style="--bar:${Math.round(row.qty / maxQty * 100)}%; --bar-color:${row.color}">
+            <span class="${row.side === 'UP' ? 'up' : 'down'}">${row.label}</span>
+            <span>${cents(row.price)}</span>
+            <span class="qty">${row.qty.toLocaleString('ru-RU')}</span>
+          </div>`).join("");
+      }
 
       drawTerminalChart(market.id);
     }
@@ -2970,9 +2948,24 @@
     function renderSharesPreview() {
       const amount = Number(document.getElementById("tradeAmount")?.value || 0);
       const upPrice = getSidePrice(state.currentMarketId, "UP");
-      const shares = amount > 0 ? amount / (upPrice / 100) : 0;
-      const preview = document.getElementById("sharesPreview");
-      if (preview) preview.value = shares.toFixed(2);
+      const downPrice = getSidePrice(state.currentMarketId, "DOWN");
+      // Потенциальная выплата при выигрыше = ставка / (цена в центах / 100)
+      const upPayout = amount > 0 ? amount / (upPrice / 100) : 0;
+      const downPayout = amount > 0 ? amount / (downPrice / 100) : 0;
+      setText("upButtonReturn", money(upPayout));
+      setText("downButtonReturn", money(downPayout));
+
+      // Подсветка input при превышении баланса
+      const input = document.getElementById("tradeAmount");
+      if (input) input.parentElement.classList.toggle("invalid", amount > state.balance);
+    }
+
+    function setTradeAmount(value) {
+      const input = document.getElementById("tradeAmount");
+      if (!input) return;
+      input.value = value === "max" ? Math.floor(state.balance) : value;
+      renderSharesPreview();
+      haptic("selection");
     }
 
     function drawTerminalChart(marketId) {
