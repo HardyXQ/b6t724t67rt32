@@ -374,8 +374,8 @@
     }
     .stat { min-height: 104px; display: flex; flex-direction: column; justify-content: space-between; }
     .stat .label { color: var(--muted); font-size: 12px; font-weight: 760; margin-bottom: 8px; }
-    .stat .value { font-size: 23px; font-weight: 950; line-height: 1; letter-spacing: -.055em; }
-    .stat .delta { margin-top: 7px; font-size: 12px; font-weight: 850; line-height: 1.2; }
+    .stat .value { font-size: 23px; font-weight: 950; line-height: 1; letter-spacing: -.055em; transition: opacity 0.24s ease, filter 0.24s ease; }
+    .stat .delta { margin-top: 7px; font-size: 12px; font-weight: 850; line-height: 1.2; transition: opacity 0.24s ease, filter 0.24s ease; }
     .up { color: var(--green); }
     .down { color: var(--red); }
     .neutral { color: var(--muted); }
@@ -817,7 +817,7 @@
       line-height: .98;
       letter-spacing: -.07em;
       cursor: pointer;
-      transition: opacity 0.2s ease, filter 0.2s ease, transform 0.1s ease;
+      transition: opacity 0.24s ease, filter 0.24s ease, transform 0.1s ease;
       user-select: none;
     }
     .portfolio-top h2:active {
@@ -826,12 +826,12 @@
     .portfolio-top .pnl span {
       transition: opacity 0.2s ease, filter 0.2s ease;
     }
-    .portfolio-top h2.hidden-value,
-    .portfolio-top .pnl.hidden-value span {
-      opacity: 0.4;
-      filter: blur(8px);
+    .hidden-value,
+    .hidden-value span {
+      opacity: 0.4 !important;
+      filter: blur(10px) !important;
     }
-    .portfolio-top .pnl { font-size: 13px; font-weight: 900; color: #3ab7f5; }
+    .portfolio-top .pnl { font-size: 13px; font-weight: 900; color: #3ab7f5; transition: opacity 0.24s ease, filter 0.24s ease; }
     .portfolio-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 17px; }
 
     .pnl-chart {
@@ -843,6 +843,61 @@
       position: relative;
     }
     .pnl-chart svg { width: 100%; height: 100%; }
+    .pnl-chart { position: relative; }
+    #balanceCrosshair {
+      stroke: var(--tg-blue);
+      stroke-width: 1.5;
+      stroke-dasharray: 4 4;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+    #balanceDot {
+      fill: var(--tg-blue);
+      stroke: #fff;
+      stroke-width: 2;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+    .chart-scrubbing #balanceCrosshair,
+    .chart-scrubbing #balanceDot {
+      opacity: 1;
+    }
+    .chart-scrubbing #portfolioBalance,
+    .chart-scrubbing #portfolioPnl {
+      color: var(--tg-blue);
+    }
+    [data-theme="dark"] .chart-scrubbing #portfolioBalance,
+    [data-theme="dark"] .chart-scrubbing #portfolioPnl {
+      color: #3ab7f5;
+    }
+    .pnl-chart-info {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      text-align: right;
+      pointer-events: none;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .pnl-chart-info b {
+      font-size: 14px;
+      color: var(--text);
+    }
+    .pnl-chart-info b.up { color: var(--green); }
+    .pnl-chart-info b.down { color: var(--red); }
+    .pnl-chart-info div { font-size: 10px; opacity: 0.7; }
+    .chart-scrubbing .pnl-chart-info {
+      opacity: 1;
+    }
 
     .portfolio-slider-container {
       overflow: hidden;
@@ -1183,7 +1238,7 @@
     .success-anim-wrap {
       display: flex;
       justify-content: center;
-      margin: 10px 0 24px;
+      margin: 10px 0 14px;
     }
     .check-box {
       width: 80px;
@@ -1230,7 +1285,7 @@
     }
     .success-info { text-align: center; }
     .success-info h3 {
-      margin: 0 0 10px;
+      margin: 0 0 6px;
       font-size: 24px;
       font-weight: 950;
       letter-spacing: -0.04em;
@@ -1610,7 +1665,7 @@
       padding: 0 2px;
     }
     .trm-amount-head label { color: var(--muted); font-size: 13px; font-weight: 850; }
-    .trm-available { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .trm-available { color: var(--muted); font-size: 12px; font-weight: 800; transition: opacity 0.24s ease, filter 0.24s ease; }
     .trm-available b { color: var(--text); font-weight: 950; }
     .trm-amount-input {
       position: relative;
@@ -1951,7 +2006,7 @@
       </div>
 
       <section class="grid" aria-label="Статистика">
-        <article class="card stat">
+        <article class="card stat" onclick="toggleBalancePrivacy()" style="cursor:pointer">
           <div class="label">Баланс</div>
           <div class="value" id="homeBalance">$0.00</div>
           <div class="delta" id="homePnl">PnL $0.00</div>
@@ -2065,7 +2120,7 @@
         <section class="trm-amount">
           <div class="trm-amount-head">
             <label for="tradeAmount">Сумма сделки</label>
-            <span class="trm-available">Доступно: <b id="trmAvailable">$0.00</b></span>
+            <span class="trm-available" onclick="toggleBalancePrivacy()" style="cursor:pointer">Доступно: <b id="trmAvailable">$0.00</b></span>
           </div>
           <div class="trm-amount-input">
             <span class="trm-cur">$</span>
@@ -2128,7 +2183,6 @@
 
       <div class="section-title">
         <h3>История баланса</h3>
-        <span>Profit / Loss</span>
       </div>
       <div class="segmented five" style="margin-bottom:12px">
         <div class="seg-glider"></div>
@@ -2138,10 +2192,13 @@
         <button class="seg" type="button" onclick="setBalanceRange('1y', this)">1Y</button>
         <button class="seg active" type="button" onclick="setBalanceRange('all', this)">All</button>
       </div>
-      <div class="pnl-chart card" style="padding:0">
+      <div class="pnl-chart card" style="padding:0" id="balanceChartContainer">
+        <div class="pnl-chart-info" id="balanceChartInfo"></div>
         <svg id="balanceChart" viewBox="0 0 360 170" role="img" aria-label="График баланса">
           <path id="balanceArea" d="" fill="url(#balanceAreaGradient)"></path>
           <path id="balanceLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="4" stroke-linecap="round"></path>
+          <line id="balanceCrosshair" x1="0" y1="0" x2="0" y2="170"></line>
+          <circle id="balanceDot" cx="0" cy="0" r="5"></circle>
           <defs>
             <linearGradient id="balanceAreaGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#229ED9" stop-opacity=".20"></stop>
@@ -2309,6 +2366,7 @@
       demoWalletActive: false,
       balanceRange: "all",
       portfolioTab: "positions",
+      balanceHidden: false,
       timezone: "GMT+3"
     });
 
@@ -2824,7 +2882,7 @@
       if (favs.length === 0) {
         homeMarketsEl.innerHTML = `
           <div class="empty" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 18px; border-style: solid; background: var(--surface-soft);">
-            <div style="font-size: 15px; font-weight: 800;">Нет рынков, добавить?</div>
+            <div style="font-size: 15px; font-weight: 800;">Нет рынков. Добавить?</div>
             <button class="primary" style="min-height: 40px; padding: 0 20px; font-size: 13px; width: auto; box-shadow: none;" onclick="go('markets')">Добавить</button>
           </div>
         `;
@@ -2954,7 +3012,11 @@
       }
 
       // Доступный баланс
-      setText("trmAvailable", money(state.balance));
+      const availableEl = document.getElementById("trmAvailable");
+      if (availableEl) {
+        availableEl.textContent = money(state.balance);
+        availableEl.classList.toggle("hidden-value", !!state.balanceHidden);
+      }
 
       // Кнопка избранного
       const favBtn = document.getElementById("terminalFavBtn");
@@ -3241,7 +3303,7 @@
               <button class="input-max-btn" type="button" onclick="setMaxWithdraw()">Макс</button>
             </div>
             <div id="withdrawError" style="margin-top:4px; font-size:11px; color:var(--red); display:none; font-weight:900;">Недостаточный баланс</div>
-            <div id="withdrawAvailable" style="margin-top:4px; font-size:11px; color:var(--muted)">Доступно: ${money(state.balance)}</div>
+            <div id="withdrawAvailable" class="${state.balanceHidden ? 'hidden-value' : ''}" style="margin-top:4px; font-size:11px; color:var(--muted)">Доступно: ${money(state.balance)}</div>
           </div>
           <div class="field full">
             <label id="withdrawAddrLabel">Адрес получателя (TON)</label>
@@ -3310,9 +3372,9 @@
               </svg>
             </div>
           </div>
-          <h3>Готово!</h3>
+          <h3>Успех!</h3>
           <p>
-            Заявка на <strong>${money(amount)}</strong> создана. Средства будут отправлены на ваш кошелек в ближайшее время.
+            Вывод на сумму <strong>${money(amount)}</strong> создан. Средства будут отправлены на ваш кошелек в ближайшее время.
           </p>
         </div>
       `;
@@ -3409,19 +3471,25 @@
     }
 
     function toggleBalancePrivacy() {
-      const balanceEl = document.getElementById("portfolioBalance");
-      const pnlEl = document.getElementById("portfolioPnl");
-      if (balanceEl) balanceEl.classList.toggle("hidden-value");
-      if (pnlEl) pnlEl.classList.toggle("hidden-value");
+      state.balanceHidden = !state.balanceHidden;
+      saveState();
+      renderAll();
       haptic("selection");
     }
 
     function renderPortfolio(noAnimate = false) {
       const pnl = state.balance - state.initialBalance;
-      document.getElementById("portfolioBalance").textContent = money(state.balance);
+      const balanceEl = document.getElementById("portfolioBalance");
+      if (balanceEl) {
+        balanceEl.textContent = money(state.balance);
+        balanceEl.classList.toggle("hidden-value", !!state.balanceHidden);
+      }
       const pnlEl = document.getElementById("portfolioPnl");
-      pnlEl.innerHTML = `PnL <span>${pnl >= 0 ? "+" : ""}${money(pnl)}</span>`;
-      pnlEl.className = "pnl " + (pnl >= 0 ? "up" : "down") + (pnlEl.classList.contains("hidden-value") ? " hidden-value" : "");
+      if (pnlEl) {
+        pnlEl.innerHTML = `PnL <span>${pnl >= 0 ? "+" : ""}${money(pnl)}</span>`;
+        pnlEl.className = "pnl " + (pnl >= 0 ? "up" : "down");
+        pnlEl.classList.toggle("hidden-value", !!state.balanceHidden);
+      }
 
       // Sync balance range buttons
       const range = state.balanceRange || "all";
@@ -3546,6 +3614,7 @@
         </article>`;
     }
 
+    let currentChartPoints = [];
     function drawBalanceChart() {
       let points = state.balanceHistory.length ? state.balanceHistory : seedBalanceHistory();
       const now = Date.now();
@@ -3582,6 +3651,8 @@
         return [x, y];
       });
 
+      currentChartPoints = points.map((p, i) => ({ ...p, x: coords[i][0], y: coords[i][1] }));
+
       const d = coords.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(" ");
       const area = d + ` L${coords[coords.length - 1][0]},170 L${coords[0][0]},170 Z`;
       document.getElementById("balanceLine").setAttribute("d", d);
@@ -3592,18 +3663,27 @@
       const openPositions = state.positions.filter(p => p.status === "open").length;
       const soon = state.positions.filter(p => p.status === "open" && p.expiresAt - Date.now() < 5 * 60000).length;
       const pnl = state.balance - state.initialBalance;
-      document.getElementById("homeBalance").textContent = money(state.balance);
-      const homePnl = document.getElementById("homePnl");
-      homePnl.textContent = `PnL ${pnl >= 0 ? "+" : ""}${money(pnl)}`;
 
-      let pnlClass = "delta";
-      if (pnl > 0.005) pnlClass += " up";
-      else if (pnl < -0.005) pnlClass += " down";
-      else {
-        pnlClass += " neutral";
-        homePnl.textContent = `PnL $0.00`;
+      const balanceEl = document.getElementById("homeBalance");
+      if (balanceEl) {
+        balanceEl.textContent = money(state.balance);
+        balanceEl.classList.toggle("hidden-value", !!state.balanceHidden);
       }
-      homePnl.className = pnlClass;
+
+      const homePnl = document.getElementById("homePnl");
+      if (homePnl) {
+        homePnl.textContent = `PnL ${pnl >= 0 ? "+" : ""}${money(pnl)}`;
+
+        let pnlClass = "delta";
+        if (pnl > 0.005) pnlClass += " up";
+        else if (pnl < -0.005) pnlClass += " down";
+        else {
+          pnlClass += " neutral";
+          homePnl.textContent = `PnL $0.00`;
+        }
+        homePnl.className = pnlClass;
+        homePnl.classList.toggle("hidden-value", !!state.balanceHidden);
+      }
 
       document.getElementById("homePositions").textContent = openPositions;
       document.getElementById("homeExpiring").textContent = `${soon} истекают скоро`;
@@ -3666,6 +3746,96 @@
       if (event.target.id === "modal") closeModal();
     }
 
+    function initChartScrubbing() {
+      const container = document.getElementById('balanceChartContainer');
+      const crosshair = document.getElementById('balanceCrosshair');
+      const dot = document.getElementById('balanceDot');
+      const info = document.getElementById('balanceChartInfo');
+      const balanceVal = document.getElementById('portfolioBalance');
+      const pnlVal = document.getElementById('portfolioPnl');
+
+      if (!container) return;
+
+      let lastIdx = -1;
+
+      const onMove = (e) => {
+        if (!currentChartPoints || !currentChartPoints.length) return;
+        if (e.cancelable) e.preventDefault();
+
+        const rect = container.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        const width = rect.width;
+        const viewBoxX = (x / width) * 360;
+
+        let closest = currentChartPoints[0];
+        let minDist = Math.abs(viewBoxX - closest.x);
+        let idx = 0;
+
+        for (let i = 1; i < currentChartPoints.length; i++) {
+          const d = Math.abs(viewBoxX - currentChartPoints[i].x);
+          if (d < minDist) {
+            minDist = d;
+            closest = currentChartPoints[i];
+            idx = i;
+          }
+        }
+
+        if (idx !== lastIdx) {
+          lastIdx = idx;
+          haptic("selection");
+
+          const range = state.balanceRange || 'all';
+          let interval = 24 * 3600000; // Default 1d
+          if (range === '1d') interval = 3600000;
+          else if (range === '1w') interval = 3 * 3600000;
+          else if (range === '1m') interval = 6 * 3600000;
+
+          const snappedT = Math.round(closest.t / interval) * interval;
+          const snappedDate = new Date(snappedT);
+          const tz = getTimezoneValue(state.timezone);
+          const timeStr = snappedDate.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: tz });
+          const dateStr = snappedDate.toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: tz });
+
+          if (info) {
+            const pnlFormatted = state.balanceHidden ? "****" : (closest.value >= 0 ? "+" : "") + money(closest.value);
+            const pnlClass = closest.value >= 0 ? "up" : "down";
+            info.innerHTML = `<div>${dateStr}, ${timeStr}</div><b class="${pnlClass}">${pnlFormatted}</b>`;
+          }
+          if (crosshair) {
+            crosshair.setAttribute('x1', closest.x);
+            crosshair.setAttribute('x2', closest.x);
+          }
+          if (dot) {
+            dot.setAttribute('cx', closest.x);
+            dot.setAttribute('cy', closest.y);
+          }
+        }
+        container.classList.add('chart-scrubbing');
+      };
+
+      const onEnd = () => {
+        container.classList.remove('chart-scrubbing');
+        lastIdx = -1;
+        renderPortfolio();
+      };
+
+      container.addEventListener('touchstart', onMove, { passive: false });
+      container.addEventListener('touchmove', onMove, { passive: false });
+      container.addEventListener('touchend', onEnd);
+      container.addEventListener('touchcancel', onEnd);
+      container.addEventListener('mousedown', (e) => {
+        onMove(e);
+        const moveHandler = (me) => onMove(me);
+        const upHandler = () => {
+          onEnd();
+          window.removeEventListener('mousemove', moveHandler);
+          window.removeEventListener('mouseup', upHandler);
+        };
+        window.addEventListener('mousemove', moveHandler);
+        window.addEventListener('mouseup', upHandler);
+      });
+    }
+
     function haptic(type) {
       if (!tg?.HapticFeedback) return;
       if (type === "success") tg.HapticFeedback.notificationOccurred("success");
@@ -3685,6 +3855,7 @@
     document.body.dataset.screen = "home";
     initTelegram();
     applyTheme();
+    initChartScrubbing();
     renderAll();
     setInterval(() => {
       if (document.getElementById("screen-terminal").classList.contains("active")) {
