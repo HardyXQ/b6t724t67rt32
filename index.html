@@ -107,6 +107,36 @@
       height: 100dvh;
     }
 
+    /* Блокировка горизонтальной ориентации */
+    .orientation-lock {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      text-align: center;
+      background: var(--bg);
+    }
+    .orientation-lock-inner { display: grid; gap: 12px; justify-items: center; max-width: 320px; }
+    .orientation-lock svg {
+      width: 56px;
+      height: 56px;
+      color: var(--tg-blue);
+      animation: rotate-hint 2.2s ease-in-out infinite;
+    }
+    .orientation-lock strong { font-size: 19px; font-weight: 950; letter-spacing: normal; }
+    .orientation-lock span { color: var(--muted); font-size: 14px; line-height: 1.45; }
+    @keyframes rotate-hint {
+      0%, 60%, 100% { transform: rotate(0deg); }
+      30% { transform: rotate(-90deg); }
+    }
+    @media (orientation: landscape) and (max-height: 540px) {
+      .orientation-lock { display: flex; }
+      body.no-scroll, body { overflow: hidden; }
+    }
+
     body, button, input { font: inherit; }
     button {
       border: 0;
@@ -162,7 +192,7 @@
       place-items: center;
       color: #fff;
       background: linear-gradient(135deg, var(--tg-blue), var(--tg-blue-dark));
-      box-shadow: 0 6px 14px rgba(34,158,217,.30);
+      box-shadow: none;
     }
     .logo svg {
       width: 56%;
@@ -944,6 +974,26 @@
     }
 
     .position, .history-row { display: grid; gap: 9px; margin-bottom: 10px; }
+    .position-close-btn {
+      width: 100%;
+      min-height: 44px;
+      margin-top: 2px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: normal;
+      transition: transform .12s ease, background .15s ease;
+    }
+    .position-close-btn:active { transform: scale(.98); background: var(--surface); }
+    .position-close-btn.expired {
+      background: linear-gradient(135deg, #17b26a, #34c97f);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 8px 18px rgba(23, 178, 106, .28);
+    }
     .position-head, .history-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .position-head strong, .history-head strong {
       min-width: 0;
@@ -1400,9 +1450,7 @@
       gap: 13px;
       padding: 15px;
       border-radius: var(--radius-lg);
-      background:
-        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--tg-blue) 12%, transparent), transparent 42%),
-        color-mix(in srgb, var(--surface) 95%, transparent);
+      background: color-mix(in srgb, var(--surface) 95%, transparent);
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
     }
@@ -1459,8 +1507,8 @@
       text-align: center;
       padding: 8px clamp(8px, 2.6vw, 12px);
       border-radius: var(--radius-sm);
-      background: color-mix(in srgb, var(--red) 9%, var(--surface));
-      border: 1px solid color-mix(in srgb, var(--red) 18%, transparent);
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
     }
     .trm-timer span {
       display: block;
@@ -1605,17 +1653,21 @@
     }
     .trm-pos {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 13px;
-      border-radius: var(--radius-sm);
+      gap: 11px;
+      padding: 13px;
+      border-radius: var(--radius);
       background: color-mix(in srgb, var(--surface) 94%, transparent);
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
       transition: transform .1s ease;
     }
     .trm-pos:active { transform: scale(.985); }
+    .trm-pos-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .trm-pos-top .trm-pos-main { flex: 1 1 auto; }
     .trm-pos-side {
       display: inline-flex;
       align-items: center;
@@ -1655,6 +1707,108 @@
       font-weight: 950;
       font-variant-numeric: tabular-nums;
     }
+    /* Правая колонка верхней строки: выплата (зелёным) */
+    .trm-pos-right {
+      flex: 0 0 auto;
+      display: grid;
+      gap: 2px;
+      justify-items: end;
+      text-align: right;
+    }
+    .trm-pos-payout {
+      font-size: 15px;
+      font-weight: 950;
+      line-height: 1.1;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+    .trm-pos-payout-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    /* Нижняя строка позиции: shares, средняя цена, текущая доходность */
+    .trm-pos-foot {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .trm-pos-stat {
+      min-width: 0;
+      padding: 8px 9px;
+      border-radius: 10px;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+    }
+    .trm-pos-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 9.5px;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .trm-pos-stat strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 950;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trm-pos-stat strong.up { color: var(--green); }
+    .trm-pos-stat strong.down { color: var(--red); }
+    /* Кнопка «Вывести средства» внутри блока позиции (после истечения) */
+    .trm-pos-cashout {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      min-height: 40px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #17b26a, #34c97f);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: normal;
+      box-shadow: 0 8px 18px rgba(23, 178, 106, .28);
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .trm-pos-cashout:active { transform: scale(.98); opacity: .92; }
+    /* Кнопка «Закрыть позицию» (до истечения времени) */
+    .trm-pos-close {
+      grid-column: 1 / -1;
+      margin-top: 2px;
+      min-height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: normal;
+      transition: transform .12s ease, background .15s ease;
+    }
+    .trm-pos-close:active { transform: scale(.98); background: var(--surface); }
+    /* Кнопка отмены лимитной заявки */
+    .trm-pos-cancel {
+      flex: 0 0 auto;
+      align-self: center;
+      height: 32px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      transition: transform .1s ease;
+    }
+    .trm-pos-cancel:active { transform: scale(.95); }
 
     /* Сумма */
     .trm-amount { display: grid; gap: 10px; }
@@ -1755,11 +1909,15 @@
       font-weight: 800;
     }
     .trm-ob-head b {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
       color: var(--muted);
-      font-size: 18px;
-      font-weight: 800;
-      transition: transform .18s ease;
+      transition: transform .2s ease;
     }
+    .trm-ob-head b svg { width: 18px; height: 18px; }
     .trm-orderbook.open .trm-ob-head b { transform: rotate(180deg); }
     .trm-ob-body {
       max-height: 0;
@@ -1798,7 +1956,13 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      padding-top: 4px;
+      padding: 10px;
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
     }
     .trm-dir {
       display: grid;
@@ -1808,12 +1972,12 @@
       color: #fff;
       text-align: left;
       min-width: 0;
-      box-shadow: 0 12px 24px rgba(0, 0, 0, .16);
+      box-shadow: none;
       transition: transform .12s ease, opacity .12s ease;
     }
     .trm-dir:active { transform: scale(.97); opacity: .92; }
-    .trm-dir.up { background: linear-gradient(135deg, #17b26a, #34c97f); }
-    .trm-dir.down { background: linear-gradient(135deg, #ef4444, #f4607a); }
+    .trm-dir.up { background: var(--green); }
+    .trm-dir.down { background: var(--red); }
     .trm-dir-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
     .trm-dir-ico {
       flex: 0 0 auto;
@@ -1845,6 +2009,22 @@
       text-overflow: ellipsis;
     }
     .trm-dir-payout b { color: #fff; font-weight: 950; font-variant-numeric: tabular-nums; }
+    /* Большая кнопка «Вывести средства» вместо Вверх/Вниз (после истечения) */
+    .trm-dir-cashout {
+      grid-column: 1 / -1;
+      min-height: 56px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #17b26a, #34c97f);
+      color: #fff;
+      font-size: clamp(15px, 4.4vw, 17px);
+      font-weight: 950;
+      letter-spacing: normal;
+      box-shadow: 0 12px 24px rgba(23, 178, 106, .28);
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .trm-dir-cashout:active { transform: scale(.97); opacity: .92; }
+    /* Поле лимитной цены */
+    .trm-limit-price { display: grid; gap: 8px; }
 
     @media (max-width: 480px) {
       :root {
@@ -1950,6 +2130,14 @@
 </head>
 
 <body>
+  <!-- Блокировка горизонтальной ориентации (фолбэк, если клиент не поддерживает lockOrientation) -->
+  <div class="orientation-lock" aria-hidden="true">
+    <div class="orientation-lock-inner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+      <strong>Поверните устройство</strong>
+      <span>Приложение работает только в вертикальном режиме.</span>
+    </div>
+  </div>
   <main class="app">
     <header class="topbar">
       <div class="brand" onclick="go('home')">
@@ -2117,6 +2305,9 @@
         <!-- Мои позиции по рынку -->
         <section class="trm-positions" id="terminalPositions"></section>
 
+        <!-- Лимитные заявки по рынку -->
+        <section class="trm-positions" id="terminalLimitOrders"></section>
+
         <!-- Сумма -->
         <section class="trm-amount">
           <div class="trm-amount-head">
@@ -2129,10 +2320,27 @@
             <button type="button" class="trm-max" onclick="setTradeAmount('max')">Макс</button>
           </div>
           <div class="trm-chips">
-            <button type="button" onclick="setTradeAmount(10)">$10</button>
+            <button type="button" onclick="setTradeAmount(1)">$1</button>
             <button type="button" onclick="setTradeAmount(25)">$25</button>
             <button type="button" onclick="setTradeAmount(50)">$50</button>
             <button type="button" onclick="setTradeAmount(100)">$100</button>
+          </div>
+          <!-- Тип ордера -->
+          <div class="segmented two" id="orderTypeSeg" style="margin-top:2px;">
+            <div class="seg-glider"></div>
+            <button class="seg active" type="button" onclick="setOrderType('market', this)">Маркет</button>
+            <button class="seg" type="button" onclick="setOrderType('limit', this)">Лимит</button>
+          </div>
+          <!-- Лимитная цена (только для лимитного ордера) -->
+          <div class="trm-limit-price" id="limitPriceWrap" style="display:none;">
+            <div class="trm-amount-head">
+              <label for="limitPrice">Лимитная цена за share</label>
+              <span class="trm-available">исполнится при цене ≤ лимита</span>
+            </div>
+            <div class="trm-amount-input">
+              <input id="limitPrice" inputmode="decimal" value="50" oninput="renderSharesPreview()" aria-label="Лимитная цена" />
+              <span class="trm-cur">¢</span>
+            </div>
           </div>
         </section>
 
@@ -2140,8 +2348,8 @@
         <div class="trm-orderbook" aria-label="Стакан заявок" onclick="this.classList.toggle('open')">
           <div class="trm-ob-head">
             <strong>Стакан заявок</strong>
-            <em>детали рынка</em>
-            <b>⌄</b>
+            <em>Детали рынка</em>
+            <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></b>
           </div>
           <div class="trm-ob-body">
             <div class="trm-ob-cols"><span>Сторона</span><span>Цена</span><span class="qty">Объём</span></div>
@@ -2151,22 +2359,23 @@
 
         <!-- Кнопки направления -->
         <div class="trm-actions">
-          <button class="trm-dir up" type="button" onclick="placeOrder('UP')">
+          <button class="trm-dir up" type="button" id="terminalUpBtn" onclick="placeOrder('UP')">
             <span class="trm-dir-head">
               <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
               <span class="trm-dir-name">Вверх</span>
-              <span class="trm-dir-pct" id="upButtonPrice">50%</span>
+              <span class="trm-dir-pct" id="upButtonPrice">50¢</span>
             </span>
-            <span class="trm-dir-payout">выплата <b id="upButtonReturn">$0.00</b></span>
+            <span class="trm-dir-payout">Выплата <b id="upButtonReturn">$0.00</b></span>
           </button>
-          <button class="trm-dir down" type="button" onclick="placeOrder('DOWN')">
+          <button class="trm-dir down" type="button" id="terminalDownBtn" onclick="placeOrder('DOWN')">
             <span class="trm-dir-head">
               <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span>
               <span class="trm-dir-name">Вниз</span>
-              <span class="trm-dir-pct" id="downButtonPrice">50%</span>
+              <span class="trm-dir-pct" id="downButtonPrice">50¢</span>
             </span>
-            <span class="trm-dir-payout">выплата <b id="downButtonReturn">$0.00</b></span>
+            <span class="trm-dir-payout">Выплата <b id="downButtonReturn">$0.00</b></span>
           </button>
+          <button class="trm-dir-cashout" type="button" id="terminalCashout" onclick="cashOutMarket()" style="display:none;">Вывести средства</button>
         </div>
       </section>
     </section>
@@ -2356,6 +2565,7 @@
       balance: 0,
       initialBalance: 0,
       positions: [],
+      limitOrders: [],
       history: [],
       balanceHistory: seedBalanceHistory(),
       marketState: {},
@@ -2372,6 +2582,10 @@
     });
 
     let state = loadState();
+    // Тип ордера в терминале: 'market' | 'limit' (только UI-состояние, не сохраняется)
+    let orderType = "market";
+    // Отложенное намерение по сделке, ожидающее подтверждения в модалке
+    let pendingOrder = null;
 
     function seedBalanceHistory() {
       const now = Date.now();
@@ -2760,6 +2974,11 @@
         tg.disableVerticalSwipes?.();
       } catch (e) { /* unsupported on older clients */ }
 
+      // Lock to portrait so the app can't be rotated to landscape (Bot API 8.0+).
+      try {
+        tg.lockOrientation?.();
+      } catch (e) { /* unsupported on older clients — CSS overlay handles it */ }
+
       // Initial insets + live updates as the layout changes.
       applySafeAreas();
       tg.onEvent?.("safeAreaChanged", applySafeAreas);
@@ -3061,20 +3280,44 @@
 
       const upPrice = getSidePrice(market.id, "UP");
       const downPrice = getSidePrice(market.id, "DOWN");
-      // Цена в центах ≈ вероятность по рынку — показываем в процентах
-      setText("upButtonPrice", upPrice + "%");
-      setText("downButtonPrice", downPrice + "%");
+      // Цена share показывается в центах
+      setText("upButtonPrice", cents(upPrice));
+      setText("downButtonPrice", cents(downPrice));
       renderSharesPreview();
 
       // Открытые позиции по этому рынку
+      const myPositions = state.positions.filter(p => p.marketId === market.id && p.status === "open");
       const posEl = document.getElementById("terminalPositions");
       if (posEl) {
-        const myPositions = state.positions.filter(p => p.marketId === market.id && p.status === "open");
         posEl.innerHTML = myPositions.length
-          ? `<div class="trm-pos-head"><span>Мои позиции</span><b>${myPositions.length}</b></div>` +
+          ? `<div class="trm-pos-head"><span>Мои позиции</span></div>` +
             myPositions.map(terminalPositionHtml).join("")
           : "";
       }
+
+      // Лимитные заявки по этому рынку
+      const limEl = document.getElementById("terminalLimitOrders");
+      if (limEl) {
+        const myLimits = (state.limitOrders || []).filter(o => o.marketId === market.id && o.status === "pending");
+        limEl.innerHTML = myLimits.length
+          ? `<div class="trm-pos-head"><span>Лимитные заявки</span></div>` +
+            myLimits.map(limitOrderHtml).join("")
+          : "";
+      }
+
+      // После истечения позиций — вместо Вверх/Вниз показываем «Вывести средства»
+      const hasExpiredOpen = myPositions.some(p => Date.now() >= p.expiresAt);
+      const upBtn = document.getElementById("terminalUpBtn");
+      const downBtn = document.getElementById("terminalDownBtn");
+      const cashoutBtn = document.getElementById("terminalCashout");
+      if (upBtn && downBtn && cashoutBtn) {
+        upBtn.style.display = hasExpiredOpen ? "none" : "";
+        downBtn.style.display = hasExpiredOpen ? "none" : "";
+        cashoutBtn.style.display = hasExpiredOpen ? "block" : "none";
+      }
+
+      // Подсветка активного типа ордера
+      syncGlider(document.getElementById("orderTypeSeg"), true);
 
       const rows = getOrderbook(market.id);
       const maxQty = Math.max(...rows.map(r => r.qty));
@@ -3102,17 +3345,38 @@
 
     function renderSharesPreview() {
       const amount = Number(document.getElementById("tradeAmount")?.value || 0);
-      const upPrice = getSidePrice(state.currentMarketId, "UP");
-      const downPrice = getSidePrice(state.currentMarketId, "DOWN");
+      let upPrice, downPrice;
+      if (orderType === "limit") {
+        // В лимитном режиме выплата считается по лимитной цене
+        const limit = clamp(Number(document.getElementById("limitPrice")?.value || 0), 1, 99);
+        upPrice = downPrice = limit;
+      } else {
+        upPrice = getSidePrice(state.currentMarketId, "UP");
+        downPrice = getSidePrice(state.currentMarketId, "DOWN");
+      }
       // Потенциальная выплата при выигрыше = ставка / (цена в центах / 100)
       const upPayout = amount > 0 ? amount / (upPrice / 100) : 0;
       const downPayout = amount > 0 ? amount / (downPrice / 100) : 0;
       setText("upButtonReturn", money(upPayout));
       setText("downButtonReturn", money(downPayout));
 
-      // Подсветка input при превышении баланса
+      // Подсветка input при превышении баланса или сумме меньше минимума ($1)
       const input = document.getElementById("tradeAmount");
-      if (input) input.parentElement.classList.toggle("invalid", amount > state.balance);
+      if (input) input.parentElement.classList.toggle("invalid", amount > state.balance || (amount > 0 && amount < 1));
+    }
+
+    function setOrderType(type, button) {
+      orderType = type;
+      const seg = document.getElementById("orderTypeSeg");
+      if (seg) {
+        seg.querySelectorAll(".seg").forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+        syncGlider(seg);
+      }
+      const wrap = document.getElementById("limitPriceWrap");
+      if (wrap) wrap.style.display = type === "limit" ? "grid" : "none";
+      renderSharesPreview();
+      haptic("selection");
     }
 
     function setTradeAmount(value) {
@@ -3143,10 +3407,9 @@
 
     function placeOrder(side) {
       const market = getMarket(state.currentMarketId);
-      const ms = getMarketState(market.id);
       const amount = Number(document.getElementById("tradeAmount").value || 0);
-      if (!amount || amount <= 0) {
-        showToast("Проверьте сумму", "Введите сумму сделки больше нуля.");
+      if (!amount || amount < 1) {
+        showToast("Проверьте сумму", "Минимальная сумма сделки — $1.");
         return;
       }
       if (amount > state.balance) {
@@ -3154,6 +3417,74 @@
         return;
       }
 
+      let price;
+      if (orderType === "limit") {
+        price = clamp(Math.round(Number(document.getElementById("limitPrice")?.value || 0)), 1, 99);
+        if (!price) {
+          showToast("Проверьте цену", "Укажите лимитную цену от 1¢ до 99¢.");
+          return;
+        }
+      } else {
+        price = getSidePrice(market.id, side);
+      }
+
+      // Сначала показываем подтверждение, а исполняем после нажатия «Подтвердить»
+      pendingOrder = { side, amount };
+      showOrderConfirm(market, side, amount, price);
+    }
+
+    function showOrderConfirm(market, side, amount, price) {
+      const dir = side === "UP" ? "Вверх" : "Вниз";
+      const dirColor = side === "UP" ? "var(--green)" : "var(--red)";
+      const typeLabel = orderType === "limit" ? "Лимитный" : "Маркет";
+      const payout = amount / (price / 100);
+      const row = (label, value, color) =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);">` +
+        `<span style="color:var(--muted);font-weight:800;">${label}</span>` +
+        `<strong style="font-weight:950;${color ? `color:${color};` : ""}">${value}</strong></div>`;
+      document.getElementById("modalTitle").textContent = "Подтверждение сделки";
+      document.getElementById("modalText").innerHTML =
+        `<div style="text-align:left;">` +
+        row("Рынок", `${market.asset} · ${market.expiry}`) +
+        row("Направление", dir, dirColor) +
+        row("Тип ордера", typeLabel) +
+        row(orderType === "limit" ? "Лимитная цена" : "Цена за share", cents(price)) +
+        row("Сумма", money(amount)) +
+        `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0 0;">` +
+        `<span style="color:var(--muted);font-weight:800;">Потенциальная выплата</span>` +
+        `<strong style="font-weight:950;color:var(--green);">${money(payout)}</strong></div>` +
+        `</div>`;
+      document.getElementById("modalActions").innerHTML =
+        `<button class="ghost" type="button" onclick="cancelOrder()">Отмена</button>` +
+        `<button class="primary" type="button" onclick="confirmOrder()">Подтвердить</button>`;
+      showModal();
+      haptic("selection");
+    }
+
+    function cancelOrder() {
+      pendingOrder = null;
+      closeModal();
+    }
+
+    function confirmOrder() {
+      closeModal();
+      if (!pendingOrder) return;
+      const { side, amount } = pendingOrder;
+      pendingOrder = null;
+      if (amount > state.balance) {
+        showToast("Недостаточно средств", "В демо-балансе нет такой суммы.");
+        return;
+      }
+      if (orderType === "limit") {
+        placeLimitOrder(side, amount);
+        return;
+      }
+      executeMarketOrder(side, amount);
+    }
+
+    function executeMarketOrder(side, amount) {
+      const market = getMarket(state.currentMarketId);
+      const ms = getMarketState(market.id);
       const priceCents = getSidePrice(market.id, side);
       const shares = amount / (priceCents / 100);
       const now = Date.now();
@@ -3189,6 +3520,250 @@
       saveState();
       renderAll();
       showToast("Демо-заявка создана", `${market.asset} ${market.expiry} · ${side === "UP" ? "Вверх" : "Вниз"} · ${cents(priceCents)} за share · ${money(amount)}.`);
+      haptic("success");
+    }
+
+    // === Лимитные ордера ===
+    function placeLimitOrder(side, amount) {
+      const market = getMarket(state.currentMarketId);
+      const limitPrice = clamp(Math.round(Number(document.getElementById("limitPrice")?.value || 0)), 1, 99);
+      if (!limitPrice) {
+        showToast("Проверьте цену", "Укажите лимитную цену от 1¢ до 99¢.");
+        return;
+      }
+      const now = Date.now();
+      const order = {
+        id: "lim_" + now,
+        marketId: market.id,
+        asset: market.asset,
+        expiry: market.expiry,
+        side,
+        amount,
+        limitPrice,
+        createdAt: now,
+        status: "pending"
+      };
+      state.balance -= amount; // резервируем средства под заявку
+      state.limitOrders.unshift(order);
+      state.history.unshift({
+        id: "hist_" + now,
+        type: "LIMIT",
+        text: `Лимит ${side === "UP" ? "Вверх" : "Вниз"} · ${market.asset} ${market.expiry}`,
+        amount: -amount,
+        time: now,
+        meta: `${cents(limitPrice)} · резерв ${money(amount)}`
+      });
+      pushBalancePoint(true);
+      saveState();
+      renderAll();
+      showToast("Лимитная заявка создана", `${market.asset} · ${side === "UP" ? "Вверх" : "Вниз"} · лимит ${cents(limitPrice)} · ${money(amount)}.`);
+      haptic("success");
+    }
+
+    // Проверка лимитных заявок: исполняем при цене ≤ лимита, возвращаем средства при закрытии рынка
+    function processLimitOrders() {
+      if (!state.limitOrders || !state.limitOrders.length) return false;
+      let changed = false;
+      state.limitOrders.forEach(o => {
+        if (o.status !== "pending") return;
+        const market = getMarket(o.marketId);
+        const ms = getMarketState(o.marketId);
+        updateMockPrice(o.marketId);
+        const remaining = ms.openedAt + market.minutes * 60000 - Date.now();
+        if (remaining <= 0) {
+          // Рынок закрылся раньше исполнения — возвращаем резерв
+          o.status = "cancelled";
+          state.balance += o.amount;
+          state.history.unshift({
+            id: "hist_" + Date.now() + Math.random(),
+            type: "LIMIT_CANCEL",
+            text: `Лимит истёк · ${o.asset} ${o.expiry}`,
+            amount: o.amount,
+            time: Date.now(),
+            meta: `возврат ${money(o.amount)}`
+          });
+          changed = true;
+          return;
+        }
+        const curPrice = getSidePrice(o.marketId, o.side);
+        if (curPrice <= o.limitPrice) {
+          // Исполнение лимитной заявки
+          const shares = o.amount / (o.limitPrice / 100);
+          const now = Date.now();
+          state.positions.unshift({
+            id: "pos_" + now + Math.floor(Math.random() * 1000),
+            marketId: o.marketId,
+            asset: o.asset,
+            expiry: o.expiry,
+            side: o.side,
+            amount: o.amount,
+            sharePrice: o.limitPrice,
+            shares,
+            openAssetPrice: ms.currentPrice,
+            openedAt: now,
+            expiresAt: ms.openedAt + market.minutes * 60000,
+            status: "open"
+          });
+          o.status = "filled";
+          state.history.unshift({
+            id: "hist_" + now + Math.random(),
+            type: "BUY",
+            text: `Лимит исполнен · ${o.side === "UP" ? "Вверх" : "Вниз"} · ${o.asset}`,
+            amount: 0,
+            time: now,
+            meta: `${cents(o.limitPrice)} · ${shares.toFixed(2)} shares`
+          });
+          changed = true;
+        }
+      });
+      if (changed) {
+        state.limitOrders = state.limitOrders.filter(o => o.status === "pending");
+        pushBalancePoint(true);
+        saveState();
+      }
+      return changed;
+    }
+
+    function cancelLimitOrder(id) {
+      const o = (state.limitOrders || []).find(x => x.id === id);
+      if (!o || o.status !== "pending") return;
+      o.status = "cancelled";
+      state.balance += o.amount;
+      state.history.unshift({
+        id: "hist_" + Date.now(),
+        type: "LIMIT_CANCEL",
+        text: `Отмена лимита · ${o.asset} ${o.expiry}`,
+        amount: o.amount,
+        time: Date.now(),
+        meta: `возврат ${money(o.amount)}`
+      });
+      state.limitOrders = state.limitOrders.filter(x => x.status === "pending");
+      pushBalancePoint(true);
+      saveState();
+      renderAll();
+      showToast("Лимит отменён", "Зарезервированные средства возвращены.");
+      haptic("selection");
+    }
+
+    // Модалка подтверждения закрытия/вывода с предпросмотром текущего результата
+    function showCloseConfirm(positions, mode) {
+      // mode: 'close' (досрочно) | 'cashout' (после истечения)
+      const row = (label, value, color) =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);">` +
+        `<span style="color:var(--muted);font-weight:800;">${label}</span>` +
+        `<strong style="font-weight:950;${color ? `color:${color};` : ""}">${value}</strong></div>`;
+
+      // Показываем потенциальную доходность при выигрыше — фактический
+      // результат не раскрываем до закрытия позиции.
+      const potentialPayout = positions.reduce((sum, p) => sum + p.shares, 0);
+      const totalStake = positions.reduce((sum, p) => sum + p.amount, 0);
+      const yieldProfit = potentialPayout - totalStake;
+      const yieldPct = totalStake > 0 ? (yieldProfit / totalStake) * 100 : 0;
+      const yieldSign = yieldProfit >= 0 ? "+" : "";
+      const yieldText = `${yieldSign}${money(yieldProfit)} · ${yieldSign}${yieldPct.toFixed(1)}%`;
+
+      let rows;
+      if (positions.length === 1) {
+        const p = positions[0];
+        const dir = p.side === "UP" ? "Вверх" : "Вниз";
+        const dirColor = p.side === "UP" ? "var(--green)" : "var(--red)";
+        rows =
+          row("Рынок", `${p.asset} · ${p.expiry}`) +
+          row("Направление", dir, dirColor) +
+          row("Ставка", money(p.amount)) +
+          row("Доходность", yieldText, "var(--green)");
+      } else {
+        rows =
+          row("Позиций к закрытию", String(positions.length)) +
+          row("Доходность", yieldText, "var(--green)");
+      }
+
+      document.getElementById("modalTitle").textContent = mode === "cashout" ? "Вывод средств" : "Закрытие позиции";
+      document.getElementById("modalText").innerHTML = `<div style="text-align:left;">` + rows + `</div>`;
+
+      const confirmCall = pendingCloseAction;
+      document.getElementById("modalActions").innerHTML =
+        `<button class="ghost" type="button" onclick="cancelClose()">Отмена</button>` +
+        `<button class="primary" type="button" onclick="${confirmCall}">${mode === "cashout" ? "Вывести" : "Закрыть"}</button>`;
+      showModal();
+      haptic("selection");
+    }
+
+    let pendingCloseAction = "";
+
+    function cancelClose() {
+      pendingCloseAction = "";
+      closeModal();
+    }
+
+    // Досрочное закрытие позиции (до истечения времени) — расчёт по текущему результату
+    function closePosition(id) {
+      const p = state.positions.find(x => x.id === id);
+      if (!p || p.status !== "open") return;
+      pendingCloseAction = `doClosePosition('${id}')`;
+      showCloseConfirm([p], "close");
+    }
+
+    function doClosePosition(id) {
+      pendingCloseAction = "";
+      closeModal();
+      const p = state.positions.find(x => x.id === id);
+      if (!p || p.status !== "open") return;
+      settlePosition(p);
+      pushBalancePoint(true);
+      saveState();
+      renderAll();
+      const res = p.status === "won" ? `Выигрыш ${money(p.payout)} зачислен на баланс.` : "Позиция закрыта без выплаты.";
+      showToast("Позиция закрыта", res);
+      haptic(p.status === "won" ? "success" : "error");
+    }
+
+    // === Вывод средств по истёкшим позициям ===
+    function cashOutPosition(id) {
+      const p = state.positions.find(x => x.id === id);
+      if (!p || p.status !== "open") return;
+      if (Date.now() < p.expiresAt) {
+        showToast("Ещё рано", "Дождитесь закрытия рынка по этой позиции.");
+        return;
+      }
+      pendingCloseAction = `doCashOutPosition('${id}')`;
+      showCloseConfirm([p], "cashout");
+    }
+
+    function doCashOutPosition(id) {
+      pendingCloseAction = "";
+      closeModal();
+      const p = state.positions.find(x => x.id === id);
+      if (!p || p.status !== "open") return;
+      settlePosition(p);
+      pushBalancePoint(true);
+      saveState();
+      renderAll();
+      const res = p.status === "won" ? `Выигрыш ${money(p.payout)} зачислен на баланс.` : "Позиция закрыта без выплаты.";
+      showToast("Средства выведены", res);
+      haptic(p.status === "won" ? "success" : "error");
+    }
+
+    function cashOutMarket() {
+      const market = getMarket(state.currentMarketId);
+      const open = state.positions.filter(p => p.marketId === market.id && p.status === "open" && Date.now() >= p.expiresAt);
+      if (!open.length) return;
+      pendingCloseAction = "doCashOutMarket()";
+      showCloseConfirm(open, "cashout");
+    }
+
+    function doCashOutMarket() {
+      pendingCloseAction = "";
+      closeModal();
+      const market = getMarket(state.currentMarketId);
+      const open = state.positions.filter(p => p.marketId === market.id && p.status === "open" && Date.now() >= p.expiresAt);
+      if (!open.length) return;
+      open.forEach(settlePosition);
+      pushBalancePoint(true);
+      saveState();
+      renderAll();
+      const total = open.reduce((sum, p) => sum + (p.payout || 0), 0);
+      showToast("Средства выведены", `Закрыто позиций: ${open.length}. Зачислено ${money(total)}.`);
       haptic("success");
     }
 
@@ -3571,18 +4146,60 @@
     function terminalPositionHtml(p) {
       const dir = p.side === "UP" ? "Вверх" : "Вниз";
       const sideClass = p.side === "UP" ? "up" : "down";
-      const expiry = new Date(p.expiresAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: getTimezoneValue(state.timezone) });
+      // Текущая доходность в данный момент (если рынок закрыть сейчас)
+      const ms = getMarketState(p.marketId);
+      const winningNow = (p.side === "UP" && ms.currentPrice >= p.openAssetPrice) || (p.side === "DOWN" && ms.currentPrice < p.openAssetPrice);
+      const curValue = winningNow ? p.shares : 0;
+      const pnl = curValue - p.amount;
+      const pct = p.amount > 0 ? (pnl / p.amount) * 100 : 0;
+      const pnlClass = pnl >= 0 ? "up" : "down";
+      const sign = pnl >= 0 ? "+" : "";
+      const expired = Date.now() >= p.expiresAt;
+      const cashoutBtn = expired
+        ? `<button class="trm-pos-cashout" type="button" onclick="event.stopPropagation(); cashOutPosition('${p.id}')">Вывести средства</button>`
+        : `<button class="trm-pos-close" type="button" onclick="event.stopPropagation(); closePosition('${p.id}')">Закрыть позицию</button>`;
       return `
         <div class="trm-pos" onclick="go('portfolio')">
-          <span class="trm-pos-side ${sideClass}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${p.side === "UP" ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>'}</svg>
-            ${dir}
-          </span>
-          <div class="trm-pos-main">
-            <strong>${money(p.amount)}</strong>
-            <span>выплата ${money(p.shares)} · до ${expiry}</span>
+          <div class="trm-pos-top">
+            <span class="trm-pos-side ${sideClass}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${p.side === "UP" ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>'}</svg>
+              ${dir}
+            </span>
+            <div class="trm-pos-main">
+              <strong>${money(p.amount)}</strong>
+              <span>Ставка</span>
+            </div>
+            <div class="trm-pos-right">
+              <strong class="trm-pos-payout">${money(p.shares)}</strong>
+              <span class="trm-pos-payout-label">выплата</span>
+            </div>
           </div>
-          <span class="trm-pos-pct">${cents(p.sharePrice)}</span>
+          <div class="trm-pos-foot">
+            <div class="trm-pos-stat"><span>Shares</span><strong>${p.shares.toFixed(2)}</strong></div>
+            <div class="trm-pos-stat"><span>Ср. цена</span><strong>${cents(p.sharePrice)}</strong></div>
+            <div class="trm-pos-stat"><span>Доходность</span><strong class="${pnlClass}">${sign}${pct.toFixed(1)}%</strong></div>
+          </div>
+          ${cashoutBtn}
+        </div>`;
+    }
+
+    function limitOrderHtml(o) {
+      const dir = o.side === "UP" ? "Вверх" : "Вниз";
+      const sideClass = o.side === "UP" ? "up" : "down";
+      const shares = o.amount / (o.limitPrice / 100);
+      return `
+        <div class="trm-pos">
+          <div class="trm-pos-top">
+            <span class="trm-pos-side ${sideClass}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${o.side === "UP" ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>'}</svg>
+              ${dir}
+            </span>
+            <div class="trm-pos-main">
+              <strong>${money(o.amount)}</strong>
+              <span>лимит ${cents(o.limitPrice)} · ${shares.toFixed(2)} shares</span>
+            </div>
+            <button class="trm-pos-cancel" type="button" onclick="cancelLimitOrder('${o.id}')">Отмена</button>
+          </div>
         </div>`;
     }
 
@@ -3591,6 +4208,10 @@
       const direction = p.side === "UP" ? "Вверх" : "Вниз";
       const statusClass = p.status === "open" ? "mini-badge" : (p.status === "won" ? "mini-badge up" : "mini-badge down");
       const statusText = p.status === "open" ? "Открыта" : (p.status === "won" ? "Win" : "Loss");
+      const expired = Date.now() >= p.expiresAt;
+      const closeBtn = p.status === "open"
+        ? `<button class="position-close-btn ${expired ? "expired" : ""}" type="button" onclick="${expired ? "cashOutPosition" : "closePosition"}('${p.id}')">${expired ? "Вывести средства" : "Закрыть позицию"}</button>`
+        : "";
       return `
         <article class="card position">
           <div class="position-head">
@@ -3610,6 +4231,7 @@
             <div class="meta-cell"><span>Открытие</span><strong>${p.openAssetPrice > 100 ? money(p.openAssetPrice) : "$" + p.openAssetPrice.toFixed(3)}</strong></div>
             <div class="meta-cell"><span>Экспирация</span><strong>${new Date(p.expiresAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: getTimezoneValue(state.timezone) })}</strong></div>
           </div>
+          ${closeBtn}
         </article>`;
     }
 
@@ -3624,6 +4246,8 @@
       if (item.type === "WITHDRAW") { icon = "📤"; iconBg = "rgba(239, 68, 68, 0.1)"; }
       if (item.type === "WIN") { icon = "📈"; iconBg = "rgba(23, 178, 106, 0.1)"; }
       if (item.type === "LOSS") { icon = "📉"; iconBg = "rgba(239, 68, 68, 0.1)"; }
+      if (item.type === "LIMIT") { icon = "⏳"; iconBg = "rgba(34, 158, 217, 0.1)"; }
+      if (item.type === "LIMIT_CANCEL") { icon = "↩️"; iconBg = "var(--surface-2)"; }
 
       return `
         <article class="card history-row">
@@ -3880,14 +4504,27 @@
       if (state.themeMode === "system") applyTheme();
     });
 
+    // Best-effort блокировка ориентации в портрет (браузер / PWA).
+    // В Telegram основную работу делает tg.lockOrientation(); в обычном
+    // вебвью этот вызов часто недоступен — тогда срабатывает CSS-оверлей.
+    function lockPortraitOrientation() {
+      try {
+        screen.orientation?.lock?.("portrait").catch(() => {});
+      } catch (e) { /* unsupported — CSS overlay handles it */ }
+    }
+
     document.body.dataset.screen = "home";
     initTelegram();
+    lockPortraitOrientation();
     applyTheme();
     initChartScrubbing();
     renderAll();
     setInterval(() => {
+      const changed = processLimitOrders();
       if (document.getElementById("screen-terminal").classList.contains("active")) {
         renderTerminal();
+      } else if (changed) {
+        renderAll();
       }
     }, 1000);
   </script>
