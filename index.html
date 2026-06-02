@@ -34,6 +34,7 @@
       --radius-sm: 12px;
       --tap: 48px;
       --nav-height: 82px;
+      letter-spacing: 0.015em;
       /* Safe-area / Telegram fullscreen insets.
          Fallback to CSS env(); overridden from JS with Telegram's
          safeAreaInset / contentSafeAreaInset when running in a Mini App. */
@@ -172,7 +173,7 @@
       margin: 0;
       font-size: 18px;
       line-height: 1.05;
-      letter-spacing: -.04em;
+      letter-spacing: normal;
     }
     .brand span {
       display: block;
@@ -322,7 +323,7 @@
       max-width: 330px;
       font-size: clamp(29px, 8.2vw, 34px);
       line-height: .98;
-      letter-spacing: -.065em;
+      letter-spacing: normal;
     }
     .hero p {
       margin: 0;
@@ -348,7 +349,7 @@
       padding: 0 14px;
       border-radius: var(--radius-sm);
       font-weight: 900;
-      letter-spacing: -.015em;
+      letter-spacing: normal;
       transition: transform .14s ease, box-shadow .14s ease, opacity .14s ease;
     }
     .primary { background: var(--tg-blue); color: #fff; box-shadow: 0 12px 24px rgba(34,158,217,.24); }
@@ -374,7 +375,7 @@
     }
     .stat { min-height: 104px; display: flex; flex-direction: column; justify-content: space-between; }
     .stat .label { color: var(--muted); font-size: 12px; font-weight: 760; margin-bottom: 8px; }
-    .stat .value { font-size: 23px; font-weight: 950; line-height: 1; letter-spacing: -.055em; transition: opacity 0.24s ease, filter 0.24s ease; }
+    .stat .value { font-size: 23px; font-weight: 950; line-height: 1; letter-spacing: normal; transition: opacity 0.24s ease, filter 0.24s ease; }
     .stat .delta { margin-top: 7px; font-size: 12px; font-weight: 850; line-height: 1.2; transition: opacity 0.24s ease, filter 0.24s ease; }
     .up { color: var(--green); }
     .down { color: var(--red); }
@@ -391,7 +392,7 @@
       margin: 0;
       font-size: 19px;
       line-height: 1.1;
-      letter-spacing: -.04em;
+      letter-spacing: normal;
     }
     .section-title span, .section-title a {
       color: var(--muted);
@@ -439,7 +440,7 @@
       margin: 0;
       font-size: 15px;
       line-height: 1.15;
-      letter-spacing: -.025em;
+      letter-spacing: normal;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -459,7 +460,7 @@
       text-align: right;
       align-self: center;
     }
-    .quote strong { display: block; font-size: 15px; line-height: 1.15; letter-spacing: -.03em; }
+    .quote strong { display: block; font-size: 15px; line-height: 1.15; letter-spacing: normal; }
     .quote span { display: block; margin-top: 4px; font-size: 12px; font-weight: 900; }
 
     .badge-row { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
@@ -557,7 +558,7 @@
       font-weight: 900;
     }
     .terminal-title { text-align: right; min-width: 0; }
-    .terminal-title strong { display: block; font-size: 18px; line-height: 1.1; letter-spacing: -.04em; }
+    .terminal-title strong { display: block; font-size: 18px; line-height: 1.1; letter-spacing: normal; }
     .terminal-title span { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 800; }
 
     .terminal-card {
@@ -595,7 +596,7 @@
       display: block;
       font-size: 14px;
       line-height: 1.1;
-      letter-spacing: -.03em;
+      letter-spacing: normal;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -703,7 +704,7 @@
       color: var(--text);
       padding: 0 13px;
       font-weight: 900;
-      letter-spacing: -.015em;
+      letter-spacing: normal;
     }
     /* Скрываем стрелочки (spin buttons) для input type="number" */
     .input::-webkit-outer-spin-button,
@@ -760,7 +761,7 @@
       display: grid;
       place-items: center;
       line-height: 1.08;
-      letter-spacing: -.02em;
+      letter-spacing: normal;
       transition: transform .14s ease;
     }
     .direction:active { transform: scale(.985); }
@@ -815,7 +816,7 @@
       margin: 9px 0 5px;
       font-size: 36px;
       line-height: .98;
-      letter-spacing: -.07em;
+      letter-spacing: normal;
       cursor: pointer;
       transition: opacity 0.24s ease, filter 0.24s ease, transform 0.1s ease;
       user-select: none;
@@ -948,7 +949,7 @@
       min-width: 0;
       font-size: 15px;
       line-height: 1.2;
-      letter-spacing: -.03em;
+      letter-spacing: normal;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -981,7 +982,7 @@
       min-width: 0;
       font-size: 12px;
       line-height: 1.15;
-      letter-spacing: -.02em;
+      letter-spacing: normal;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -997,7 +998,7 @@
       border: 1px solid var(--line);
       box-shadow: var(--shadow-soft);
     }
-    .setting-row h4 { margin: 0; font-size: 15px; line-height: 1.2; letter-spacing: -.025em; }
+    .setting-row h4 { margin: 0; font-size: 15px; line-height: 1.2; letter-spacing: normal; }
     .setting-row p { margin: -4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
     #ton-connect { min-height: 42px; display: flex; align-items: center; overflow: hidden; }
 
@@ -1141,7 +1142,7 @@
       from { transform: translateY(100%); }
       to { transform: translateY(0); }
     }
-    .sheet h3 { margin: 0 0 12px; font-size: 20px; line-height: 1.15; letter-spacing: -.045em; }
+    .sheet h3 { margin: 0 0 12px; font-size: 20px; line-height: 1.15; letter-spacing: normal; }
     .sheet p { margin: 0 0 20px; color: var(--muted); line-height: 1.45; font-size: 14px; }
     .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
 
@@ -1200,7 +1201,7 @@
       font-weight: 600;
       color: var(--text);
       word-break: break-all;
-      letter-spacing: -0.01em;
+      letter-spacing: normal;
     }
     .copy-icon {
       width: 32px;
@@ -1288,7 +1289,7 @@
       margin: 0 0 6px;
       font-size: 24px;
       font-weight: 950;
-      letter-spacing: -0.04em;
+      letter-spacing: normal;
       animation: success-text-in 0.6s 0.3s cubic-bezier(0.23, 1, 0.32, 1) both;
     }
     .success-info p {
@@ -1377,7 +1378,7 @@
       display: block;
       font-size: 16px;
       font-weight: 950;
-      letter-spacing: -.03em;
+      letter-spacing: normal;
       line-height: 1.1;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1428,7 +1429,7 @@
     .trm-hero-price {
       font-size: clamp(19px, 6.2vw, 25px);
       font-weight: 950;
-      letter-spacing: -.05em;
+      letter-spacing: normal;
       line-height: 1;
       font-variant-numeric: tabular-nums;
       overflow: hidden;
@@ -1442,7 +1443,7 @@
       margin-top: 7px;
       min-width: 0;
     }
-    .trm-change { flex: 0 0 auto; font-size: 13px; font-weight: 900; letter-spacing: -.01em; }
+    .trm-change { flex: 0 0 auto; font-size: 13px; font-weight: 900; letter-spacing: normal; }
     .trm-change.up { color: var(--green); }
     .trm-change.down { color: var(--red); }
     .trm-hero-sub #terminalAssetName {
@@ -1475,7 +1476,7 @@
       color: var(--red);
       font-size: clamp(17px, 5vw, 20px);
       font-weight: 950;
-      letter-spacing: -.04em;
+      letter-spacing: normal;
       font-variant-numeric: tabular-nums;
     }
 
@@ -1568,7 +1569,7 @@
       margin-top: 6px;
       font-size: clamp(15px, 4.6vw, 18px);
       font-weight: 950;
-      letter-spacing: -.04em;
+      letter-spacing: normal;
       font-variant-numeric: tabular-nums;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1623,7 +1624,7 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 950;
-      letter-spacing: -.01em;
+      letter-spacing: normal;
     }
     .trm-pos-side svg { width: 13px; height: 13px; }
     .trm-pos-side.up { color: var(--green); background: color-mix(in srgb, var(--green) 13%, transparent); }
@@ -1633,7 +1634,7 @@
       display: block;
       font-size: 15px;
       font-weight: 950;
-      letter-spacing: -.03em;
+      letter-spacing: normal;
       line-height: 1.1;
       font-variant-numeric: tabular-nums;
     }
@@ -1698,7 +1699,7 @@
       color: var(--text);
       font-size: clamp(18px, 5.4vw, 22px);
       font-weight: 950;
-      letter-spacing: -.03em;
+      letter-spacing: normal;
       padding: 0 8px;
       font-variant-numeric: tabular-nums;
     }
@@ -1745,7 +1746,7 @@
       min-height: 52px;
       padding: 0 16px;
     }
-    .trm-ob-head strong { font-size: 14px; font-weight: 950; letter-spacing: -.02em; }
+    .trm-ob-head strong { font-size: 14px; font-weight: 950; letter-spacing: normal; }
     .trm-ob-head em {
       flex: 1;
       color: var(--muted-2);
@@ -1824,7 +1825,7 @@
       background: rgba(255, 255, 255, .2);
     }
     .trm-dir-ico svg { width: 15px; height: 15px; }
-    .trm-dir-name { font-size: clamp(14px, 4.2vw, 16px); font-weight: 950; letter-spacing: -.02em; }
+    .trm-dir-name { font-size: clamp(14px, 4.2vw, 16px); font-weight: 950; letter-spacing: normal; }
     .trm-dir-pct {
       flex: 0 0 auto;
       margin-left: auto;
@@ -2387,7 +2388,34 @@
       try {
         const raw = localStorage.getItem(storageKey);
         if (!raw) return defaultState();
-        return { ...defaultState(), ...JSON.parse(raw) };
+        const loaded = { ...defaultState(), ...JSON.parse(raw) };
+
+        // Fill gaps in balance history while app was closed
+        const history = loaded.balanceHistory;
+        if (history && history.length > 0) {
+          const lastPoint = history[history.length - 1];
+          const now = Date.now();
+          const oneDay = 86400000;
+
+          // If last update was more than a day ago, add a point for each day missed
+          let t = lastPoint.t + oneDay;
+          while (t < now - 3600000) { // Keep 1 hour buffer
+            history.push({ t: t, value: lastPoint.value });
+            t += oneDay;
+          }
+
+          // Always add current point if last one is old
+          if (now - lastPoint.t > 3600000) {
+            history.push({ t: now, value: loaded.balance - loaded.initialBalance });
+          }
+
+          // Keep only last 1000 points to prevent storage bloat
+          if (history.length > 1000) {
+            loaded.balanceHistory = history.slice(-1000);
+          }
+        }
+
+        return loaded;
       } catch (error) {
         return defaultState();
       }
