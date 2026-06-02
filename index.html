@@ -107,6 +107,14 @@
       height: 100dvh;
     }
 
+    /* Когда открыта экранная клавиатура (фокус в поле ввода) — не даём
+       прилипшим к низу элементам «выезжать» вверх над клавиатурой. */
+    body.kb-open .bottom-nav { display: none; }
+    body.kb-open .trm-actions {
+      position: static;
+      bottom: auto;
+    }
+
     /* Блокировка горизонтальной ориентации */
     .orientation-lock {
       position: fixed;
@@ -1508,7 +1516,7 @@
       padding: 8px clamp(8px, 2.6vw, 12px);
       border-radius: var(--radius-sm);
       background: var(--surface-soft);
-      border: 1px solid var(--line);
+      border: 0;
     }
     .trm-timer span {
       display: block;
@@ -1661,7 +1669,6 @@
       box-shadow: var(--shadow-soft);
       transition: transform .1s ease;
     }
-    .trm-pos:active { transform: scale(.985); }
     .trm-pos-top {
       display: flex;
       align-items: center;
@@ -1794,6 +1801,12 @@
       transition: transform .12s ease, background .15s ease;
     }
     .trm-pos-close:active { transform: scale(.98); background: var(--surface); }
+    /* Ожидающая лимитная заявка — пунктирная синяя рамка для отличия от позиций */
+    .trm-pos-limit {
+      border-style: dashed;
+      border-color: color-mix(in srgb, var(--tg-blue) 40%, var(--line));
+      background: color-mix(in srgb, var(--tg-blue) 5%, var(--surface));
+    }
     /* Кнопка отмены лимитной заявки */
     .trm-pos-cancel {
       flex: 0 0 auto;
@@ -2023,8 +2036,93 @@
       transition: transform .12s ease, opacity .12s ease;
     }
     .trm-dir-cashout:active { transform: scale(.97); opacity: .92; }
-    /* Поле лимитной цены */
-    .trm-limit-price { display: grid; gap: 8px; }
+    /* Кнопка «Создать лимит» */
+    .trm-dir-submit {
+      grid-column: 1 / -1;
+      min-height: 56px;
+      border-radius: var(--radius);
+      background: var(--tg-blue);
+      color: #fff;
+      font-size: clamp(15px, 4.4vw, 17px);
+      font-weight: 950;
+      letter-spacing: normal;
+      box-shadow: none;
+      transition: transform .12s ease, opacity .12s ease;
+    }
+    .trm-dir-submit:active { transform: scale(.97); opacity: .92; }
+    /* Панель лимитного ордера */
+    .trm-limit-panel { display: grid; gap: 9px; }
+    #limitSideSeg .seg svg, #limitSideSeg .seg.active svg { fill: none; }
+    .trm-limit-stepper {
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      gap: 10px;
+      align-items: center;
+    }
+    .trm-step {
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1;
+      transition: transform .1s ease, background .15s ease;
+    }
+    .trm-step:active { transform: scale(.95); background: var(--surface); }
+    .trm-limit-val {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      line-height: 1;
+    }
+    .trm-limit-val b { font-size: 24px; font-weight: 950; line-height: 1; font-variant-numeric: tabular-nums; }
+    .trm-limit-val span { font-size: 16px; font-weight: 900; line-height: 1; color: var(--muted); }
+    .trm-limit-range {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      margin: 4px 0 2px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      outline: none;
+    }
+    .trm-limit-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--tg-blue);
+      border: 3px solid var(--surface);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+      cursor: pointer;
+    }
+    .trm-limit-range::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--tg-blue);
+      border: 3px solid var(--surface);
+      cursor: pointer;
+    }
+    .trm-limit-hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+      padding: 0 2px;
+    }
 
     @media (max-width: 480px) {
       :root {
@@ -2264,7 +2362,6 @@
             <div class="trm-hero-price" id="terminalPrice">$0.00</div>
             <div class="trm-hero-sub">
               <span id="terminalChange" class="trm-change up">+0.00%</span>
-              <span id="terminalAssetName">BTC/USD</span>
             </div>
           </div>
           <div class="trm-timer" aria-label="До закрытия">
@@ -2305,9 +2402,6 @@
         <!-- Мои позиции по рынку -->
         <section class="trm-positions" id="terminalPositions"></section>
 
-        <!-- Лимитные заявки по рынку -->
-        <section class="trm-positions" id="terminalLimitOrders"></section>
-
         <!-- Сумма -->
         <section class="trm-amount">
           <div class="trm-amount-head">
@@ -2331,16 +2425,22 @@
             <button class="seg active" type="button" onclick="setOrderType('market', this)">Маркет</button>
             <button class="seg" type="button" onclick="setOrderType('limit', this)">Лимит</button>
           </div>
-          <!-- Лимитная цена (только для лимитного ордера) -->
-          <div class="trm-limit-price" id="limitPriceWrap" style="display:none;">
-            <div class="trm-amount-head">
-              <label for="limitPrice">Лимитная цена за share</label>
-              <span class="trm-available">исполнится при цене ≤ лимита</span>
+          <!-- Лимитный ордер: направление + цена + одна кнопка создания -->
+          <div class="trm-limit-panel" id="limitPriceWrap" style="display:none;">
+            <div class="trm-amount-head"><label>Направление лимита</label></div>
+            <div class="segmented two" id="limitSideSeg">
+              <div class="seg-glider"></div>
+              <button class="seg active" type="button" onclick="setLimitSide('UP', this)"><span class="seg-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span> Вверх</button>
+              <button class="seg" type="button" onclick="setLimitSide('DOWN', this)"><span class="seg-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span> Вниз</button>
             </div>
-            <div class="trm-amount-input">
-              <input id="limitPrice" inputmode="decimal" value="50" oninput="renderSharesPreview()" aria-label="Лимитная цена" />
-              <span class="trm-cur">¢</span>
+            <div class="trm-amount-head"><label>Лимитная цена за share</label></div>
+            <div class="trm-limit-stepper">
+              <button type="button" class="trm-step" onclick="stepLimit(-1)" aria-label="Меньше">−</button>
+              <div class="trm-limit-val"><b id="limitPriceVal">45</b><span>¢</span></div>
+              <button type="button" class="trm-step" onclick="stepLimit(1)" aria-label="Больше">+</button>
             </div>
+            <input type="range" id="limitPrice" class="trm-limit-range" min="1" max="99" value="45" oninput="onLimitInput()" aria-label="Лимитная цена" />
+            <div class="trm-limit-hint" id="limitHint">Сработает, когда цена «Вверх» опустится до 45¢.</div>
           </div>
         </section>
 
@@ -2356,6 +2456,9 @@
             <div id="orderbookRows"></div>
           </div>
         </div>
+
+        <!-- Лимитные заявки по рынку -->
+        <section class="trm-positions" id="terminalLimitOrders"></section>
 
         <!-- Кнопки направления -->
         <div class="trm-actions">
@@ -2376,6 +2479,7 @@
             <span class="trm-dir-payout">Выплата <b id="downButtonReturn">$0.00</b></span>
           </button>
           <button class="trm-dir-cashout" type="button" id="terminalCashout" onclick="cashOutMarket()" style="display:none;">Вывести средства</button>
+          <button class="trm-dir-submit" type="button" id="terminalLimitSubmit" onclick="submitLimitOrder()" style="display:none;">Создать лимит</button>
         </div>
       </section>
     </section>
@@ -2503,7 +2607,7 @@
         </svg>
         Главная
       </button>
-      <button class="nav-item" type="button" data-nav="markets" onclick="go('markets')">
+      <button class="nav-item" type="button" data-nav="markets" onclick="goMarkets()">
         <svg viewBox="0 0 24 24">
           <path d="M3 20h18" />
           <path d="M18 7l-7.5 7.5-3-3L3 16" />
@@ -2577,6 +2681,7 @@
       demoWalletActive: false,
       balanceRange: "all",
       portfolioTab: "positions",
+      lastMarketScreen: "markets",
       balanceHidden: false,
       timezone: "GMT+3"
     });
@@ -2584,6 +2689,8 @@
     let state = loadState();
     // Тип ордера в терминале: 'market' | 'limit' (только UI-состояние, не сохраняется)
     let orderType = "market";
+    // Направление лимитной заявки, выбранное внутри панели: 'UP' | 'DOWN'
+    let limitSide = "UP";
     // Отложенное намерение по сделке, ожидающее подтверждения в модалке
     let pendingOrder = null;
 
@@ -2999,6 +3106,12 @@
 
     function go(screen) {
       const isFirstLoad = !document.body.dataset.screen;
+      // Запоминаем последнее под-состояние вкладки «Рынки» (список или терминал),
+      // чтобы при возврате на вкладку восстановить его.
+      if (screen === "markets" || screen === "terminal") {
+        state.lastMarketScreen = screen;
+        saveState();
+      }
       document.body.dataset.screen = screen;
       document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
       document.getElementById("screen-" + screen).classList.add("active");
@@ -3011,6 +3124,16 @@
         document.querySelectorAll('.segmented').forEach(c => syncGlider(c, true));
       }, 0);
       haptic("selection");
+    }
+
+    // Переход на вкладку «Рынки» с восстановлением последнего под-состояния
+    // (списка рынков или открытого терминала по паре).
+    function goMarkets() {
+      if (state.lastMarketScreen === "terminal" && state.currentMarketId) {
+        go("terminal");
+      } else {
+        go("markets");
+      }
     }
 
     function goFavorites() {
@@ -3305,19 +3428,13 @@
           : "";
       }
 
-      // После истечения позиций — вместо Вверх/Вниз показываем «Вывести средства»
-      const hasExpiredOpen = myPositions.some(p => Date.now() >= p.expiresAt);
-      const upBtn = document.getElementById("terminalUpBtn");
-      const downBtn = document.getElementById("terminalDownBtn");
-      const cashoutBtn = document.getElementById("terminalCashout");
-      if (upBtn && downBtn && cashoutBtn) {
-        upBtn.style.display = hasExpiredOpen ? "none" : "";
-        downBtn.style.display = hasExpiredOpen ? "none" : "";
-        cashoutBtn.style.display = hasExpiredOpen ? "block" : "none";
-      }
+      // Кнопки действий (вывод / лимит / Вверх-Вниз) + подсказка лимита
+      updateTerminalActions();
+      updateLimitHint();
 
-      // Подсветка активного типа ордера
+      // Подсветка активного типа ордера и направления лимита
       syncGlider(document.getElementById("orderTypeSeg"), true);
+      if (orderType === "limit") syncGlider(document.getElementById("limitSideSeg"), true);
 
       const rows = getOrderbook(market.id);
       const maxQty = Math.max(...rows.map(r => r.qty));
@@ -3344,7 +3461,9 @@
     }
 
     function renderSharesPreview() {
-      const amount = Number(document.getElementById("tradeAmount")?.value || 0);
+      const amountInput = document.getElementById("tradeAmount");
+      const rawAmount = (amountInput?.value ?? "").trim();
+      const amount = Number(rawAmount || 0);
       let upPrice, downPrice;
       if (orderType === "limit") {
         // В лимитном режиме выплата считается по лимитной цене
@@ -3360,9 +3479,10 @@
       setText("upButtonReturn", money(upPayout));
       setText("downButtonReturn", money(downPayout));
 
-      // Подсветка input при превышении баланса или сумме меньше минимума ($1)
-      const input = document.getElementById("tradeAmount");
-      if (input) input.parentElement.classList.toggle("invalid", amount > state.balance || (amount > 0 && amount < 1));
+      // Подсветка поля красным при некорректной сумме: пустое поле,
+      // нечисловое значение, меньше минимума ($1) или больше доступного баланса.
+      const invalidAmount = rawAmount === "" || !isFinite(amount) || amount < 1 || amount > state.balance;
+      if (amountInput) amountInput.parentElement.classList.toggle("invalid", invalidAmount);
     }
 
     function setOrderType(type, button) {
@@ -3373,16 +3493,94 @@
         button.classList.add("active");
         syncGlider(seg);
       }
-      const wrap = document.getElementById("limitPriceWrap");
-      if (wrap) wrap.style.display = type === "limit" ? "grid" : "none";
-      renderSharesPreview();
+      refreshOrderUI();
+      if (type === "limit") syncGlider(document.getElementById("limitSideSeg"), true);
       haptic("selection");
+    }
+
+    function setLimitSide(side, button) {
+      limitSide = side;
+      const seg = document.getElementById("limitSideSeg");
+      if (seg) {
+        seg.querySelectorAll(".seg").forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+        syncGlider(seg);
+      }
+      refreshOrderUI();
+      haptic("selection");
+    }
+
+    function stepLimit(delta) {
+      const range = document.getElementById("limitPrice");
+      if (!range) return;
+      range.value = clamp(Math.round(Number(range.value || 0)) + delta, 1, 99);
+      refreshOrderUI();
+      haptic("selection");
+    }
+
+    function onLimitInput() {
+      refreshOrderUI();
+    }
+
+    function submitLimitOrder() {
+      placeOrder(limitSide);
+    }
+
+    // Синхронизация панели лимита (число, подсказка, кнопки действий, превью)
+    function refreshOrderUI() {
+      const wrap = document.getElementById("limitPriceWrap");
+      if (wrap) wrap.style.display = orderType === "limit" ? "grid" : "none";
+      updateLimitHint();
+      updateTerminalActions();
+      renderSharesPreview();
+    }
+
+    function updateLimitHint() {
+      const range = document.getElementById("limitPrice");
+      const val = range ? clamp(Math.round(Number(range.value || 0)), 1, 99) : 45;
+      const valEl = document.getElementById("limitPriceVal");
+      if (valEl) valEl.textContent = val;
+      const cur = getSidePrice(state.currentMarketId, limitSide);
+      const sideLabel = limitSide === "UP" ? "«Вверх»" : "«Вниз»";
+      const hint = document.getElementById("limitHint");
+      if (hint) {
+        hint.textContent = cur <= val
+          ? `Сработает сразу: цена ${sideLabel} уже ${cur}¢ (≤ ${val}¢).`
+          : `Сработает, когда цена ${sideLabel} опустится с ${cur}¢ до ${val}¢.`;
+      }
+      const submitBtn = document.getElementById("terminalLimitSubmit");
+      if (submitBtn) submitBtn.textContent = `Создать лимит · ${limitSide === "UP" ? "Вверх" : "Вниз"} ${val}¢`;
+    }
+
+    // Переключение кнопок действий: вывод / лимит / Вверх-Вниз
+    function updateTerminalActions() {
+      const market = getMarket(state.currentMarketId);
+      const myPositions = state.positions.filter(p => p.marketId === market.id && p.status === "open");
+      const hasExpiredOpen = myPositions.some(p => Date.now() >= p.expiresAt);
+      const isLimit = orderType === "limit";
+      const upBtn = document.getElementById("terminalUpBtn");
+      const downBtn = document.getElementById("terminalDownBtn");
+      const cashoutBtn = document.getElementById("terminalCashout");
+      const limitBtn = document.getElementById("terminalLimitSubmit");
+      if (!upBtn || !downBtn || !cashoutBtn || !limitBtn) return;
+      cashoutBtn.style.display = hasExpiredOpen ? "block" : "none";
+      limitBtn.style.display = (!hasExpiredOpen && isLimit) ? "block" : "none";
+      const showDir = !hasExpiredOpen && !isLimit;
+      upBtn.style.display = showDir ? "" : "none";
+      downBtn.style.display = showDir ? "" : "none";
     }
 
     function setTradeAmount(value) {
       const input = document.getElementById("tradeAmount");
       if (!input) return;
-      input.value = value === "max" ? Math.floor(state.balance) : value;
+      if (value === "max") {
+        input.value = Math.floor(state.balance);
+      } else {
+        // Чипы прибавляют сумму к уже введённой, не превышая баланс
+        const current = Number(input.value || 0);
+        const next = current + value;
+        input.value = state.balance > 0 ? Math.min(next, Math.floor(state.balance)) : next;
+      }
       renderSharesPreview();
       haptic("selection");
     }
@@ -4159,7 +4357,7 @@
         ? `<button class="trm-pos-cashout" type="button" onclick="event.stopPropagation(); cashOutPosition('${p.id}')">Вывести средства</button>`
         : `<button class="trm-pos-close" type="button" onclick="event.stopPropagation(); closePosition('${p.id}')">Закрыть позицию</button>`;
       return `
-        <div class="trm-pos" onclick="go('portfolio')">
+        <div class="trm-pos">
           <div class="trm-pos-top">
             <span class="trm-pos-side ${sideClass}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${p.side === "UP" ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>'}</svg>
@@ -4188,7 +4386,7 @@
       const sideClass = o.side === "UP" ? "up" : "down";
       const shares = o.amount / (o.limitPrice / 100);
       return `
-        <div class="trm-pos">
+        <div class="trm-pos trm-pos-limit">
           <div class="trm-pos-top">
             <span class="trm-pos-side ${sideClass}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">${o.side === "UP" ? '<path d="M12 19V5M5 12l7-7 7 7"/>' : '<path d="M12 5v14M5 12l7 7 7-7"/>'}</svg>
@@ -4196,7 +4394,7 @@
             </span>
             <div class="trm-pos-main">
               <strong>${money(o.amount)}</strong>
-              <span>лимит ${cents(o.limitPrice)} · ${shares.toFixed(2)} shares</span>
+              <span>лимит ${cents(o.limitPrice)} · ${shares.toFixed(2)} shares · ожидает</span>
             </div>
             <button class="trm-pos-cancel" type="button" onclick="cancelLimitOrder('${o.id}')">Отмена</button>
           </div>
@@ -4498,6 +4696,16 @@
 
     document.addEventListener("input", event => {
       if (event.target.id === "tradeAmount") renderSharesPreview();
+    });
+
+    // Открытие экранной клавиатуры: помечаем body, чтобы низ интерфейса
+    // (нав-бар и липкие кнопки) не «выезжал» вверх над клавиатурой.
+    const isTextField = el => el && el.matches && el.matches('input:not([type=range]):not([type=checkbox]):not([type=radio]), textarea, [contenteditable=""], [contenteditable="true"]');
+    document.addEventListener("focusin", event => {
+      if (isTextField(event.target)) document.body.classList.add("kb-open");
+    });
+    document.addEventListener("focusout", event => {
+      if (isTextField(event.target)) document.body.classList.remove("kb-open");
     });
 
     window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
