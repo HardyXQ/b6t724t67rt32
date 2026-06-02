@@ -1515,9 +1515,10 @@
       text-align: center;
       padding: 8px clamp(8px, 2.6vw, 12px);
       border-radius: var(--radius-sm);
-      background: var(--surface-soft);
+      background: #2c3e50;
       border: 0;
     }
+    [data-theme="dark"] .trm-timer { background: #1b2733; }
     .trm-timer span {
       display: block;
       color: var(--muted);
@@ -3093,11 +3094,13 @@
       tg.onEvent?.("fullscreenChanged", applySafeAreas);
       tg.onEvent?.("viewportChanged", applySafeAreas);
 
-      // Disable double tap to zoom as a fail-safe
+      // Disable double tap to zoom as a fail-safe — но не мешаем быстрым
+      // повторным нажатиям по кнопкам/полям (иначе второй тап «съедается»).
       let lastTouchEnd = 0;
       document.addEventListener('touchend', (event) => {
         const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
+        const interactive = event.target.closest('button, a, input, textarea, select, [role="button"], [onclick]');
+        if (!interactive && now - lastTouchEnd <= 300) {
           event.preventDefault();
         }
         lastTouchEnd = now;
