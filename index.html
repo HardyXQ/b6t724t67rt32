@@ -1051,6 +1051,53 @@
       color: var(--green);
     }
 
+    /* Pull-to-refresh */
+    .ptr-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      pointer-events: none;
+      transform: translateY(-100%);
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), opacity 0.2s ease;
+      opacity: 0;
+    }
+    .ptr-indicator.pulling {
+      transition: none;
+      opacity: 1;
+    }
+    .ptr-indicator.refreshing {
+      transform: translateY(calc(var(--safe-top) + 10px));
+      opacity: 1;
+    }
+    .ptr-circle {
+      width: 32px;
+      height: 32px;
+      background: var(--surface);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 1px solid var(--line);
+      color: var(--tg-blue);
+    }
+    .ptr-circle svg {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.2s ease;
+    }
+    .ptr-indicator.refreshing .ptr-circle svg {
+      animation: ptr-rotate 0.8s linear infinite;
+    }
+    @keyframes ptr-rotate {
+      to { transform: rotate(360deg); }
+    }
+
     .modal {
       position: fixed;
       inset: 0;
@@ -1895,6 +1942,14 @@
 
 <body>
   <main class="app">
+    <div id="ptr" class="ptr-indicator">
+      <div class="ptr-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"></path>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+      </div>
+    </div>
     <header class="topbar">
       <div class="brand" onclick="go('home')">
         <div class="logo" aria-label="Opton">
@@ -2655,6 +2710,62 @@
       if (csa) set("--content-top", csa.top);
     }
 
+    let ptrY = 0;
+    let ptrPulling = false;
+    function initPTR() {
+      const ptr = document.getElementById('ptr');
+      const app = document.querySelector('.app');
+      if (!ptr || !app) return;
+      const threshold = 70;
+      const maxPull = 100;
+
+      document.addEventListener('touchstart', e => {
+        if (app.scrollTop > 5) return;
+        ptrY = e.touches[0].clientY;
+        ptrPulling = true;
+        ptr.style.transition = 'none';
+        ptr.classList.remove('refreshing');
+      }, { passive: true });
+
+      document.addEventListener('touchmove', e => {
+        if (!ptrPulling) return;
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - ptrY;
+        if (diff > 0 && app.scrollTop <= 0) {
+          if (e.cancelable) e.preventDefault();
+          const pull = Math.min(diff * 0.5, maxPull);
+          ptr.style.transform = `translateY(${pull - 60}px)`;
+          ptr.style.opacity = Math.min(pull / threshold, 1);
+          const rotate = (pull / threshold) * 360;
+          const svg = ptr.querySelector('.ptr-circle svg');
+          if (svg) svg.style.transform = `rotate(${rotate}deg)`;
+        } else {
+          ptrPulling = false;
+        }
+      }, { passive: false });
+
+      document.addEventListener('touchend', () => {
+        if (!ptrPulling) return;
+        ptrPulling = false;
+        ptr.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s';
+
+        const style = window.getComputedStyle(ptr);
+        const matrix = new WebKitCSSMatrix(style.transform);
+        const currentY = matrix.m42;
+
+        if (currentY > 0) {
+          ptr.classList.add('refreshing');
+          ptr.style.transform = `translateY(10px)`;
+          ptr.style.opacity = '1';
+          haptic("success");
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          ptr.style.transform = `translateY(-100%)`;
+          ptr.style.opacity = '0';
+        }
+      });
+    }
+
     function initTelegram() {
       if (!tg) return;
       tg.ready();
@@ -2726,7 +2837,7 @@
     }
 
     function filterMarkets(expiry, button) {
-      haptic("soft");
+      haptic("selection");
       state.filterExpiry = expiry;
       saveState();
       // syncMarketFilter is called inside renderMarkets(false)
@@ -3684,6 +3795,7 @@
 
     document.body.dataset.screen = "home";
     initTelegram();
+    initPTR();
     applyTheme();
     renderAll();
     setInterval(() => {
