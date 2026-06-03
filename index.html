@@ -114,6 +114,12 @@
       position: static;
       bottom: auto;
     }
+    /* Модалки при открытой клавиатуре крепим к верху, чтобы поле ввода
+       не уезжало за клавиатуру (по центру модалку перекрывало бы). */
+    body.kb-open .modal {
+      align-items: flex-start;
+      padding-top: calc(16px + var(--safe-top));
+    }
 
     /* Блокировка горизонтальной ориентации */
     .orientation-lock {
