@@ -174,14 +174,14 @@
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
     }
 
-    body.ptr-active .screen.active,
-    body.ptr-settling .screen.active,
-    body.ptr-refreshing .screen.active {
+    body.ptr-active .app,
+    body.ptr-settling .app,
+    body.ptr-refreshing .app {
       transform: translate3d(0, var(--ptr-pull, 0px), 0);
       will-change: transform;
     }
 
-    body.ptr-settling .screen.active {
+    body.ptr-settling .app {
       transition: transform .54s cubic-bezier(.18, .92, .2, 1);
     }
 
@@ -189,7 +189,7 @@
       position: fixed;
       top: calc(76px + var(--safe-top) + var(--content-top));
       left: 50%;
-      z-index: 35;
+      z-index: 80;
       width: 54px;
       height: 54px;
       display: grid;
@@ -4816,10 +4816,11 @@
 
       const rubber = distance => {
         const freeDistance = 120;
-        const freePull = distance * .72;
+        const t = Math.min(1, distance / freeDistance);
+        const easedStart = distance * (.52 + (.22 * (1 - Math.pow(1 - t, 2))));
         const easy = distance <= freeDistance
-          ? freePull
-          : (freeDistance * .72) + ((distance - freeDistance) * .34);
+          ? easedStart
+          : (freeDistance * .74) + ((distance - freeDistance) * .34);
         if (easy <= threshold) return easy;
         return threshold + Math.log1p(easy - threshold) * 20;
       };
@@ -4845,7 +4846,7 @@
         }
         if (raf) return;
         const tick = () => {
-          currentPull += (lastPull - currentPull) * .42;
+          currentPull += (lastPull - currentPull) * .34;
           if (Math.abs(lastPull - currentPull) < .35) currentPull = lastPull;
           applyPullFrame(currentPull);
           if (currentPull !== lastPull) {
