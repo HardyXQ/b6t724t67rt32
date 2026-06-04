@@ -191,8 +191,8 @@
       top: calc(76px + var(--safe-top) + var(--content-top));
       left: 50%;
       z-index: 35;
-      width: 46px;
-      height: 46px;
+      width: 54px;
+      height: 54px;
       display: grid;
       place-items: center;
       opacity: var(--ptr-opacity, 0);
@@ -205,54 +205,37 @@
     }
 
     .pull-refresh::before {
-      content: "";
-      position: absolute;
-      inset: 6px;
-      border-radius: 50%;
-      background: color-mix(in srgb, var(--surface) 80%, transparent);
-      border: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
-      box-shadow: 0 12px 32px rgba(15, 23, 32, .10);
-      -webkit-backdrop-filter: blur(16px);
-      backdrop-filter: blur(16px);
-      transform: scale(.88);
-      opacity: 0;
-      transition: opacity .18s ease, transform .24s cubic-bezier(.2, .9, .2, 1);
-    }
-
-    .pull-refresh.show::before,
-    body.ptr-refreshing .pull-refresh::before {
-      opacity: 1;
-      transform: scale(1);
+      content: none;
     }
 
     .ptr-spinner {
       position: relative;
-      width: 28px;
-      height: 28px;
+      width: 34px;
+      height: 34px;
+      filter: drop-shadow(0 8px 16px rgba(15, 23, 32, .14));
       transform: rotate(var(--ptr-rotate, 0deg));
     }
 
     .ptr-spinner span {
       position: absolute;
-      left: 13px;
-      top: 2px;
-      width: 3px;
-      height: 8px;
+      left: 15px;
+      top: 1px;
+      width: 4px;
+      height: 10px;
       border-radius: 999px;
-      background: currentColor;
-      color: color-mix(in srgb, var(--muted) 78%, var(--text));
-      opacity: calc(.24 + (var(--ptr-progress, 0) * .58));
-      transform-origin: 1.5px 12px;
+      background: linear-gradient(180deg, var(--tg-blue), color-mix(in srgb, var(--tg-blue) 52%, var(--text)));
+      opacity: calc(.18 + (var(--ptr-progress, 0) * .72));
+      transform-origin: 2px 16px;
     }
 
     .ptr-spinner span:nth-child(1) { transform: rotate(0deg); }
-    .ptr-spinner span:nth-child(2) { transform: rotate(45deg); opacity: calc(.20 + (var(--ptr-progress, 0) * .48)); }
-    .ptr-spinner span:nth-child(3) { transform: rotate(90deg); opacity: calc(.18 + (var(--ptr-progress, 0) * .42)); }
-    .ptr-spinner span:nth-child(4) { transform: rotate(135deg); opacity: calc(.16 + (var(--ptr-progress, 0) * .36)); }
-    .ptr-spinner span:nth-child(5) { transform: rotate(180deg); opacity: calc(.14 + (var(--ptr-progress, 0) * .30)); }
-    .ptr-spinner span:nth-child(6) { transform: rotate(225deg); opacity: calc(.12 + (var(--ptr-progress, 0) * .24)); }
-    .ptr-spinner span:nth-child(7) { transform: rotate(270deg); opacity: calc(.10 + (var(--ptr-progress, 0) * .18)); }
-    .ptr-spinner span:nth-child(8) { transform: rotate(315deg); opacity: calc(.08 + (var(--ptr-progress, 0) * .12)); }
+    .ptr-spinner span:nth-child(2) { transform: rotate(45deg); opacity: calc(.16 + (var(--ptr-progress, 0) * .54)); }
+    .ptr-spinner span:nth-child(3) { transform: rotate(90deg); opacity: calc(.14 + (var(--ptr-progress, 0) * .46)); }
+    .ptr-spinner span:nth-child(4) { transform: rotate(135deg); opacity: calc(.12 + (var(--ptr-progress, 0) * .38)); }
+    .ptr-spinner span:nth-child(5) { transform: rotate(180deg); opacity: calc(.10 + (var(--ptr-progress, 0) * .30)); }
+    .ptr-spinner span:nth-child(6) { transform: rotate(225deg); opacity: calc(.09 + (var(--ptr-progress, 0) * .24)); }
+    .ptr-spinner span:nth-child(7) { transform: rotate(270deg); opacity: calc(.08 + (var(--ptr-progress, 0) * .18)); }
+    .ptr-spinner span:nth-child(8) { transform: rotate(315deg); opacity: calc(.07 + (var(--ptr-progress, 0) * .12)); }
 
     body.ptr-refreshing .pull-refresh {
       opacity: 1;
@@ -4808,9 +4791,9 @@
       if (!app || !indicator) return;
 
       const root = document.documentElement;
-      const threshold = 86;
-      const maxPull = 118;
-      const holdPull = 56;
+      const threshold = 112;
+      const maxPull = 146;
+      const holdPull = 64;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -4836,8 +4819,8 @@
       };
 
       const rubber = distance => {
-        const softened = distance * .56;
-        return Math.min(maxPull, softened - Math.max(0, softened - 70) * .42);
+        const softened = distance * .50;
+        return Math.min(maxPull, softened - Math.max(0, softened - 82) * .36);
       };
 
       const paint = pull => {
