@@ -4792,7 +4792,6 @@
 
       const root = document.documentElement;
       const threshold = 112;
-      const maxPull = 146;
       const holdPull = 64;
       let startX = 0;
       let startY = 0;
@@ -4801,6 +4800,7 @@
       let locked = false;
       let refreshing = false;
       let armed = false;
+      let autoTriggered = false;
       let raf = 0;
 
       const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -4819,8 +4819,9 @@
       };
 
       const rubber = distance => {
-        const softened = distance * .50;
-        return Math.min(maxPull, softened - Math.max(0, softened - 82) * .36);
+        const easy = distance * .54;
+        if (easy <= threshold) return easy;
+        return threshold + Math.log1p(easy - threshold) * 18;
       };
 
       const paint = pull => {
@@ -4829,7 +4830,7 @@
         raf = requestAnimationFrame(() => {
           const progress = Math.min(1, lastPull / threshold);
           root.style.setProperty("--ptr-pull", `${lastPull.toFixed(1)}px`);
-          root.style.setProperty("--ptr-indicator", `${Math.min(34, lastPull * .48).toFixed(1)}px`);
+          root.style.setProperty("--ptr-indicator", `${Math.min(58, lastPull * .42).toFixed(1)}px`);
           root.style.setProperty("--ptr-opacity", Math.min(1, progress * 1.35).toFixed(3));
           root.style.setProperty("--ptr-scale", (.72 + progress * .28).toFixed(3));
           root.style.setProperty("--ptr-progress", progress.toFixed(3));
@@ -4844,6 +4845,7 @@
         pulling = false;
         locked = false;
         armed = false;
+        autoTriggered = false;
         document.body.classList.add("ptr-settling");
         paint(0);
         window.setTimeout(() => {
@@ -4854,9 +4856,10 @@
       };
 
       const performSoftRefresh = async () => {
+        if (refreshing) return;
         refreshing = true;
         pulling = false;
-        locked = false;
+        locked = true;
         document.body.classList.add("ptr-active");
         document.body.classList.remove("ptr-settling");
         document.body.classList.add("ptr-refreshing");
@@ -4877,6 +4880,7 @@
         document.body.classList.remove("ptr-refreshing");
         refreshing = false;
         armed = false;
+        autoTriggered = false;
         paint(0);
         window.setTimeout(() => {
           document.body.classList.remove("ptr-active");
@@ -4895,10 +4899,15 @@
         pulling = true;
         locked = false;
         armed = false;
+        autoTriggered = false;
         document.body.classList.add("ptr-active");
       }, { passive: true });
 
       document.addEventListener("touchmove", event => {
+        if (refreshing && event.cancelable) {
+          event.preventDefault();
+          return;
+        }
         if (!pulling || event.touches.length !== 1) return;
         const touch = event.touches[0];
         const dx = touch.clientX - startX;
@@ -4920,12 +4929,16 @@
         armed = pull >= threshold;
         if (armed && !wasArmed) haptic("selection");
         paint(pull);
+        if (armed && !autoTriggered) {
+          autoTriggered = true;
+          performSoftRefresh();
+        }
       }, { passive: false });
 
       document.addEventListener("touchend", () => {
+        if (refreshing) return;
         if (!pulling && !locked) return;
-        if (armed) performSoftRefresh();
-        else release();
+        release();
       }, { passive: true });
 
       document.addEventListener("touchcancel", release, { passive: true });
