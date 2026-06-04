@@ -181,7 +181,18 @@
       will-change: transform;
     }
 
+    body.ptr-active .topbar,
+    body.ptr-settling .topbar,
+    body.ptr-refreshing .topbar {
+      transform: translate3d(0, calc(var(--ptr-pull, 0px) * -1), 0);
+      will-change: transform;
+    }
+
     body.ptr-settling .app {
+      transition: transform .54s cubic-bezier(.18, .92, .2, 1);
+    }
+
+    body.ptr-settling .topbar {
       transition: transform .54s cubic-bezier(.18, .92, .2, 1);
     }
 
