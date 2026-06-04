@@ -4785,8 +4785,8 @@
       if (!app || !indicator) return;
 
       const root = document.documentElement;
-      const threshold = 164;
-      const holdPull = 76;
+      const threshold = 142;
+      const holdPull = 72;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -4815,9 +4815,9 @@
       };
 
       const rubber = distance => {
-        const easy = distance * .38;
+        const easy = distance * .46;
         if (easy <= threshold) return easy;
-        return threshold + Math.log1p(easy - threshold) * 18;
+        return threshold + Math.log1p(easy - threshold) * 20;
       };
 
       const applyPullFrame = pull => {
