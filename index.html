@@ -182,7 +182,7 @@
     }
 
     body.ptr-settling .screen.active {
-      transition: transform .42s cubic-bezier(.2, .9, .2, 1);
+      transition: transform .54s cubic-bezier(.18, .92, .2, 1);
     }
 
     .pull-refresh {
@@ -198,8 +198,8 @@
       pointer-events: none;
       transform: translate3d(-50%, calc(-18px + var(--ptr-indicator, 0px)), 0) scale(var(--ptr-scale, .72));
       transition:
-        opacity .18s ease,
-        transform .24s cubic-bezier(.2, .9, .2, 1);
+        opacity .22s ease,
+        transform .30s cubic-bezier(.18, .92, .2, 1);
       will-change: opacity, transform;
     }
 
@@ -4785,11 +4785,12 @@
       if (!app || !indicator) return;
 
       const root = document.documentElement;
-      const threshold = 128;
-      const holdPull = 70;
+      const threshold = 164;
+      const holdPull = 76;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
+      let currentPull = 0;
       let pulling = false;
       let locked = false;
       let refreshing = false;
@@ -4814,26 +4815,42 @@
       };
 
       const rubber = distance => {
-        const easy = distance * .45;
+        const easy = distance * .38;
         if (easy <= threshold) return easy;
-        return threshold + Math.log1p(easy - threshold) * 20;
+        return threshold + Math.log1p(easy - threshold) * 18;
       };
 
-      const paint = pull => {
-        lastPull = pull;
-        if (raf) return;
-        raf = requestAnimationFrame(() => {
-          const progress = Math.min(1, lastPull / threshold);
-          root.style.setProperty("--ptr-pull", `${lastPull.toFixed(1)}px`);
-          root.style.setProperty("--ptr-indicator", `${Math.min(58, lastPull * .42).toFixed(1)}px`);
+      const applyPullFrame = pull => {
+          const progress = Math.min(1, pull / threshold);
+          root.style.setProperty("--ptr-pull", `${pull.toFixed(1)}px`);
+          root.style.setProperty("--ptr-indicator", `${Math.min(70, pull * .38).toFixed(1)}px`);
           root.style.setProperty("--ptr-opacity", Math.min(1, progress * 1.35).toFixed(3));
           root.style.setProperty("--ptr-scale", (.72 + progress * .28).toFixed(3));
           root.style.setProperty("--ptr-progress", progress.toFixed(3));
           root.style.setProperty("--ptr-rotate", `${Math.round(progress * 210)}deg`);
           root.style.setProperty("--ptr-dash", `${(18 + progress * 54).toFixed(1)}`);
-          indicator.classList.toggle("show", lastPull > 8);
-          raf = 0;
-        });
+          indicator.classList.toggle("show", pull > 8);
+      };
+
+      const paint = pull => {
+        lastPull = pull;
+        if (document.body.classList.contains("ptr-settling")) {
+          currentPull = pull;
+          applyPullFrame(currentPull);
+          return;
+        }
+        if (raf) return;
+        const tick = () => {
+          currentPull += (lastPull - currentPull) * .28;
+          if (Math.abs(lastPull - currentPull) < .35) currentPull = lastPull;
+          applyPullFrame(currentPull);
+          if (currentPull !== lastPull) {
+            raf = requestAnimationFrame(tick);
+          } else {
+            raf = 0;
+          }
+        };
+        raf = requestAnimationFrame(tick);
       };
 
       const release = () => {
@@ -4870,11 +4887,8 @@
         if (changed) saveState();
         document.querySelectorAll(".segmented").forEach(c => syncGlider(c, true));
         closeWalletMenu();
-        haptic("success");
-        await sleep(180);
-        while (!releaseAfterRefresh) {
-          await sleep(40);
-        }
+        haptic("soft");
+        await sleep(releaseAfterRefresh ? 140 : 420);
 
         document.body.classList.add("ptr-settling");
         document.body.classList.remove("ptr-refreshing");
