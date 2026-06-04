@@ -174,6 +174,99 @@
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
     }
 
+    body.ptr-active .screen.active,
+    body.ptr-settling .screen.active,
+    body.ptr-refreshing .screen.active {
+      transform: translate3d(0, var(--ptr-pull, 0px), 0);
+      will-change: transform;
+    }
+
+    body.ptr-settling .screen.active,
+    body.ptr-refreshing .screen.active {
+      transition: transform .42s cubic-bezier(.2, .9, .2, 1);
+    }
+
+    .pull-refresh {
+      position: fixed;
+      top: calc(76px + var(--safe-top) + var(--content-top));
+      left: 50%;
+      z-index: 35;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      opacity: var(--ptr-opacity, 0);
+      pointer-events: none;
+      transform: translate3d(-50%, calc(-18px + var(--ptr-indicator, 0px)), 0) scale(var(--ptr-scale, .72));
+      transition:
+        opacity .18s ease,
+        transform .24s cubic-bezier(.2, .9, .2, 1);
+      will-change: opacity, transform;
+    }
+
+    .pull-refresh::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--surface) 80%, transparent);
+      border: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+      box-shadow: 0 12px 32px rgba(15, 23, 32, .10);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      transform: scale(.88);
+      opacity: 0;
+      transition: opacity .18s ease, transform .24s cubic-bezier(.2, .9, .2, 1);
+    }
+
+    .pull-refresh.show::before,
+    body.ptr-refreshing .pull-refresh::before {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .ptr-spinner {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      transform: rotate(var(--ptr-rotate, 0deg));
+    }
+
+    .ptr-spinner span {
+      position: absolute;
+      left: 13px;
+      top: 2px;
+      width: 3px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      color: color-mix(in srgb, var(--muted) 78%, var(--text));
+      opacity: calc(.24 + (var(--ptr-progress, 0) * .58));
+      transform-origin: 1.5px 12px;
+    }
+
+    .ptr-spinner span:nth-child(1) { transform: rotate(0deg); }
+    .ptr-spinner span:nth-child(2) { transform: rotate(45deg); opacity: calc(.20 + (var(--ptr-progress, 0) * .48)); }
+    .ptr-spinner span:nth-child(3) { transform: rotate(90deg); opacity: calc(.18 + (var(--ptr-progress, 0) * .42)); }
+    .ptr-spinner span:nth-child(4) { transform: rotate(135deg); opacity: calc(.16 + (var(--ptr-progress, 0) * .36)); }
+    .ptr-spinner span:nth-child(5) { transform: rotate(180deg); opacity: calc(.14 + (var(--ptr-progress, 0) * .30)); }
+    .ptr-spinner span:nth-child(6) { transform: rotate(225deg); opacity: calc(.12 + (var(--ptr-progress, 0) * .24)); }
+    .ptr-spinner span:nth-child(7) { transform: rotate(270deg); opacity: calc(.10 + (var(--ptr-progress, 0) * .18)); }
+    .ptr-spinner span:nth-child(8) { transform: rotate(315deg); opacity: calc(.08 + (var(--ptr-progress, 0) * .12)); }
+
+    body.ptr-refreshing .pull-refresh {
+      opacity: 1;
+      transform: translate3d(-50%, 22px, 0) scale(1);
+    }
+
+    body.ptr-refreshing .ptr-spinner {
+      animation: ptr-spin .82s linear infinite;
+    }
+
+    @keyframes ptr-spin {
+      to { transform: rotate(360deg); }
+    }
+
     .topbar {
       position: sticky;
       top: 0;
@@ -2241,6 +2334,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
       <strong>Поверните устройство</strong>
       <span>Приложение работает только в вертикальном режиме.</span>
+    </div>
+  </div>
+  <div class="pull-refresh" id="pullRefresh" aria-hidden="true">
+    <div class="ptr-spinner">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
     </div>
   </div>
   <main class="app">
@@ -4703,6 +4802,152 @@
       else tg.HapticFeedback.selectionChanged();
     }
 
+    function initPullToRefresh() {
+      const app = document.querySelector(".app");
+      const indicator = document.getElementById("pullRefresh");
+      if (!app || !indicator) return;
+
+      const root = document.documentElement;
+      const threshold = 86;
+      const maxPull = 118;
+      const holdPull = 56;
+      let startX = 0;
+      let startY = 0;
+      let lastPull = 0;
+      let pulling = false;
+      let locked = false;
+      let refreshing = false;
+      let armed = false;
+      let raf = 0;
+
+      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const scrollTop = () => Math.max(
+        window.scrollY || 0,
+        document.documentElement.scrollTop || 0,
+        document.body.scrollTop || 0,
+        app.scrollTop || 0
+      );
+
+      const canStartFrom = target => {
+        if (refreshing) return false;
+        if (scrollTop() > 1) return false;
+        if (document.body.classList.contains("no-scroll") || document.body.classList.contains("kb-open")) return false;
+        return !target.closest("button, a, input, textarea, select, [role='button'], .modal, .toast-container, #balanceChartContainer");
+      };
+
+      const rubber = distance => {
+        const softened = distance * .56;
+        return Math.min(maxPull, softened - Math.max(0, softened - 70) * .42);
+      };
+
+      const paint = pull => {
+        lastPull = pull;
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          const progress = Math.min(1, lastPull / threshold);
+          root.style.setProperty("--ptr-pull", `${lastPull.toFixed(1)}px`);
+          root.style.setProperty("--ptr-indicator", `${Math.min(34, lastPull * .48).toFixed(1)}px`);
+          root.style.setProperty("--ptr-opacity", Math.min(1, progress * 1.35).toFixed(3));
+          root.style.setProperty("--ptr-scale", (.72 + progress * .28).toFixed(3));
+          root.style.setProperty("--ptr-progress", progress.toFixed(3));
+          root.style.setProperty("--ptr-rotate", `${Math.round(progress * 210)}deg`);
+          indicator.classList.toggle("show", lastPull > 8);
+          raf = 0;
+        });
+      };
+
+      const release = () => {
+        if (refreshing) return;
+        pulling = false;
+        locked = false;
+        armed = false;
+        document.body.classList.add("ptr-settling");
+        paint(0);
+        window.setTimeout(() => {
+          document.body.classList.remove("ptr-active");
+          document.body.classList.remove("ptr-settling");
+          indicator.classList.remove("show");
+        }, 430);
+      };
+
+      const performSoftRefresh = async () => {
+        refreshing = true;
+        pulling = false;
+        locked = false;
+        document.body.classList.add("ptr-active");
+        document.body.classList.remove("ptr-settling");
+        document.body.classList.add("ptr-refreshing");
+        indicator.classList.add("show");
+        paint(holdPull);
+        haptic("soft");
+
+        await sleep(560);
+        const changed = processLimitOrders();
+        renderAll();
+        if (changed) saveState();
+        document.querySelectorAll(".segmented").forEach(c => syncGlider(c, true));
+        closeWalletMenu();
+        haptic("success");
+        await sleep(220);
+
+        document.body.classList.add("ptr-settling");
+        document.body.classList.remove("ptr-refreshing");
+        refreshing = false;
+        armed = false;
+        paint(0);
+        window.setTimeout(() => {
+          document.body.classList.remove("ptr-active");
+          document.body.classList.remove("ptr-settling");
+          indicator.classList.remove("show");
+        }, 430);
+      };
+
+      document.addEventListener("touchstart", event => {
+        if (event.touches.length !== 1 || !canStartFrom(event.target)) {
+          pulling = false;
+          return;
+        }
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+        pulling = true;
+        locked = false;
+        armed = false;
+        document.body.classList.add("ptr-active");
+      }, { passive: true });
+
+      document.addEventListener("touchmove", event => {
+        if (!pulling || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+
+        if (!locked) {
+          if (Math.abs(dx) > 10 && Math.abs(dx) > dy) {
+            pulling = false;
+            release();
+            return;
+          }
+          if (dy > 6) locked = true;
+        }
+
+        if (!locked || dy <= 0 || scrollTop() > 1) return;
+        if (event.cancelable) event.preventDefault();
+        const pull = rubber(dy);
+        const wasArmed = armed;
+        armed = pull >= threshold;
+        if (armed && !wasArmed) haptic("selection");
+        paint(pull);
+      }, { passive: false });
+
+      document.addEventListener("touchend", () => {
+        if (!pulling && !locked) return;
+        if (armed) performSoftRefresh();
+        else release();
+      }, { passive: true });
+
+      document.addEventListener("touchcancel", release, { passive: true });
+    }
+
     document.addEventListener("input", event => {
       if (event.target.id === "tradeAmount") renderSharesPreview();
     });
@@ -4734,6 +4979,7 @@
     initTelegram();
     lockPortraitOrientation();
     applyTheme();
+    initPullToRefresh();
     initChartScrubbing();
     renderAll();
     setInterval(() => {
