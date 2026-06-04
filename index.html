@@ -181,8 +181,7 @@
       will-change: transform;
     }
 
-    body.ptr-settling .screen.active,
-    body.ptr-refreshing .screen.active {
+    body.ptr-settling .screen.active {
       transition: transform .42s cubic-bezier(.2, .9, .2, 1);
     }
 
@@ -210,36 +209,30 @@
 
     .ptr-spinner {
       position: relative;
-      width: 34px;
-      height: 34px;
-      filter: drop-shadow(0 8px 16px rgba(15, 23, 32, .14));
+      width: 36px;
+      height: 36px;
+      color: var(--tg-blue);
+      filter: drop-shadow(0 7px 14px rgba(34, 158, 217, .20));
       transform: rotate(var(--ptr-rotate, 0deg));
     }
 
-    .ptr-spinner span {
-      position: absolute;
-      left: 15px;
-      top: 1px;
-      width: 4px;
-      height: 10px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, var(--tg-blue), color-mix(in srgb, var(--tg-blue) 52%, var(--text)));
-      opacity: calc(.18 + (var(--ptr-progress, 0) * .72));
-      transform-origin: 2px 16px;
+    .ptr-spinner svg {
+      width: 100%;
+      height: 100%;
     }
 
-    .ptr-spinner span:nth-child(1) { transform: rotate(0deg); }
-    .ptr-spinner span:nth-child(2) { transform: rotate(45deg); opacity: calc(.16 + (var(--ptr-progress, 0) * .54)); }
-    .ptr-spinner span:nth-child(3) { transform: rotate(90deg); opacity: calc(.14 + (var(--ptr-progress, 0) * .46)); }
-    .ptr-spinner span:nth-child(4) { transform: rotate(135deg); opacity: calc(.12 + (var(--ptr-progress, 0) * .38)); }
-    .ptr-spinner span:nth-child(5) { transform: rotate(180deg); opacity: calc(.10 + (var(--ptr-progress, 0) * .30)); }
-    .ptr-spinner span:nth-child(6) { transform: rotate(225deg); opacity: calc(.09 + (var(--ptr-progress, 0) * .24)); }
-    .ptr-spinner span:nth-child(7) { transform: rotate(270deg); opacity: calc(.08 + (var(--ptr-progress, 0) * .18)); }
-    .ptr-spinner span:nth-child(8) { transform: rotate(315deg); opacity: calc(.07 + (var(--ptr-progress, 0) * .12)); }
+    .ptr-spinner circle {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3.8;
+      stroke-linecap: round;
+      stroke-dasharray: var(--ptr-dash, 20) 96;
+      opacity: calc(.46 + (var(--ptr-progress, 0) * .54));
+    }
 
     body.ptr-refreshing .pull-refresh {
       opacity: 1;
-      transform: translate3d(-50%, 22px, 0) scale(1);
+      transform: translate3d(-50%, calc(-18px + var(--ptr-indicator, 40px)), 0) scale(1);
     }
 
     body.ptr-refreshing .ptr-spinner {
@@ -2321,8 +2314,9 @@
   </div>
   <div class="pull-refresh" id="pullRefresh" aria-hidden="true">
     <div class="ptr-spinner">
-      <span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span>
+      <svg viewBox="0 0 36 36" focusable="false" aria-hidden="true">
+        <circle cx="18" cy="18" r="15"></circle>
+      </svg>
     </div>
   </div>
   <main class="app">
@@ -4791,8 +4785,8 @@
       if (!app || !indicator) return;
 
       const root = document.documentElement;
-      const threshold = 112;
-      const holdPull = 64;
+      const threshold = 128;
+      const holdPull = 70;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -4801,6 +4795,7 @@
       let refreshing = false;
       let armed = false;
       let autoTriggered = false;
+      let releaseAfterRefresh = false;
       let raf = 0;
 
       const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -4819,9 +4814,9 @@
       };
 
       const rubber = distance => {
-        const easy = distance * .54;
+        const easy = distance * .45;
         if (easy <= threshold) return easy;
-        return threshold + Math.log1p(easy - threshold) * 18;
+        return threshold + Math.log1p(easy - threshold) * 20;
       };
 
       const paint = pull => {
@@ -4835,6 +4830,7 @@
           root.style.setProperty("--ptr-scale", (.72 + progress * .28).toFixed(3));
           root.style.setProperty("--ptr-progress", progress.toFixed(3));
           root.style.setProperty("--ptr-rotate", `${Math.round(progress * 210)}deg`);
+          root.style.setProperty("--ptr-dash", `${(18 + progress * 54).toFixed(1)}`);
           indicator.classList.toggle("show", lastPull > 8);
           raf = 0;
         });
@@ -4846,6 +4842,7 @@
         locked = false;
         armed = false;
         autoTriggered = false;
+        releaseAfterRefresh = false;
         document.body.classList.add("ptr-settling");
         paint(0);
         window.setTimeout(() => {
@@ -4858,13 +4855,13 @@
       const performSoftRefresh = async () => {
         if (refreshing) return;
         refreshing = true;
-        pulling = false;
         locked = true;
+        releaseAfterRefresh = false;
         document.body.classList.add("ptr-active");
         document.body.classList.remove("ptr-settling");
         document.body.classList.add("ptr-refreshing");
         indicator.classList.add("show");
-        paint(holdPull);
+        paint(Math.max(holdPull, Math.min(lastPull, threshold)));
         haptic("soft");
 
         await sleep(560);
@@ -4874,13 +4871,19 @@
         document.querySelectorAll(".segmented").forEach(c => syncGlider(c, true));
         closeWalletMenu();
         haptic("success");
-        await sleep(220);
+        await sleep(180);
+        while (!releaseAfterRefresh) {
+          await sleep(40);
+        }
 
         document.body.classList.add("ptr-settling");
         document.body.classList.remove("ptr-refreshing");
         refreshing = false;
+        pulling = false;
+        locked = false;
         armed = false;
         autoTriggered = false;
+        releaseAfterRefresh = false;
         paint(0);
         window.setTimeout(() => {
           document.body.classList.remove("ptr-active");
@@ -4900,12 +4903,17 @@
         locked = false;
         armed = false;
         autoTriggered = false;
+        releaseAfterRefresh = false;
         document.body.classList.add("ptr-active");
       }, { passive: true });
 
       document.addEventListener("touchmove", event => {
         if (refreshing && event.cancelable) {
           event.preventDefault();
+          if (event.touches.length === 1 && (pulling || locked)) {
+            const dy = event.touches[0].clientY - startY;
+            if (dy > 0) paint(Math.max(holdPull, rubber(dy)));
+          }
           return;
         }
         if (!pulling || event.touches.length !== 1) return;
@@ -4936,12 +4944,25 @@
       }, { passive: false });
 
       document.addEventListener("touchend", () => {
-        if (refreshing) return;
+        if (refreshing) {
+          releaseAfterRefresh = true;
+          pulling = false;
+          locked = false;
+          document.body.classList.add("ptr-settling");
+          paint(holdPull);
+          return;
+        }
         if (!pulling && !locked) return;
         release();
       }, { passive: true });
 
-      document.addEventListener("touchcancel", release, { passive: true });
+      document.addEventListener("touchcancel", () => {
+        if (refreshing) {
+          releaseAfterRefresh = true;
+          return;
+        }
+        release();
+      }, { passive: true });
     }
 
     document.addEventListener("input", event => {
