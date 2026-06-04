@@ -4815,7 +4815,11 @@
       };
 
       const rubber = distance => {
-        const easy = distance * .46;
+        const freeDistance = 120;
+        const freePull = distance * .72;
+        const easy = distance <= freeDistance
+          ? freePull
+          : (freeDistance * .72) + ((distance - freeDistance) * .34);
         if (easy <= threshold) return easy;
         return threshold + Math.log1p(easy - threshold) * 20;
       };
@@ -4841,7 +4845,7 @@
         }
         if (raf) return;
         const tick = () => {
-          currentPull += (lastPull - currentPull) * .28;
+          currentPull += (lastPull - currentPull) * .42;
           if (Math.abs(lastPull - currentPull) < .35) currentPull = lastPull;
           applyPullFrame(currentPull);
           if (currentPull !== lastPull) {
