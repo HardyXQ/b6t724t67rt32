@@ -1491,6 +1491,11 @@
 
     /* ===== Terminal (экран сделки) ===== */
     .trm { display: grid; gap: 12px; color: var(--text); }
+    .trm > * { order: 10; }
+    .trm-top { order: 1; }
+    .trm-hero { order: 2; }
+    .trm-levels { order: 3; }
+    .trm-chart { order: 4; }
 
     /* Верхняя панель */
     .trm-top {
@@ -1542,11 +1547,12 @@
       grid-template-columns: 52px minmax(0, 1fr) auto;
       align-items: center;
       gap: 13px;
-      padding: 15px;
-      border-radius: var(--radius-lg);
+      padding: 15px 15px 12px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
       background: color-mix(in srgb, var(--surface) 95%, transparent);
       border: 1px solid var(--line);
-      box-shadow: var(--shadow-soft);
+      border-bottom: 0;
+      box-shadow: none;
     }
     .poly-coin {
       width: 52px;
@@ -1588,6 +1594,18 @@
     .trm-change { flex: 0 0 auto; font-size: 13px; font-weight: 900; letter-spacing: normal; }
     .trm-change.up { color: var(--green); }
     .trm-change.down { color: var(--red); }
+    .trm-market-utc {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1.2;
+      letter-spacing: normal;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .trm-hero-sub #terminalAssetName {
       color: var(--muted);
       font-size: 12px;
@@ -1688,20 +1706,30 @@
     .trm-levels {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 6px;
+      margin-top: -12px;
+      padding: 0 10px 10px;
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      background: color-mix(in srgb, var(--surface) 95%, transparent);
+      box-shadow: var(--shadow-soft);
     }
     .trm-levels article {
       min-width: 0;
-      padding: 12px 14px;
-      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
       background: color-mix(in srgb, var(--surface) 94%, transparent);
       border: 1px solid var(--line);
-      box-shadow: var(--shadow-soft);
     }
     .trm-levels span {
       display: block;
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 850;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1709,8 +1737,8 @@
     }
     .trm-levels strong {
       display: block;
-      margin-top: 6px;
-      font-size: clamp(15px, 4.6vw, 18px);
+      flex: 0 0 auto;
+      font-size: 13px;
       font-weight: 950;
       letter-spacing: normal;
       font-variant-numeric: tabular-nums;
@@ -1719,8 +1747,8 @@
       white-space: nowrap;
     }
     .trm-level-target {
-      background: color-mix(in srgb, var(--tg-blue) 8%, var(--surface)) !important;
-      border-color: color-mix(in srgb, var(--tg-blue) 24%, var(--line)) !important;
+      background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+      border-color: var(--line) !important;
     }
     .trm-level-target strong { color: var(--tg-blue); }
 
@@ -1858,6 +1886,15 @@
     }
     .trm-pos-stat strong.up { color: var(--green); }
     .trm-pos-stat strong.down { color: var(--red); }
+    .trm-pos-stat strong small {
+      display: block;
+      margin-top: 2px;
+      font-size: 10.5px;
+      font-weight: 900;
+      line-height: 1;
+      color: inherit;
+      opacity: .82;
+    }
     /* Кнопка «Вывести средства» внутри блока позиции (после истечения) */
     .trm-pos-cashout {
       grid-column: 1 / -1;
@@ -2457,6 +2494,7 @@
             <div class="trm-hero-sub">
               <span id="terminalChange" class="trm-change up">+0.00%</span>
             </div>
+            <div class="trm-market-utc" id="terminalMarketUtc">UTC 00:00-00:00</div>
           </div>
           <div class="trm-timer" aria-label="До закрытия">
             <span>До закрытия</span>
@@ -2466,7 +2504,7 @@
 
         <!-- График -->
         <section class="trm-chart">
-          <div class="trm-chart-tag" id="chartLabel">Демо-график</div>
+          <div class="trm-chart-tag" id="chartLabel">График цены</div>
           <div class="trm-chart-now" id="polyCurrentLabel">$0.00</div>
           <svg id="terminalChart" viewBox="0 0 360 210" preserveAspectRatio="none" role="img" aria-label="График цены">
             <path id="terminalArea" d="" fill="url(#terminalAreaGradient)"></path>
@@ -2888,17 +2926,28 @@
       return Math.max(min, Math.min(max, value));
     }
 
+    function marketWindowStart(minutes, now = Date.now()) {
+      const duration = Math.max(1, Number(minutes || 1)) * 60000;
+      return Math.floor(now / duration) * duration;
+    }
+
+    function marketWindowEnd(minutes, now = Date.now()) {
+      return marketWindowStart(minutes, now) + Math.max(1, Number(minutes || 1)) * 60000;
+    }
+
     function getMarket(id) {
       return markets.find(m => m.id === id) || markets[0];
     }
 
     function getMarketState(id) {
-      if (!state.marketState[id]) {
+      const market = getMarket(id);
+      const openedAt = marketWindowStart(market.minutes);
+      if (!state.marketState[id] || state.marketState[id].openedAt !== openedAt) {
         state.marketState[id] = {
           upCents: 50,
-          openPrice: getMarket(id).price,
-          currentPrice: getMarket(id).price,
-          openedAt: Date.now()
+          openPrice: market.price,
+          currentPrice: market.price,
+          openedAt
         };
         saveState();
       }
@@ -3283,13 +3332,7 @@
 
     function openTerminal(id) {
       state.currentMarketId = id;
-      const market = getMarket(id);
-      state.marketState[id] = {
-        upCents: 50,
-        openPrice: market.price,
-        currentPrice: market.price,
-        openedAt: Date.now()
-      };
+      getMarketState(id);
       saveState();
       go("terminal");
     }
@@ -3441,6 +3484,15 @@
       return `${month}, ${startTime}–${endTime}`;
     }
 
+    function formatMarketScheduleUtc(openedAt, minutes) {
+      const start = new Date(openedAt);
+      const end = new Date(openedAt + minutes * 60000);
+      const date = start.toLocaleDateString("ru-RU", { day: "2-digit", month: "short", timeZone: "UTC" }).replace(".", "");
+      const startTime = start.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
+      const endTime = end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
+      return `${date}, ${startTime}-${endTime} UTC`;
+    }
+
     function setText(id, value) {
       const el = document.getElementById(id);
       if (el) el.textContent = value;
@@ -3464,10 +3516,11 @@
       setText("polyMinutes", String(remainingMinutes).padStart(2, "0"));
       setText("polySeconds", String(remainingSeconds).padStart(2, "0"));
       setText("terminalPrice", priceLabel);
+      setText("terminalMarketUtc", formatMarketScheduleUtc(ms.openedAt, market.minutes));
       setText("terminalOpenPrice", marketPriceText(ms.openPrice));
       setText("polyTargetPrice", targetLabel);
       setText("polyCurrentLabel", priceLabel);
-      setText("chartLabel", market.asset + " · демо");
+      setText("chartLabel", market.asset);
 
       // Изменение цены актива
       const changeEl = document.getElementById("terminalChange");
@@ -3707,7 +3760,7 @@
         return;
       }
       if (amount > state.balance) {
-        showToast("Недостаточно средств", "В демо-балансе нет такой суммы.");
+        showToast("Недостаточно средств", "На балансе нет такой суммы.");
         return;
       }
 
@@ -3766,7 +3819,7 @@
       const { side, amount } = pendingOrder;
       pendingOrder = null;
       if (amount > state.balance) {
-        showToast("Недостаточно средств", "В демо-балансе нет такой суммы.");
+        showToast("Недостаточно средств", "На балансе нет такой суммы.");
         return;
       }
       if (orderType === "limit") {
@@ -3793,7 +3846,7 @@
         shares,
         openAssetPrice: ms.currentPrice,
         openedAt: now,
-        expiresAt: now + market.minutes * 60000,
+        expiresAt: marketWindowEnd(market.minutes, now),
         status: "open"
       };
 
@@ -3813,7 +3866,7 @@
       pushBalancePoint(true);
       saveState();
       renderAll();
-      showToast("Демо-заявка создана", `${market.asset} ${market.expiry} · ${side === "UP" ? "Вверх" : "Вниз"} · ${cents(priceCents)} за share · ${money(amount)}.`);
+      showToast("Заявка создана", `${market.asset} ${market.expiry} · ${side === "UP" ? "Вверх" : "Вниз"} · ${cents(priceCents)} за share · ${money(amount)}.`);
       haptic("success");
     }
 
@@ -3826,6 +3879,7 @@
         return;
       }
       const now = Date.now();
+      const ms = getMarketState(market.id);
       const order = {
         id: "lim_" + now,
         marketId: market.id,
@@ -3835,6 +3889,8 @@
         amount,
         limitPrice,
         createdAt: now,
+        openedAt: ms.openedAt,
+        expiresAt: ms.openedAt + market.minutes * 60000,
         status: "pending"
       };
       state.balance -= amount; // резервируем средства под заявку
@@ -3863,7 +3919,9 @@
         const market = getMarket(o.marketId);
         const ms = getMarketState(o.marketId);
         updateMockPrice(o.marketId);
-        const remaining = ms.openedAt + market.minutes * 60000 - Date.now();
+        const orderOpenedAt = o.openedAt ?? marketWindowStart(market.minutes, o.createdAt || Date.now());
+        const orderExpiresAt = o.expiresAt ?? (orderOpenedAt + market.minutes * 60000);
+        const remaining = orderExpiresAt - Date.now();
         if (remaining <= 0) {
           // Рынок закрылся раньше исполнения — возвращаем резерв
           o.status = "cancelled";
@@ -3895,7 +3953,7 @@
             shares,
             openAssetPrice: ms.currentPrice,
             openedAt: now,
-            expiresAt: ms.openedAt + market.minutes * 60000,
+            expiresAt: orderExpiresAt,
             status: "open"
           });
           o.status = "filled";
@@ -4471,7 +4529,7 @@
           <div class="trm-pos-foot">
             <div class="trm-pos-stat"><span>Shares</span><strong>${p.shares.toFixed(2)}</strong></div>
             <div class="trm-pos-stat"><span>Ср. цена</span><strong>${cents(p.sharePrice)}</strong></div>
-            <div class="trm-pos-stat"><span>Доходность</span><strong class="${pnlClass}">${sign}${pct.toFixed(1)}%</strong></div>
+            <div class="trm-pos-stat"><span>Доходность</span><strong class="${pnlClass}">${sign}${money(pnl)}<small>(${sign}${pct.toFixed(1)}%)</small></strong></div>
           </div>
           ${cashoutBtn}
         </div>`;
