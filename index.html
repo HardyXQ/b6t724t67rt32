@@ -214,6 +214,10 @@
       will-change: opacity, transform;
     }
 
+    body.ptr-active:not(.ptr-settling):not(.ptr-refreshing) .pull-refresh {
+      transition: none;
+    }
+
     .pull-refresh::before {
       content: none;
     }
@@ -3354,7 +3358,7 @@
 
         const html = list.length
           ? `<div class="market-list">${list.map(m => marketCardHtml(m)).join("")}</div>`
-          : `<div class="empty">В этой категории пока нет рынков.</div>`;
+          : `<div class="empty">Избранных рынков пока нет.</div>`;
         el.innerHTML = html;
       });
 
@@ -4864,9 +4868,9 @@
       let locked = false;
       let refreshing = false;
       let armed = false;
-      let autoTriggered = false;
       let releaseAfterRefresh = false;
       let raf = 0;
+      let settleTimer = 0;
 
       const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
       const scrollTop = () => Math.max(
@@ -4906,6 +4910,12 @@
           indicator.classList.toggle("show", pull > 8);
       };
 
+      const clearSettleTimer = () => {
+        if (!settleTimer) return;
+        window.clearTimeout(settleTimer);
+        settleTimer = 0;
+      };
+
       const paint = pull => {
         lastPull = pull;
         if (document.body.classList.contains("ptr-settling")) {
@@ -4937,16 +4947,26 @@
         applyPullFrame(pull);
       };
 
+      const resetPullState = () => {
+        clearSettleTimer();
+        document.body.classList.remove("ptr-active");
+        document.body.classList.remove("ptr-settling");
+        document.body.classList.remove("ptr-refreshing");
+        indicator.classList.remove("show");
+        paintImmediate(0);
+      };
+
       const release = () => {
         if (refreshing) return;
+        clearSettleTimer();
         pulling = false;
         locked = false;
         armed = false;
-        autoTriggered = false;
         releaseAfterRefresh = false;
         document.body.classList.add("ptr-settling");
         paint(0);
-        window.setTimeout(() => {
+        settleTimer = window.setTimeout(() => {
+          settleTimer = 0;
           document.body.classList.remove("ptr-active");
           document.body.classList.remove("ptr-settling");
           indicator.classList.remove("show");
@@ -4956,6 +4976,7 @@
       const performSoftRefresh = async () => {
         if (refreshing) return;
         refreshing = true;
+        clearSettleTimer();
         locked = true;
         releaseAfterRefresh = false;
         document.body.classList.add("ptr-active");
@@ -4978,10 +4999,10 @@
         pulling = false;
         locked = false;
         armed = false;
-        autoTriggered = false;
         releaseAfterRefresh = false;
         paint(0);
-        window.setTimeout(() => {
+        settleTimer = window.setTimeout(() => {
+          settleTimer = 0;
           document.body.classList.remove("ptr-active");
           document.body.classList.remove("ptr-settling");
           indicator.classList.remove("show");
@@ -4998,9 +5019,8 @@
         pulling = true;
         locked = false;
         armed = false;
-        autoTriggered = false;
         releaseAfterRefresh = false;
-        document.body.classList.add("ptr-active");
+        if (document.body.classList.contains("ptr-settling")) resetPullState();
       }, { passive: true });
 
       document.addEventListener("touchmove", event => {
@@ -5023,7 +5043,10 @@
             release();
             return;
           }
-          if (dy > 6) locked = true;
+          if (dy > 6) {
+            locked = true;
+            document.body.classList.add("ptr-active");
+          }
         }
 
         if (!locked || dy <= 0 || scrollTop() > 1) return;
@@ -5033,10 +5056,6 @@
         armed = pull >= threshold;
         if (armed && !wasArmed) haptic("selection");
         paint(pull);
-        if (armed && !autoTriggered) {
-          autoTriggered = true;
-          performSoftRefresh();
-        }
       }, { passive: false });
 
       document.addEventListener("touchend", () => {
@@ -5049,6 +5068,11 @@
           return;
         }
         if (!pulling && !locked) return;
+        if (armed) {
+          pulling = false;
+          performSoftRefresh();
+          return;
+        }
         release();
       }, { passive: true });
 
