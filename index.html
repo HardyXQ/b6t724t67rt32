@@ -4797,7 +4797,7 @@
 
       const root = document.documentElement;
       const threshold = 142;
-      const holdPull = 72;
+      const refreshPull = 116;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -4902,7 +4902,7 @@
         releaseAfterRefresh = false;
         document.body.classList.add("ptr-active");
         document.body.classList.remove("ptr-settling");
-        paintImmediate(Math.max(holdPull, Math.min(lastPull, threshold)));
+        paintImmediate(Math.max(refreshPull, Math.min(lastPull, threshold)));
         document.body.classList.add("ptr-refreshing");
         indicator.classList.add("show");
 
@@ -4950,7 +4950,7 @@
           event.preventDefault();
           if (event.touches.length === 1 && (pulling || locked)) {
             const dy = event.touches[0].clientY - startY;
-            if (dy > 0) paint(Math.max(holdPull, rubber(dy)));
+            if (dy > 0) paint(Math.max(refreshPull, rubber(dy)));
           }
           return;
         }
@@ -4987,7 +4987,7 @@
           pulling = false;
           locked = false;
           document.body.classList.add("ptr-settling");
-          paintImmediate(holdPull);
+          paintImmediate(refreshPull);
           return;
         }
         if (!pulling && !locked) return;
