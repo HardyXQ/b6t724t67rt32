@@ -189,11 +189,11 @@
     }
 
     body.ptr-settling .app {
-      transition: transform .54s cubic-bezier(.18, .92, .2, 1);
+      transition: transform .72s cubic-bezier(.16, .86, .24, 1);
     }
 
     body.ptr-settling .topbar {
-      transition: transform .54s cubic-bezier(.18, .92, .2, 1);
+      transition: transform .72s cubic-bezier(.16, .86, .24, 1);
     }
 
     .pull-refresh {
@@ -4855,6 +4855,7 @@
       const root = document.documentElement;
       const threshold = 142;
       const refreshPull = 116;
+      const settleMs = 760;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -4949,7 +4950,7 @@
           document.body.classList.remove("ptr-active");
           document.body.classList.remove("ptr-settling");
           indicator.classList.remove("show");
-        }, 430);
+        }, settleMs);
       };
 
       const performSoftRefresh = async () => {
@@ -4984,7 +4985,7 @@
           document.body.classList.remove("ptr-active");
           document.body.classList.remove("ptr-settling");
           indicator.classList.remove("show");
-        }, 430);
+        }, settleMs);
       };
 
       document.addEventListener("touchstart", event => {
