@@ -3416,8 +3416,10 @@
     function marketCardHtml(m, isHome = false) {
       const up = getSidePrice(m.id, "UP");
       const down = getSidePrice(m.id, "DOWN");
-      const changeClass = m.change >= 0 ? "up" : "down";
-      const changeText = (m.change >= 0 ? "+" : "") + m.change.toFixed(2) + "%";
+      const ms = getMarketState(m.id);
+      updateMockPrice(m.id);
+      const priceText = marketPriceText(ms.currentPrice);
+      const change = marketCandleChange(ms.currentPrice, ms.openPrice);
       const isFav = state.favorites && state.favorites.includes(m.id);
 
       const starIcon = `
@@ -3429,7 +3431,7 @@
       `;
 
       return `
-        <article class="card market-card" onclick="openTerminal('${m.id}')">
+        <article class="card market-card" data-market-id="${m.id}" onclick="openTerminal('${m.id}')">
           <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0;">
             <div class="asset">
               <div style="position: relative; flex: 0 0 auto;">
@@ -3447,8 +3449,8 @@
             </div>
           </div>
           <div class="quote">
-            <strong>${m.price > 100 ? money(m.price) : "$" + m.price.toFixed(2)}</strong>
-            <span class="${changeClass}">${changeText}</span>
+            <strong data-market-price="${m.id}">${priceText}</strong>
+            <span data-market-change="${m.id}" class="${change.className}">${change.text}</span>
           </div>
         </article>`;
     }
@@ -3478,6 +3480,15 @@
       const abs = Math.abs(n);
       if (abs > 100) return money(n);
       return (n < 0 ? "-$" : "$") + abs.toFixed(3);
+    }
+
+    function marketCandleChange(currentPrice, openPrice) {
+      const pct = openPrice > 0 ? ((currentPrice - openPrice) / openPrice) * 100 : 0;
+      const up = pct >= 0;
+      return {
+        className: up ? "up" : "down",
+        text: `${up ? "+" : "-"}${Math.abs(pct).toFixed(2)}%`
+      };
     }
 
     function formatMarketSchedule(openedAt, minutes) {
@@ -3643,10 +3654,31 @@
     function updateTerminalCandleChange(currentPrice, openPrice) {
       const changeEl = document.getElementById("terminalChange");
       if (!changeEl) return;
-      const pct = openPrice > 0 ? ((currentPrice - openPrice) / openPrice) * 100 : 0;
-      const up = pct >= 0;
-      changeEl.textContent = `${up ? "▲" : "▼"} ${up ? "+" : "-"}${Math.abs(pct).toFixed(2)}%`;
-      changeEl.className = "trm-change " + (up ? "up" : "down");
+      const change = marketCandleChange(currentPrice, openPrice);
+      changeEl.textContent = `${change.className === "up" ? "▲" : "▼"} ${change.text}`;
+      changeEl.className = "trm-change " + change.className;
+    }
+
+    function updateMarketCardQuote(marketId) {
+      const market = getMarket(marketId);
+      const ms = getMarketState(marketId);
+      const priceText = marketPriceText(ms.currentPrice);
+      const change = marketCandleChange(ms.currentPrice, ms.openPrice);
+      document.querySelectorAll(`[data-market-price="${market.id}"]`).forEach(el => {
+        el.textContent = priceText;
+      });
+      document.querySelectorAll(`[data-market-change="${market.id}"]`).forEach(el => {
+        el.textContent = change.text;
+        el.className = change.className;
+      });
+    }
+
+    function refreshMarketCardQuotes() {
+      if (!document.querySelector("[data-market-price]")) return;
+      markets.forEach(market => {
+        updateMockPrice(market.id);
+        updateMarketCardQuote(market.id);
+      });
     }
 
     function setOrderType(type, button) {
@@ -3760,8 +3792,14 @@
     function setLiveMarketPrice(assetKey, price) {
       if (!Number.isFinite(price)) return;
       terminalChartState.livePrices[assetKey] = price;
+      markets.forEach(market => {
+        if (marketStreamKey(market) !== assetKey) return;
+        const ms = getMarketState(market.id);
+        ms.currentPrice = price;
+        updateMarketCardQuote(market.id);
+      });
       const currentMarket = getMarket(state.currentMarketId);
-      if (!document.getElementById("screen-terminal")?.classList.contains("active")) return;
+      if (!currentMarket || !document.getElementById("screen-terminal")?.classList.contains("active")) return;
       if (marketStreamKey(currentMarket) !== assetKey) return;
       const ms = getMarketState(currentMarket.id);
       ms.currentPrice = price;
@@ -5421,6 +5459,7 @@
     renderAll();
     setInterval(() => {
       const changed = processLimitOrders();
+      refreshMarketCardQuotes();
       if (document.getElementById("screen-terminal").classList.contains("active")) {
         renderTerminal();
       } else if (changed) {
