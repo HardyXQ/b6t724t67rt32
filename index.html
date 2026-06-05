@@ -456,9 +456,14 @@
       line-height: 1.48;
       font-size: 14px;
     }
-    .hero-actions, .two-col {
+    .hero-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 10px;
     }
     .hero-actions { margin-top: 20px; }
@@ -1704,7 +1709,7 @@
     /* Ключевые уровни */
     .trm-levels {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 6px;
       margin-top: -12px;
       padding: 0 10px 10px;
@@ -1746,6 +1751,7 @@
       white-space: nowrap;
     }
     .trm-level-target {
+      grid-column: 1 / -1;
       background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
       border-color: var(--line) !important;
     }
@@ -2063,7 +2069,7 @@
     .trm-orderbook.open .trm-ob-body { max-height: 360px; border-top: 1px solid var(--line); }
     .trm-ob-cols {
       display: grid;
-      grid-template-columns: 1fr .9fr .8fr;
+      grid-template-columns: .9fr .7fr .8fr .8fr;
       gap: 8px;
       padding: 9px 16px;
       color: var(--muted);
@@ -2073,8 +2079,10 @@
       letter-spacing: .03em;
       background: color-mix(in srgb, var(--surface-2) 60%, transparent);
     }
+    .trm-ob-cols .shares,
     .trm-ob-cols .qty { text-align: right; }
     .trm-orderbook .book-row {
+      grid-template-columns: .9fr .7fr .8fr .8fr;
       min-height: 36px;
       padding: 9px 16px;
       font-size: 12px;
@@ -2083,6 +2091,8 @@
     }
     .trm-orderbook .book-row .up { color: var(--green); }
     .trm-orderbook .book-row .down { color: var(--red); }
+    .trm-orderbook .book-row .shares,
+    .trm-orderbook .book-row .qty { text-align: right; }
 
     /* Кнопки направления (липкий CTA) */
     .trm-actions {
@@ -2294,7 +2304,7 @@
     }
 
     @media (max-width: 350px) {
-      .hero-actions, .portfolio-actions, .two-col, .direction-actions { grid-template-columns: 1fr; }
+      .portfolio-actions, .two-col, .direction-actions { grid-template-columns: 1fr; }
       .market-card { grid-template-columns: 1fr; }
       .quote { text-align: left; margin-top: 4px; }
       .success-info h3 { font-size: 20px; }
@@ -2520,10 +2530,6 @@
 
         <!-- Ключевые уровни -->
         <section class="trm-levels">
-          <article>
-            <span>Цена открытия</span>
-            <strong id="terminalOpenPrice">$0.00</strong>
-          </article>
           <article class="trm-level-target">
             <span>Целевая цена</span>
             <strong id="polyTargetPrice">$0.00</strong>
@@ -2579,11 +2585,11 @@
         <div class="trm-orderbook" aria-label="Стакан заявок" onclick="this.classList.toggle('open')">
           <div class="trm-ob-head">
             <strong>Стакан заявок</strong>
-            <em>Детали рынка</em>
+            <em id="orderbookVolume">$0 Объем</em>
             <b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></b>
           </div>
           <div class="trm-ob-body">
-            <div class="trm-ob-cols"><span>Сторона</span><span>Цена</span><span class="qty">Объём</span></div>
+            <div class="trm-ob-cols"><span>Сторона</span><span>Цена</span><span class="shares">ДОЛИ</span><span class="qty">ИТОГО</span></div>
             <div id="orderbookRows"></div>
           </div>
         </div>
@@ -3516,7 +3522,6 @@
       setText("polySeconds", String(remainingSeconds).padStart(2, "0"));
       setText("terminalPrice", priceLabel);
       setText("terminalMarketUtc", formatMarketScheduleUtc(ms.openedAt, market.minutes));
-      setText("terminalOpenPrice", marketPriceText(ms.openPrice));
       setText("polyTargetPrice", targetLabel);
       setText("polyCurrentLabel", priceLabel);
       setText("chartLabel", market.asset);
@@ -3586,12 +3591,15 @@
 
       const rows = getOrderbook(market.id);
       const maxQty = Math.max(...rows.map(r => r.qty));
+      const totalOrderbookVolume = Math.round(rows.reduce((sum, row) => sum + (row.qty * row.price / 100), 0));
+      setText("orderbookVolume", `$${totalOrderbookVolume.toLocaleString("en-US")} Объем`);
       const orderbookEl = document.getElementById("orderbookRows");
       if (orderbookEl) {
         orderbookEl.innerHTML = rows.map(row => `
           <div class="book-row" style="--bar:${Math.round(row.qty / maxQty * 100)}%; --bar-color:${row.color}">
             <span class="${row.side === 'UP' ? 'up' : 'down'}">${row.label}</span>
             <span>${cents(row.price)}</span>
+            <span class="shares">${(row.qty * row.price / 100).toLocaleString('ru-RU', { maximumFractionDigits: 0 })}</span>
             <span class="qty">${row.qty.toLocaleString('ru-RU')}</span>
           </div>`).join("");
       }
@@ -3794,7 +3802,7 @@
         row("Рынок", `${market.asset} · ${market.expiry}`) +
         row("Направление", dir, dirColor) +
         row("Тип ордера", typeLabel) +
-        row(orderType === "limit" ? "Лимитная цена" : "Цена за share", cents(price)) +
+        row(orderType === "limit" ? "Лимитная цена" : "Цена за долю", cents(price)) +
         row("Сумма", money(amount)) +
         `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0 0;">` +
         `<span style="color:var(--muted);font-weight:800;">Потенциальная выплата</span>` +
@@ -4518,7 +4526,7 @@
             </span>
             <div class="trm-pos-main">
               <strong>${money(p.amount)}</strong>
-              <span>Ставка</span>
+              <span>СТАВКА</span>
             </div>
             <div class="trm-pos-right">
               <strong class="trm-pos-payout">${money(p.shares)}</strong>
@@ -4526,7 +4534,7 @@
             </div>
           </div>
           <div class="trm-pos-foot">
-            <div class="trm-pos-stat"><span>Shares</span><strong>${p.shares.toFixed(2)}</strong></div>
+            <div class="trm-pos-stat"><span>ДОЛИ</span><strong>${p.shares.toFixed(2)}</strong></div>
             <div class="trm-pos-stat"><span>Ср. цена</span><strong>${cents(p.sharePrice)}</strong></div>
             <div class="trm-pos-stat"><span>Доходность</span><strong class="${pnlClass}">${sign}${money(pnl)}<small>(${sign}${pct.toFixed(1)}%)</small></strong></div>
           </div>
