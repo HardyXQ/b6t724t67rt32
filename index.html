@@ -1668,7 +1668,7 @@
       opacity: .4;
       pointer-events: none;
     }
-    .trm-chart svg {
+    .trm-chart canvas {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -1703,9 +1703,6 @@
       color: var(--tg-blue);
       background: color-mix(in srgb, var(--surface) 92%, transparent);
     }
-    #terminalLine { stroke: var(--tg-blue); }
-    #terminalDot { fill: var(--tg-blue); }
-
     /* Ключевые уровни */
     .trm-levels {
       display: grid;
@@ -2515,17 +2512,7 @@
         <section class="trm-chart">
           <div class="trm-chart-tag" id="chartLabel">График цены</div>
           <div class="trm-chart-now" id="polyCurrentLabel">$0.00</div>
-          <svg id="terminalChart" viewBox="0 0 360 210" preserveAspectRatio="none" role="img" aria-label="График цены">
-            <path id="terminalArea" d="" fill="url(#terminalAreaGradient)"></path>
-            <path id="terminalLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
-            <circle id="terminalDot" cx="0" cy="0" r="4.5" fill="var(--tg-blue)"></circle>
-            <defs>
-              <linearGradient id="terminalAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#229ED9" stop-opacity=".18"></stop>
-                <stop offset="100%" stop-color="#229ED9" stop-opacity="0"></stop>
-              </linearGradient>
-            </defs>
-          </svg>
+          <canvas id="terminalChartCanvas" aria-label="График цены"></canvas>
         </section>
 
         <!-- Ключевые уровни -->
@@ -2830,6 +2817,13 @@
     let limitSide = "UP";
     // Отложенное намерение по сделке, ожидающее подтверждения в модалке
     let pendingOrder = null;
+    const terminalChartState = {
+      maxPoints: 120,
+      markets: {},
+      livePrices: {},
+      raf: 0,
+      streamsStarted: false
+    };
 
     function seedBalanceHistory() {
       const now = Date.now();
@@ -2948,10 +2942,12 @@
       const market = getMarket(id);
       const openedAt = marketWindowStart(market.minutes);
       if (!state.marketState[id] || state.marketState[id].openedAt !== openedAt) {
+        const livePrice = getLiveMarketPrice(market);
+        const startPrice = Number.isFinite(livePrice) ? livePrice : market.price;
         state.marketState[id] = {
           upCents: 50,
-          openPrice: market.price,
-          currentPrice: market.price,
+          openPrice: startPrice,
+          currentPrice: startPrice,
           openedAt
         };
         saveState();
@@ -3604,12 +3600,17 @@
           </div>`).join("");
       }
 
-      drawTerminalChart(market.id);
+      updateTerminalChart(market.id, ms.currentPrice, targetPrice);
     }
 
     function updateMockPrice(marketId) {
       const market = getMarket(marketId);
       const ms = getMarketState(marketId);
+      const livePrice = getLiveMarketPrice(market);
+      if (Number.isFinite(livePrice)) {
+        ms.currentPrice = livePrice;
+        return;
+      }
       const elapsed = (Date.now() - ms.openedAt) / 1000;
       const wave = Math.sin(elapsed / 7 + market.price) * 0.0017;
       const bias = (ms.upCents - 50) / 50 * 0.002;
@@ -3741,22 +3742,252 @@
       haptic("selection");
     }
 
-    function drawTerminalChart(marketId) {
-      const market = getMarket(marketId);
+    function marketStreamKey(market) {
+      return shortAssetName(market?.asset).toUpperCase();
+    }
+
+    function getLiveMarketPrice(market) {
+      return terminalChartState.livePrices[marketStreamKey(market)];
+    }
+
+    function setLiveMarketPrice(assetKey, price) {
+      if (!Number.isFinite(price)) return;
+      terminalChartState.livePrices[assetKey] = price;
+      const currentMarket = getMarket(state.currentMarketId);
+      if (!document.getElementById("screen-terminal")?.classList.contains("active")) return;
+      if (marketStreamKey(currentMarket) !== assetKey) return;
+      const ms = getMarketState(currentMarket.id);
+      ms.currentPrice = price;
+      const targetPrice = ms.openPrice * (currentMarket.price > 100 ? 1.0003 : 1.006);
+      setText("terminalPrice", marketPriceText(price));
+      setText("polyCurrentLabel", marketPriceText(price));
+      updateTerminalChart(currentMarket.id, price, targetPrice);
+    }
+
+    function initTerminalChartStreams() {
+      if (terminalChartState.streamsStarted || typeof WebSocket === "undefined") return;
+      terminalChartState.streamsStarted = true;
+      try {
+        const binance = new WebSocket("wss://stream.binance.com:9443/ws");
+        binance.onopen = () => {
+          binance.send(JSON.stringify({ method: "SUBSCRIBE", params: ["btcusdt@miniTicker", "ethusdt@miniTicker"], id: 1 }));
+        };
+        binance.onmessage = event => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.s === "BTCUSDT") setLiveMarketPrice("BTC", Number(msg.c));
+            if (msg.s === "ETHUSDT") setLiveMarketPrice("ETH", Number(msg.c));
+          } catch (e) {}
+        };
+      } catch (e) {}
+
+      try {
+        const bybit = new WebSocket("wss://stream.bybit.com/v5/public/linear");
+        bybit.onopen = () => {
+          bybit.send(JSON.stringify({ op: "subscribe", args: ["tickers.TONUSDT"] }));
+        };
+        bybit.onmessage = event => {
+          try {
+            const msg = JSON.parse(event.data);
+            const price = msg?.data?.lastPrice;
+            if (price) setLiveMarketPrice("TON", Number(price));
+          } catch (e) {}
+        };
+      } catch (e) {}
+    }
+
+    function getTerminalChartBucket(marketId, price, targetPrice) {
       const ms = getMarketState(marketId);
-      const points = [];
-      for (let i = 0; i < 22; i++) {
-        const x = 12 + i * 16;
-        const trend = (ms.upCents - 50) * -0.45;
-        const y = 106 + Math.sin(i * 0.72 + market.price) * 26 + Math.cos(i * 0.31) * 13 - trend - i * 0.55;
-        points.push([x, clamp(y, 24, 182)]);
+      const bucket = terminalChartState.markets[marketId];
+      if (bucket && bucket.openedAt === ms.openedAt) return bucket;
+      const prices = Array(terminalChartState.maxPoints).fill(price);
+      terminalChartState.markets[marketId] = {
+        openedAt: ms.openedAt,
+        prices,
+        latestPrice: price,
+        animatedLivePrice: price,
+        animatedMin: null,
+        animatedMax: null,
+        targetPrice,
+        lastSampleAt: Date.now()
+      };
+      return terminalChartState.markets[marketId];
+    }
+
+    function updateTerminalChart(marketId, price, targetPrice) {
+      if (!Number.isFinite(price)) return;
+      const bucket = getTerminalChartBucket(marketId, price, targetPrice);
+      const now = Date.now();
+      bucket.latestPrice = price;
+      bucket.targetPrice = targetPrice;
+      if (!Number.isFinite(bucket.animatedLivePrice)) bucket.animatedLivePrice = price;
+      if (now - bucket.lastSampleAt >= 1000) {
+        const steps = Math.min(4, Math.floor((now - bucket.lastSampleAt) / 1000));
+        for (let i = 0; i < steps; i++) {
+          bucket.prices.push(bucket.animatedLivePrice);
+          if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
+          bucket.lastSampleAt += 1000;
+        }
       }
-      const d = points.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(" ");
-      const area = d + ` L${points[points.length - 1][0]},210 L${points[0][0]},210 Z`;
-      document.getElementById("terminalLine").setAttribute("d", d);
-      document.getElementById("terminalArea").setAttribute("d", area);
-      document.getElementById("terminalDot").setAttribute("cx", points[points.length - 1][0]);
-      document.getElementById("terminalDot").setAttribute("cy", points[points.length - 1][1]);
+      startTerminalChartLoop();
+    }
+
+    function startTerminalChartLoop() {
+      if (terminalChartState.raf) return;
+      terminalChartState.raf = requestAnimationFrame(drawTerminalChartFrame);
+    }
+
+    function fitTerminalCanvas(canvas, ctx) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { width: rect.width, height: rect.height };
+    }
+
+    function drawTerminalChartFrame() {
+      terminalChartState.raf = requestAnimationFrame(drawTerminalChartFrame);
+      const canvas = document.getElementById("terminalChartCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const { width, height } = fitTerminalCanvas(canvas, ctx);
+      ctx.clearRect(0, 0, width, height);
+
+      const market = getMarket(state.currentMarketId);
+      const bucket = terminalChartState.markets[market.id];
+      if (!bucket || bucket.prices.length < 2) return;
+
+      bucket.animatedLivePrice += (bucket.latestPrice - bucket.animatedLivePrice) * 0.07;
+      const visiblePrices = bucket.prices.slice(-terminalChartState.maxPoints);
+      let min = Math.min(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
+      let max = Math.max(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
+      const minRange = Math.max(market.price * 0.0012, market.price > 100 ? 12 : 0.025);
+      if (max - min < minRange) {
+        const mid = (max + min) / 2;
+        min = mid - minRange / 2;
+        max = mid + minRange / 2;
+      }
+      const range = max - min;
+      min -= range * 0.24;
+      max += range * 0.24;
+      if (bucket.animatedMin === null) bucket.animatedMin = min;
+      if (bucket.animatedMax === null) bucket.animatedMax = max;
+      const currentRange = Math.max(.000001, bucket.animatedMax - bucket.animatedMin);
+      const cameraNeedsExpand = max > bucket.animatedMax || min < bucket.animatedMin;
+      const nearEdge = bucket.animatedLivePrice > bucket.animatedMax - currentRange * .18 || bucket.animatedLivePrice < bucket.animatedMin + currentRange * .18;
+      const expandEase = cameraNeedsExpand ? .38 : (nearEdge ? .24 : .07);
+      const contractEase = .045;
+      bucket.animatedMin += (min - bucket.animatedMin) * (min < bucket.animatedMin ? expandEase : contractEase);
+      bucket.animatedMax += (max - bucket.animatedMax) * (max > bucket.animatedMax ? expandEase : contractEase);
+
+      const styles = getComputedStyle(document.documentElement);
+      const blue = styles.getPropertyValue("--tg-blue").trim() || "#229ED9";
+      const muted = styles.getPropertyValue("--muted").trim() || "#667789";
+      const lineColor = styles.getPropertyValue("--line").trim() || "rgba(15,23,32,.075)";
+      const safeTop = 48;
+      const topPad = safeTop;
+      const bottomPad = 18;
+      const rightPad = 28;
+      const usableWidth = Math.max(1, width - rightPad);
+      const chartHeight = Math.max(1, height - topPad - bottomPad);
+      const denom = Math.max(.000001, bucket.animatedMax - bucket.animatedMin);
+      const getY = value => topPad + chartHeight - ((value - bucket.animatedMin) / denom) * chartHeight;
+      const smoothOffset = Math.min((Date.now() - bucket.lastSampleAt) / 1000, 1);
+      const stepX = usableWidth / (terminalChartState.maxPoints - 1);
+      const firstX = -smoothOffset * stepX;
+      const liveX = usableWidth;
+      const liveY = clamp(getY(bucket.animatedLivePrice), topPad + 10, height - bottomPad - 10);
+
+      ctx.save();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = lineColor;
+      ctx.fillStyle = muted;
+      ctx.globalAlpha = .55;
+      ctx.font = "900 10px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+      for (let i = 1; i <= 3; i++) {
+        const y = topPad + chartHeight * (i / 4);
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      const drawPath = () => {
+        ctx.beginPath();
+        ctx.moveTo(firstX, getY(bucket.prices[0]));
+        for (let i = 1; i < bucket.prices.length; i++) {
+          const x = (i - smoothOffset) * stepX;
+          const y = getY(bucket.prices[i]);
+          const prevX = (i - 1 - smoothOffset) * stepX;
+          const prevY = getY(bucket.prices[i - 1]);
+          ctx.bezierCurveTo((prevX + x) / 2, prevY, (prevX + x) / 2, y, x, y);
+        }
+        const lastX = (bucket.prices.length - 1 - smoothOffset) * stepX;
+        const lastY = getY(bucket.prices[bucket.prices.length - 1]);
+        ctx.bezierCurveTo((lastX + liveX) / 2, lastY, (lastX + liveX) / 2, liveY, liveX, liveY);
+      };
+
+      ctx.save();
+      drawPath();
+      ctx.lineTo(liveX, height);
+      ctx.lineTo(firstX, height);
+      ctx.closePath();
+      const fill = ctx.createLinearGradient(0, topPad, 0, height);
+      fill.addColorStop(0, "rgba(34, 158, 217, .18)");
+      fill.addColorStop(1, "rgba(34, 158, 217, 0)");
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      drawPath();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = "rgba(34, 158, 217, .35)";
+      ctx.strokeStyle = blue;
+      ctx.lineWidth = 2.7;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      ctx.restore();
+
+      if (Number.isFinite(bucket.targetPrice)) {
+        const targetY = clamp(getY(bucket.targetPrice), topPad + 12, height - bottomPad - 12);
+        ctx.save();
+        ctx.setLineDash([8, 5]);
+        ctx.strokeStyle = "rgba(34, 158, 217, .52)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(0, targetY);
+        ctx.lineTo(usableWidth, targetY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = blue;
+        ctx.font = "900 10px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+        ctx.fillText("Цель", 10, targetY - 6);
+        ctx.restore();
+      }
+
+      const pulse = 8 + Math.sin(Date.now() / 190) * 1.4;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(liveX, liveY, pulse, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(34, 158, 217, .20)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(liveX, liveY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = blue;
+      ctx.lineWidth = 2.4;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
     }
 
     function placeOrder(side) {
@@ -5122,6 +5353,7 @@
     lockPortraitOrientation();
     applyTheme();
     initPullToRefresh();
+    initTerminalChartStreams();
     initChartScrubbing();
     renderAll();
     setInterval(() => {
