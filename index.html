@@ -1553,11 +1553,10 @@
       align-items: center;
       gap: 13px;
       padding: 15px 15px 12px;
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      border-radius: var(--radius-lg);
       background: color-mix(in srgb, var(--surface) 95%, transparent);
       border: 1px solid var(--line);
-      border-bottom: 0;
-      box-shadow: none;
+      box-shadow: var(--shadow-soft);
     }
     .poly-coin {
       width: 52px;
@@ -1623,7 +1622,7 @@
       flex: 0 0 auto;
       text-align: center;
       padding: 8px clamp(8px, 2.6vw, 12px);
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: color-mix(in srgb, var(--surface) 94%, transparent);
       border: 1px solid var(--line);
     }
@@ -1846,6 +1845,7 @@
       color: var(--green);
       font-variant-numeric: tabular-nums;
     }
+    .trm-pos-payout.neutral { color: var(--muted); }
     .trm-pos-payout-label {
       color: var(--muted);
       font-size: 10px;
@@ -2513,14 +2513,6 @@
           <div class="trm-chart-tag" id="chartLabel">График цены</div>
           <div class="trm-chart-now" id="polyCurrentLabel">$0.00</div>
           <canvas id="terminalChartCanvas" aria-label="График цены"></canvas>
-        </section>
-
-        <!-- Ключевые уровни -->
-        <section class="trm-levels">
-          <article class="trm-level-target">
-            <span>Целевая цена</span>
-            <strong id="polyTargetPrice">$0.00</strong>
-          </article>
         </section>
 
         <!-- Мои позиции по рынку -->
@@ -3531,17 +3523,10 @@
       setText("polySeconds", String(remainingSeconds).padStart(2, "0"));
       setText("terminalPrice", priceLabel);
       setText("terminalMarketUtc", formatMarketScheduleUtc(ms.openedAt, market.minutes));
-      setText("polyTargetPrice", targetLabel);
       setText("polyCurrentLabel", targetLabel);
       setText("chartLabel", market.asset);
 
-      // Изменение цены актива
-      const changeEl = document.getElementById("terminalChange");
-      if (changeEl) {
-        const up = (market.change || 0) >= 0;
-        changeEl.textContent = (up ? "▲ +" : "▼ ") + Math.abs(market.change || 0).toFixed(2) + "%";
-        changeEl.className = "trm-change " + (up ? "up" : "down");
-      }
+      updateTerminalCandleChange(ms.currentPrice, targetPrice);
 
       // Доступный баланс
       const availableEl = document.getElementById("trmAvailable");
@@ -3653,6 +3638,15 @@
       // нечисловое значение, меньше минимума ($1) или больше доступного баланса.
       const invalidAmount = rawAmount === "" || !isFinite(amount) || amount < 1 || amount > state.balance;
       if (amountInput) amountInput.parentElement.classList.toggle("invalid", invalidAmount);
+    }
+
+    function updateTerminalCandleChange(currentPrice, openPrice) {
+      const changeEl = document.getElementById("terminalChange");
+      if (!changeEl) return;
+      const pct = openPrice > 0 ? ((currentPrice - openPrice) / openPrice) * 100 : 0;
+      const up = pct >= 0;
+      changeEl.textContent = `${up ? "▲" : "▼"} ${up ? "+" : "-"}${Math.abs(pct).toFixed(2)}%`;
+      changeEl.className = "trm-change " + (up ? "up" : "down");
     }
 
     function setOrderType(type, button) {
@@ -3774,6 +3768,7 @@
       const targetPrice = ms.openPrice;
       setText("terminalPrice", marketPriceText(price));
       setText("polyCurrentLabel", marketPriceText(targetPrice));
+      updateTerminalCandleChange(price, targetPrice);
       updateTerminalChart(currentMarket.id, price, targetPrice);
     }
 
@@ -4263,29 +4258,31 @@
         `<span style="color:var(--muted);font-weight:800;">${label}</span>` +
         `<strong style="font-weight:950;${color ? `color:${color};` : ""}">${value}</strong></div>`;
 
-      // Показываем потенциальную доходность при выигрыше — фактический
-      // результат не раскрываем до закрытия позиции.
-      const potentialPayout = positions.reduce((sum, p) => sum + p.shares, 0);
+      const results = positions.map(getPositionResult);
+      const potentialPayout = results.reduce((sum, result) => sum + result.payout, 0);
       const totalStake = positions.reduce((sum, p) => sum + p.amount, 0);
       const yieldProfit = potentialPayout - totalStake;
       const yieldPct = totalStake > 0 ? (yieldProfit / totalStake) * 100 : 0;
       const yieldSign = yieldProfit >= 0 ? "+" : "";
-      const yieldText = `${yieldSign}${money(yieldProfit)} · ${yieldSign}${yieldPct.toFixed(1)}%`;
+      const yieldText = `${yieldSign}${money(yieldProfit)} (${yieldSign}${yieldPct.toFixed(1)}%)`;
 
       let rows;
       if (positions.length === 1) {
         const p = positions[0];
+        const result = results[0];
         const dir = p.side === "UP" ? "Вверх" : "Вниз";
         const dirColor = p.side === "UP" ? "var(--green)" : "var(--red)";
         rows =
           row("Рынок", `${p.asset} · ${p.expiry}`) +
           row("Направление", dir, dirColor) +
           row("Ставка", money(p.amount)) +
-          row("Доходность", yieldText, "var(--green)");
+          row("Выплата", money(result.payout), result.payout > 0 ? "var(--green)" : "var(--muted)") +
+          row("Доходность", yieldText, yieldProfit >= 0 ? "var(--green)" : "var(--red)");
       } else {
         rows =
           row("Позиций к закрытию", String(positions.length)) +
-          row("Доходность", yieldText, "var(--green)");
+          row("Выплата", money(potentialPayout), potentialPayout > 0 ? "var(--green)" : "var(--muted)") +
+          row("Доходность", yieldText, yieldProfit >= 0 ? "var(--green)" : "var(--red)");
       }
 
       document.getElementById("modalTitle").textContent = mode === "cashout" ? "Вывод средств" : "Закрытие позиции";
@@ -4656,14 +4653,28 @@
       return closePrice;
     }
 
-    function settlePosition(position) {
+    function getPositionResult(position) {
       const market = getMarket(position.marketId);
+      const ms = getMarketState(position.marketId);
+      const expired = Date.now() >= position.expiresAt;
       const targetPrice = getPositionTargetPrice(position, market);
-      const closePrice = getPositionClosePrice(position, market);
-      const wentUp = closePrice >= targetPrice;
+      const resultPrice = expired ? getPositionClosePrice(position, market) : ms.currentPrice;
+      const wentUp = resultPrice >= targetPrice;
       const win = (position.side === "UP" && wentUp) || (position.side === "DOWN" && !wentUp);
       const payout = win ? position.shares : 0;
       const pnl = payout - position.amount;
+      const pct = position.amount > 0 ? (pnl / position.amount) * 100 : 0;
+      return { market, targetPrice, resultPrice, win, payout, pnl, pct };
+    }
+
+    function settlePosition(position) {
+      const result = getPositionResult(position);
+      const market = result.market;
+      const targetPrice = result.targetPrice;
+      const closePrice = result.resultPrice;
+      const win = result.win;
+      const payout = result.payout;
+      const pnl = result.pnl;
       position.status = win ? "won" : "lost";
       position.closedAt = Date.now();
       position.targetPrice = targetPrice;
@@ -4789,17 +4800,14 @@
     function terminalPositionHtml(p) {
       const dir = p.side === "UP" ? "Вверх" : "Вниз";
       const sideClass = p.side === "UP" ? "up" : "down";
-      const market = getMarket(p.marketId);
-      const ms = getMarketState(p.marketId);
       const expired = Date.now() >= p.expiresAt;
-      const targetPrice = getPositionTargetPrice(p, market);
-      const resultPrice = expired ? getPositionClosePrice(p, market) : ms.currentPrice;
-      const winningNow = (p.side === "UP" && resultPrice >= targetPrice) || (p.side === "DOWN" && resultPrice < targetPrice);
-      const curValue = winningNow ? p.shares : 0;
-      const pnl = curValue - p.amount;
-      const pct = p.amount > 0 ? (pnl / p.amount) * 100 : 0;
+      const result = getPositionResult(p);
+      const pnl = result.pnl;
+      const pct = result.pct;
       const pnlClass = pnl >= 0 ? "up" : "down";
       const sign = pnl >= 0 ? "+" : "";
+      const displayedPayout = expired ? result.payout : p.shares;
+      const payoutClass = expired && displayedPayout <= 0 ? " neutral" : "";
       const cashoutBtn = expired
         ? `<button class="trm-pos-cashout" type="button" onclick="event.stopPropagation(); cashOutPosition('${p.id}')">Вывести средства</button>`
         : `<button class="trm-pos-close" type="button" onclick="event.stopPropagation(); closePosition('${p.id}')">Закрыть позицию</button>`;
@@ -4815,7 +4823,7 @@
               <span>СТАВКА</span>
             </div>
             <div class="trm-pos-right">
-              <strong class="trm-pos-payout">${money(p.shares)}</strong>
+              <strong class="trm-pos-payout${payoutClass}">${money(displayedPayout)}</strong>
               <span class="trm-pos-payout-label">выплата</span>
             </div>
           </div>
