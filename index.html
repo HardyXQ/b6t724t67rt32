@@ -2797,6 +2797,7 @@
       history: [],
       balanceHistory: seedBalanceHistory(),
       marketState: {},
+      marketCloses: {},
       favorites: [],
       currentMarketId: markets[0].id,
       filterExpiry: "all",
@@ -2938,10 +2939,22 @@
       return markets.find(m => m.id === id) || markets[0];
     }
 
+    function marketCloseKey(marketId, openedAt) {
+      return `${marketId}:${Number(openedAt || 0)}`;
+    }
+
+    function rememberMarketClose(marketId, openedAt, closePrice) {
+      if (!state.marketCloses) state.marketCloses = {};
+      if (!Number.isFinite(closePrice) || !openedAt) return;
+      state.marketCloses[marketCloseKey(marketId, openedAt)] = closePrice;
+    }
+
     function getMarketState(id) {
       const market = getMarket(id);
       const openedAt = marketWindowStart(market.minutes);
-      if (!state.marketState[id] || state.marketState[id].openedAt !== openedAt) {
+      const previous = state.marketState[id];
+      if (!previous || previous.openedAt !== openedAt) {
+        if (previous) rememberMarketClose(id, previous.openedAt, previous.currentPrice);
         const livePrice = getLiveMarketPrice(market);
         const startPrice = Number.isFinite(livePrice) ? livePrice : market.price;
         state.marketState[id] = {
@@ -3504,7 +3517,7 @@
       const ms = getMarketState(market.id);
       updateMockPrice(market.id);
 
-      const targetPrice = ms.openPrice * (market.price > 100 ? 1.0003 : 1.006);
+      const targetPrice = ms.openPrice;
       const remainingMs = Math.max(0, ms.openedAt + market.minutes * 60000 - Date.now());
       const remainingMinutes = Math.floor(remainingMs / 60000);
       const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
@@ -3519,7 +3532,7 @@
       setText("terminalPrice", priceLabel);
       setText("terminalMarketUtc", formatMarketScheduleUtc(ms.openedAt, market.minutes));
       setText("polyTargetPrice", targetLabel);
-      setText("polyCurrentLabel", priceLabel);
+      setText("polyCurrentLabel", targetLabel);
       setText("chartLabel", market.asset);
 
       // Изменение цены актива
@@ -3758,9 +3771,9 @@
       if (marketStreamKey(currentMarket) !== assetKey) return;
       const ms = getMarketState(currentMarket.id);
       ms.currentPrice = price;
-      const targetPrice = ms.openPrice * (currentMarket.price > 100 ? 1.0003 : 1.006);
+      const targetPrice = ms.openPrice;
       setText("terminalPrice", marketPriceText(price));
-      setText("polyCurrentLabel", marketPriceText(price));
+      setText("polyCurrentLabel", marketPriceText(targetPrice));
       updateTerminalChart(currentMarket.id, price, targetPrice);
     }
 
@@ -3814,21 +3827,23 @@
       return terminalChartState.markets[marketId];
     }
 
+    function sampleTerminalChartBucket(bucket, now = Date.now()) {
+      if (!bucket || !Number.isFinite(bucket.latestPrice)) return;
+      if (!Number.isFinite(bucket.animatedLivePrice)) bucket.animatedLivePrice = bucket.latestPrice;
+      while (now - bucket.lastSampleAt >= 1000) {
+        bucket.prices.push(bucket.animatedLivePrice);
+        if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
+        bucket.lastSampleAt += 1000;
+      }
+    }
+
     function updateTerminalChart(marketId, price, targetPrice) {
       if (!Number.isFinite(price)) return;
       const bucket = getTerminalChartBucket(marketId, price, targetPrice);
       const now = Date.now();
       bucket.latestPrice = price;
       bucket.targetPrice = targetPrice;
-      if (!Number.isFinite(bucket.animatedLivePrice)) bucket.animatedLivePrice = price;
-      if (now - bucket.lastSampleAt >= 1000) {
-        const steps = Math.min(4, Math.floor((now - bucket.lastSampleAt) / 1000));
-        for (let i = 0; i < steps; i++) {
-          bucket.prices.push(bucket.animatedLivePrice);
-          if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
-          bucket.lastSampleAt += 1000;
-        }
-      }
+      sampleTerminalChartBucket(bucket, now);
       startTerminalChartLoop();
     }
 
@@ -3862,6 +3877,7 @@
       const market = getMarket(state.currentMarketId);
       const bucket = terminalChartState.markets[market.id];
       if (!bucket || bucket.prices.length < 2) return;
+      sampleTerminalChartBucket(bucket);
 
       bucket.animatedLivePrice += (bucket.latestPrice - bucket.animatedLivePrice) * 0.07;
       const visiblePrices = bucket.prices.slice(-terminalChartState.maxPoints);
@@ -3970,7 +3986,7 @@
         ctx.setLineDash([]);
         ctx.fillStyle = blue;
         ctx.font = "900 10px Inter, -apple-system, BlinkMacSystemFont, sans-serif";
-        ctx.fillText("Цель", 10, targetY - 6);
+        ctx.fillText("Целевая цена", 10, targetY - 6);
         ctx.restore();
       }
 
@@ -4083,8 +4099,10 @@
         sharePrice: priceCents,
         shares,
         openAssetPrice: ms.currentPrice,
+        targetPrice: ms.openPrice,
+        candleOpenedAt: ms.openedAt,
         openedAt: now,
-        expiresAt: marketWindowEnd(market.minutes, now),
+        expiresAt: ms.openedAt + market.minutes * 60000,
         status: "open"
       };
 
@@ -4190,6 +4208,8 @@
             sharePrice: o.limitPrice,
             shares,
             openAssetPrice: ms.currentPrice,
+            targetPrice: ms.openPrice,
+            candleOpenedAt: orderOpenedAt,
             openedAt: now,
             expiresAt: orderExpiresAt,
             status: "open"
@@ -4605,16 +4625,49 @@
       showToast("Позиции закрыты", "Демо-экспирация рассчитана локально.");
     }
 
+    function getPositionCandleOpenedAt(position, market) {
+      return position.candleOpenedAt ?? (position.expiresAt - market.minutes * 60000);
+    }
+
+    function getPositionTargetPrice(position, market) {
+      const target = Number(position.targetPrice);
+      if (Number.isFinite(target)) return target;
+      return Number.isFinite(position.openAssetPrice) ? position.openAssetPrice : market.price;
+    }
+
+    function getPositionClosePrice(position, market) {
+      const savedClose = Number(position.closeAssetPrice);
+      if (Number.isFinite(savedClose)) return savedClose;
+      const expired = Date.now() >= position.expiresAt;
+      if (!expired) {
+        const ms = getMarketState(position.marketId);
+        updateMockPrice(position.marketId);
+        return Number.isFinite(ms.currentPrice) ? ms.currentPrice : getPositionTargetPrice(position, market);
+      }
+      const candleOpenedAt = getPositionCandleOpenedAt(position, market);
+      const storedClose = state.marketCloses?.[marketCloseKey(position.marketId, candleOpenedAt)];
+      if (Number.isFinite(storedClose)) return storedClose;
+      const ms = getMarketState(position.marketId);
+      const rolledClose = state.marketCloses?.[marketCloseKey(position.marketId, candleOpenedAt)];
+      if (Number.isFinite(rolledClose)) return rolledClose;
+      updateMockPrice(position.marketId);
+      const closePrice = Number.isFinite(ms.currentPrice) ? ms.currentPrice : getPositionTargetPrice(position, market);
+      if (ms.openedAt === candleOpenedAt) rememberMarketClose(position.marketId, candleOpenedAt, closePrice);
+      return closePrice;
+    }
+
     function settlePosition(position) {
       const market = getMarket(position.marketId);
-      const ms = getMarketState(position.marketId);
-      updateMockPrice(position.marketId);
-      const wentUp = ms.currentPrice >= position.openAssetPrice;
+      const targetPrice = getPositionTargetPrice(position, market);
+      const closePrice = getPositionClosePrice(position, market);
+      const wentUp = closePrice >= targetPrice;
       const win = (position.side === "UP" && wentUp) || (position.side === "DOWN" && !wentUp);
       const payout = win ? position.shares : 0;
       const pnl = payout - position.amount;
       position.status = win ? "won" : "lost";
       position.closedAt = Date.now();
+      position.targetPrice = targetPrice;
+      position.closeAssetPrice = closePrice;
       position.payout = payout;
       position.pnl = pnl;
       state.balance += payout;
@@ -4624,7 +4677,7 @@
         text: `${win ? "Win" : "Loss"} · ${market.asset} ${market.expiry}`,
         amount: pnl,
         time: Date.now(),
-        meta: `${position.side === "UP" ? "Вверх" : "Вниз"} · payout ${money(payout)}`
+        meta: `${position.side === "UP" ? "Вверх" : "Вниз"} · close ${marketPriceText(closePrice)} · target ${marketPriceText(targetPrice)} · payout ${money(payout)}`
       });
     }
 
@@ -4736,15 +4789,17 @@
     function terminalPositionHtml(p) {
       const dir = p.side === "UP" ? "Вверх" : "Вниз";
       const sideClass = p.side === "UP" ? "up" : "down";
-      // Текущая доходность в данный момент (если рынок закрыть сейчас)
+      const market = getMarket(p.marketId);
       const ms = getMarketState(p.marketId);
-      const winningNow = (p.side === "UP" && ms.currentPrice >= p.openAssetPrice) || (p.side === "DOWN" && ms.currentPrice < p.openAssetPrice);
+      const expired = Date.now() >= p.expiresAt;
+      const targetPrice = getPositionTargetPrice(p, market);
+      const resultPrice = expired ? getPositionClosePrice(p, market) : ms.currentPrice;
+      const winningNow = (p.side === "UP" && resultPrice >= targetPrice) || (p.side === "DOWN" && resultPrice < targetPrice);
       const curValue = winningNow ? p.shares : 0;
       const pnl = curValue - p.amount;
       const pct = p.amount > 0 ? (pnl / p.amount) * 100 : 0;
       const pnlClass = pnl >= 0 ? "up" : "down";
       const sign = pnl >= 0 ? "+" : "";
-      const expired = Date.now() >= p.expiresAt;
       const cashoutBtn = expired
         ? `<button class="trm-pos-cashout" type="button" onclick="event.stopPropagation(); cashOutPosition('${p.id}')">Вывести средства</button>`
         : `<button class="trm-pos-close" type="button" onclick="event.stopPropagation(); closePosition('${p.id}')">Закрыть позицию</button>`;
