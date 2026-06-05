@@ -4869,6 +4869,16 @@
         raf = requestAnimationFrame(tick);
       };
 
+      const paintImmediate = pull => {
+        if (raf) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+        lastPull = pull;
+        currentPull = pull;
+        applyPullFrame(pull);
+      };
+
       const release = () => {
         if (refreshing) return;
         pulling = false;
@@ -4892,10 +4902,9 @@
         releaseAfterRefresh = false;
         document.body.classList.add("ptr-active");
         document.body.classList.remove("ptr-settling");
+        paintImmediate(Math.max(holdPull, Math.min(lastPull, threshold)));
         document.body.classList.add("ptr-refreshing");
         indicator.classList.add("show");
-        paint(Math.max(holdPull, Math.min(lastPull, threshold)));
-        haptic("soft");
 
         await sleep(560);
         const changed = processLimitOrders();
@@ -4903,7 +4912,6 @@
         if (changed) saveState();
         document.querySelectorAll(".segmented").forEach(c => syncGlider(c, true));
         closeWalletMenu();
-        haptic("soft");
         await sleep(releaseAfterRefresh ? 140 : 420);
 
         document.body.classList.add("ptr-settling");
@@ -4979,7 +4987,7 @@
           pulling = false;
           locked = false;
           document.body.classList.add("ptr-settling");
-          paint(holdPull);
+          paintImmediate(holdPull);
           return;
         }
         if (!pulling && !locked) return;
