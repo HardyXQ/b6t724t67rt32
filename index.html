@@ -1501,6 +1501,7 @@
     .trm-hero { order: 2; }
     .trm-levels { order: 3; }
     .trm-chart { order: 4; }
+    .trm-market-selector { order: 5; }
 
     /* Верхняя панель */
     .trm-top {
@@ -1702,6 +1703,121 @@
       color: var(--tg-blue);
       background: color-mix(in srgb, var(--surface) 92%, transparent);
     }
+    .trm-market-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      margin-top: -3px;
+      padding: 7px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--surface) 95%, transparent);
+      box-shadow: var(--shadow-soft);
+    }
+    .trm-market-times {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      overscroll-behavior-inline: contain;
+      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch;
+    }
+    .trm-market-times::-webkit-scrollbar { display: none; }
+    .trm-market-time,
+    .trm-market-more {
+      min-width: 68px;
+      height: 44px;
+      padding: 0 13px;
+      border: 1px solid transparent;
+      border-radius: calc(var(--radius-lg) - 7px);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-weight: 950;
+      line-height: 1;
+      white-space: nowrap;
+      transition: transform .12s ease, color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .trm-market-time {
+      flex: 0 0 calc((100% - 14px) / 3);
+      min-width: 0;
+      display: grid;
+      place-content: center;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      scroll-snap-align: start;
+    }
+    .trm-market-time.active {
+      color: #fff;
+      background: var(--tg-blue);
+      border-color: color-mix(in srgb, var(--tg-blue) 72%, #fff);
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--tg-blue) 30%, transparent);
+    }
+    .trm-market-time:active,
+    .trm-market-more:active { transform: scale(.95); }
+    .trm-market-more {
+      min-width: auto;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--text);
+      font-size: 12px;
+      border-color: var(--line);
+      background: var(--surface);
+    }
+    .trm-market-more svg {
+      width: 14px;
+      height: 14px;
+      transition: transform .2s ease;
+    }
+    .trm-market-more.open svg { transform: rotate(180deg); }
+    .trm-market-menu {
+      position: absolute;
+      z-index: 20;
+      top: calc(100% + 7px);
+      right: 0;
+      width: min(260px, calc(100vw - 32px));
+      display: none;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 14px 36px rgba(15, 23, 32, .18);
+      animation: dropdownIn .2s cubic-bezier(.4, 0, .2, 1);
+    }
+    .trm-market-menu.show { display: grid; gap: 3px; }
+    .trm-market-menu button {
+      min-height: 46px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      background: transparent;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .trm-market-menu button span:last-child {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .trm-market-menu button.active {
+      color: var(--tg-blue);
+      background: color-mix(in srgb, var(--tg-blue) 10%, var(--surface));
+    }
+    .trm-market-menu button:active { background: var(--surface-2); }
     /* Ключевые уровни */
     .trm-levels {
       display: grid;
@@ -2515,6 +2631,9 @@
           <canvas id="terminalChartCanvas" aria-label="График цены"></canvas>
         </section>
 
+        <!-- Выбор рынка по времени закрытия -->
+        <section class="trm-market-selector" id="terminalMarketSelector" aria-label="Выбор времени рынка"></section>
+
         <!-- Мои позиции по рынку -->
         <section class="trm-positions" id="terminalPositions"></section>
 
@@ -2549,7 +2668,7 @@
               <button class="seg active" type="button" onclick="setLimitSide('UP', this)"><span class="seg-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span> Вверх</button>
               <button class="seg" type="button" onclick="setLimitSide('DOWN', this)"><span class="seg-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span> Вниз</button>
             </div>
-            <div class="trm-amount-head"><label>Лимитная цена за share</label></div>
+            <div class="trm-amount-head"><label>Лимитная цена за долю</label></div>
             <div class="trm-limit-stepper">
               <button type="button" class="trm-step" onclick="stepLimit(-1)" aria-label="Меньше">−</button>
               <div class="trm-limit-val"><b id="limitPriceVal">45</b><span>¢</span></div>
@@ -2810,6 +2929,10 @@
     let limitSide = "UP";
     // Отложенное намерение по сделке, ожидающее подтверждения в модалке
     let pendingOrder = null;
+    let terminalMarketMenuOpen = false;
+    let terminalSelectedCloseAt = 0;
+    let terminalMarketSelectorSignature = "";
+    const terminalMarketWindowTargets = {};
     const terminalChartState = {
       maxPoints: 120,
       markets: {},
@@ -2948,7 +3071,10 @@
       if (!previous || previous.openedAt !== openedAt) {
         if (previous) rememberMarketClose(id, previous.openedAt, previous.currentPrice);
         const livePrice = getLiveMarketPrice(market);
-        const startPrice = Number.isFinite(livePrice) ? livePrice : market.price;
+        const previousClose = Number(previous?.currentPrice);
+        const startPrice = Number.isFinite(livePrice)
+          ? livePrice
+          : (Number.isFinite(previousClose) ? previousClose : market.price);
         state.marketState[id] = {
           upCents: 50,
           openPrice: startPrice,
@@ -3167,10 +3293,21 @@
       if (dropdown && dropdown.classList.contains('show') && !dropdown.contains(e.target) && !chip.contains(e.target)) {
         closeWalletMenu();
       }
+      const marketSelector = document.getElementById("terminalMarketSelector");
+      if (terminalMarketMenuOpen && marketSelector && !marketSelector.contains(e.target)) {
+        terminalMarketMenuOpen = false;
+        renderTerminalMarketSelector();
+      }
     });
 
     window.addEventListener('scroll', closeWalletMenu, { passive: true });
-    document.querySelector('.app').addEventListener('scroll', closeWalletMenu, { passive: true });
+    document.querySelector('.app').addEventListener('scroll', () => {
+      closeWalletMenu();
+      if (terminalMarketMenuOpen) {
+        terminalMarketMenuOpen = false;
+        renderTerminalMarketSelector();
+      }
+    }, { passive: true });
 
     function toggleDemoWallet() {
       state.demoWalletActive = !state.demoWalletActive;
@@ -3338,9 +3475,142 @@
 
     function openTerminal(id) {
       state.currentMarketId = id;
+      terminalSelectedCloseAt = 0;
+      terminalMarketSelectorSignature = "";
+      terminalMarketMenuOpen = false;
       getMarketState(id);
       saveState();
       go("terminal");
+    }
+
+    function formatTerminalMarketTime(closesAt) {
+      return new Date(closesAt).toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: getTimezoneValue(state.timezone)
+      });
+    }
+
+    function getTerminalMarketWindow(market, ms = getMarketState(market.id)) {
+      const duration = market.minutes * 60000;
+      const currentCloseAt = ms.openedAt + duration;
+      if (!terminalSelectedCloseAt || terminalSelectedCloseAt < currentCloseAt) {
+        terminalSelectedCloseAt = currentCloseAt;
+      }
+      return {
+        openedAt: terminalSelectedCloseAt - duration,
+        closesAt: terminalSelectedCloseAt,
+        isCurrent: terminalSelectedCloseAt === currentCloseAt
+      };
+    }
+
+    function getTerminalMarketTarget(market, ms, window) {
+      if (window.isCurrent) {
+        terminalMarketWindowTargets[marketCloseKey(market.id, window.openedAt)] = ms.openPrice;
+        return ms.openPrice;
+      }
+      const key = marketCloseKey(market.id, window.openedAt);
+      const stored = Number(terminalMarketWindowTargets[key]);
+      if (Number.isFinite(stored)) return stored;
+      const target = Number.isFinite(ms.currentPrice) ? ms.currentPrice : ms.openPrice;
+      terminalMarketWindowTargets[key] = target;
+      return target;
+    }
+
+    function syncTerminalMarketMenu() {
+      const container = document.getElementById("terminalMarketSelector");
+      if (!container) return;
+      const moreButton = container.querySelector(".trm-market-more");
+      const menu = container.querySelector(".trm-market-menu");
+      moreButton?.classList.toggle("open", terminalMarketMenuOpen);
+      moreButton?.setAttribute("aria-expanded", String(terminalMarketMenuOpen));
+      menu?.classList.toggle("show", terminalMarketMenuOpen);
+    }
+
+    function scrollTerminalMarketIntoView(behavior = "smooth") {
+      const track = document.querySelector("#terminalMarketSelector .trm-market-times");
+      const active = track?.querySelector(".trm-market-time.active");
+      if (!track || !active) return;
+      const left = active.offsetLeft - (track.clientWidth - active.offsetWidth) / 2;
+      track.scrollTo({ left: Math.max(0, left), behavior });
+    }
+
+    function selectTerminalMarket(closesAt) {
+      const nextCloseAt = Number(closesAt);
+      if (!Number.isFinite(nextCloseAt)) return;
+      terminalSelectedCloseAt = nextCloseAt;
+      terminalMarketMenuOpen = false;
+      terminalMarketSelectorSignature = "";
+      renderTerminal();
+      requestAnimationFrame(() => scrollTerminalMarketIntoView());
+      haptic("selection");
+    }
+
+    function toggleTerminalMarketMenu(event) {
+      event?.stopPropagation();
+      terminalMarketMenuOpen = !terminalMarketMenuOpen;
+      syncTerminalMarketMenu();
+    }
+
+    function renderTerminalMarketSelector() {
+      const container = document.getElementById("terminalMarketSelector");
+      if (!container) return;
+      const currentMarket = getMarket(state.currentMarketId);
+      const ms = getMarketState(currentMarket.id);
+      const duration = currentMarket.minutes * 60000;
+      const currentCloseAt = ms.openedAt + duration;
+      if (!terminalSelectedCloseAt || terminalSelectedCloseAt < currentCloseAt) {
+        terminalSelectedCloseAt = currentCloseAt;
+      }
+      const marketCloses = Array.from({ length: 8 }, (_, index) => currentCloseAt + index * duration);
+      if (!marketCloses.includes(terminalSelectedCloseAt)) marketCloses.push(terminalSelectedCloseAt);
+      marketCloses.sort((a, b) => a - b);
+      const signature = [
+        currentMarket.id,
+        currentCloseAt,
+        terminalSelectedCloseAt,
+        state.timezone,
+        marketCloses.join(",")
+      ].join(":");
+
+      if (terminalMarketSelectorSignature === signature && container.childElementCount) {
+        syncTerminalMarketMenu();
+        return;
+      }
+      terminalMarketSelectorSignature = signature;
+
+      const marketButton = closesAt => {
+        const active = closesAt === terminalSelectedCloseAt;
+        return `
+          <button class="trm-market-time${active ? " active" : ""}" type="button"
+            onclick="selectTerminalMarket(${closesAt})"
+            aria-pressed="${active}" aria-label="${currentMarket.asset}, закрытие ${formatTerminalMarketTime(closesAt)}">
+            <span>${formatTerminalMarketTime(closesAt)}</span>
+          </button>`;
+      };
+
+      const moreMarkets = marketCloses.slice(3);
+      container.innerHTML = `
+        <div class="trm-market-times">${marketCloses.map(marketButton).join("")}</div>
+        <button class="trm-market-more${terminalMarketMenuOpen ? " open" : ""}" type="button"
+          onclick="toggleTerminalMarketMenu(event)" aria-expanded="${terminalMarketMenuOpen}">
+          Ещё
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <div class="trm-market-menu${terminalMarketMenuOpen ? " show" : ""}">
+          ${moreMarkets.map(closesAt => {
+            const active = closesAt === terminalSelectedCloseAt;
+            return `
+              <button class="${active ? "active" : ""}" type="button" onclick="selectTerminalMarket(${closesAt})">
+                <span>${formatTerminalMarketTime(closesAt)}</span>
+                <span>${active ? "выбран" : ""}</span>
+              </button>`;
+          }).join("")}
+        </div>`;
+      requestAnimationFrame(() => scrollTerminalMarketIntoView("auto"));
     }
 
     function renderMarkets(noAnimate = false) {
@@ -3520,8 +3790,9 @@
       const ms = getMarketState(market.id);
       updateMockPrice(market.id);
 
-      const targetPrice = ms.openPrice;
-      const remainingMs = Math.max(0, ms.openedAt + market.minutes * 60000 - Date.now());
+      const marketWindow = getTerminalMarketWindow(market, ms);
+      const targetPrice = getTerminalMarketTarget(market, ms, marketWindow);
+      const remainingMs = Math.max(0, marketWindow.closesAt - Date.now());
       const remainingMinutes = Math.floor(remainingMs / 60000);
       const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
       const priceLabel = marketPriceText(ms.currentPrice);
@@ -3533,9 +3804,10 @@
       setText("polyMinutes", String(remainingMinutes).padStart(2, "0"));
       setText("polySeconds", String(remainingSeconds).padStart(2, "0"));
       setText("terminalPrice", priceLabel);
-      setText("terminalMarketUtc", formatMarketScheduleUtc(ms.openedAt, market.minutes));
+      setText("terminalMarketUtc", formatMarketScheduleUtc(marketWindow.openedAt, market.minutes));
       setText("polyCurrentLabel", targetLabel);
       setText("chartLabel", market.asset);
+      renderTerminalMarketSelector();
 
       updateTerminalCandleChange(ms.currentPrice, targetPrice);
 
@@ -3567,7 +3839,11 @@
       renderSharesPreview();
 
       // Открытые позиции по этому рынку
-      const myPositions = state.positions.filter(p => p.marketId === market.id && p.status === "open");
+      const myPositions = state.positions.filter(p =>
+        p.marketId === market.id &&
+        p.status === "open" &&
+        p.expiresAt === marketWindow.closesAt
+      );
       const posEl = document.getElementById("terminalPositions");
       if (posEl) {
         posEl.innerHTML = myPositions.length
@@ -3579,7 +3855,11 @@
       // Лимитные заявки по этому рынку
       const limEl = document.getElementById("terminalLimitOrders");
       if (limEl) {
-        const myLimits = (state.limitOrders || []).filter(o => o.marketId === market.id && o.status === "pending");
+        const myLimits = (state.limitOrders || []).filter(o =>
+          o.marketId === market.id &&
+          o.status === "pending" &&
+          o.expiresAt === marketWindow.closesAt
+        );
         limEl.innerHTML = myLimits.length
           ? `<div class="trm-pos-head"><span>Лимитные заявки</span></div>` +
             myLimits.map(limitOrderHtml).join("")
@@ -3751,7 +4031,13 @@
     // Переключение кнопок действий: вывод / лимит / Вверх-Вниз
     function updateTerminalActions() {
       const market = getMarket(state.currentMarketId);
-      const myPositions = state.positions.filter(p => p.marketId === market.id && p.status === "open");
+      const ms = getMarketState(market.id);
+      const marketWindow = getTerminalMarketWindow(market, ms);
+      const myPositions = state.positions.filter(p =>
+        p.marketId === market.id &&
+        p.status === "open" &&
+        p.expiresAt === marketWindow.closesAt
+      );
       const hasExpiredOpen = myPositions.some(p => Date.now() >= p.expiresAt);
       const isLimit = orderType === "limit";
       const upBtn = document.getElementById("terminalUpBtn");
@@ -3803,7 +4089,8 @@
       if (marketStreamKey(currentMarket) !== assetKey) return;
       const ms = getMarketState(currentMarket.id);
       ms.currentPrice = price;
-      const targetPrice = ms.openPrice;
+      const marketWindow = getTerminalMarketWindow(currentMarket, ms);
+      const targetPrice = getTerminalMarketTarget(currentMarket, ms, marketWindow);
       setText("terminalPrice", marketPriceText(price));
       setText("polyCurrentLabel", marketPriceText(targetPrice));
       updateTerminalCandleChange(price, targetPrice);
@@ -3845,7 +4132,21 @@
     function getTerminalChartBucket(marketId, price, targetPrice) {
       const ms = getMarketState(marketId);
       const bucket = terminalChartState.markets[marketId];
-      if (bucket && bucket.openedAt === ms.openedAt) return bucket;
+      if (bucket) {
+        if (bucket.openedAt !== ms.openedAt) {
+          sampleTerminalChartBucket(bucket);
+          const candleOpen = Number.isFinite(ms.openPrice) ? ms.openPrice : price;
+          bucket.prices.push(candleOpen);
+          if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
+          bucket.openedAt = ms.openedAt;
+          bucket.latestPrice = price;
+          bucket.animatedLivePrice = candleOpen;
+          bucket.targetPrice = candleOpen;
+          bucket.lastSampleAt = Date.now();
+          bucket.lastFrameAt = 0;
+        }
+        return bucket;
+      }
       const prices = Array(terminalChartState.maxPoints).fill(price);
       terminalChartState.markets[marketId] = {
         openedAt: ms.openedAt,
@@ -3855,7 +4156,8 @@
         animatedMin: null,
         animatedMax: null,
         targetPrice,
-        lastSampleAt: Date.now()
+        lastSampleAt: Date.now(),
+        lastFrameAt: 0
       };
       return terminalChartState.markets[marketId];
     }
@@ -3912,26 +4214,33 @@
       if (!bucket || bucket.prices.length < 2) return;
       sampleTerminalChartBucket(bucket);
 
-      bucket.animatedLivePrice += (bucket.latestPrice - bucket.animatedLivePrice) * 0.07;
+      const frameNow = performance.now();
+      const frameDelta = bucket.lastFrameAt ? Math.min(50, frameNow - bucket.lastFrameAt) : 16.67;
+      bucket.lastFrameAt = frameNow;
+      const liveEase = 1 - Math.exp(-frameDelta / 380);
+      const liveDiff = bucket.latestPrice - bucket.animatedLivePrice;
+      bucket.animatedLivePrice = Math.abs(liveDiff) < .0000001
+        ? bucket.latestPrice
+        : bucket.animatedLivePrice + liveDiff * liveEase;
       const visiblePrices = bucket.prices.slice(-terminalChartState.maxPoints);
       let min = Math.min(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
       let max = Math.max(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
-      const minRange = Math.max(market.price * 0.0012, market.price > 100 ? 12 : 0.025);
+      const minRange = Math.max(market.price * 0.0003, market.price > 100 ? 4 : 0.007);
       if (max - min < minRange) {
         const mid = (max + min) / 2;
         min = mid - minRange / 2;
         max = mid + minRange / 2;
       }
       const range = max - min;
-      min -= range * 0.24;
-      max += range * 0.24;
+      min -= range * 0.03;
+      max += range * 0.03;
       if (bucket.animatedMin === null) bucket.animatedMin = min;
       if (bucket.animatedMax === null) bucket.animatedMax = max;
       const currentRange = Math.max(.000001, bucket.animatedMax - bucket.animatedMin);
       const cameraNeedsExpand = max > bucket.animatedMax || min < bucket.animatedMin;
       const nearEdge = bucket.animatedLivePrice > bucket.animatedMax - currentRange * .18 || bucket.animatedLivePrice < bucket.animatedMin + currentRange * .18;
       const expandEase = cameraNeedsExpand ? .38 : (nearEdge ? .24 : .07);
-      const contractEase = .045;
+      const contractEase = .12;
       bucket.animatedMin += (min - bucket.animatedMin) * (min < bucket.animatedMin ? expandEase : contractEase);
       bucket.animatedMax += (max - bucket.animatedMax) * (max > bucket.animatedMax ? expandEase : contractEase);
 
@@ -3939,19 +4248,22 @@
       const blue = styles.getPropertyValue("--tg-blue").trim() || "#229ED9";
       const muted = styles.getPropertyValue("--muted").trim() || "#667789";
       const lineColor = styles.getPropertyValue("--line").trim() || "rgba(15,23,32,.075)";
-      const safeTop = 48;
+      const safeTop = 30;
       const topPad = safeTop;
-      const bottomPad = 18;
+      const bottomPad = 6;
       const rightPad = 28;
       const usableWidth = Math.max(1, width - rightPad);
       const chartHeight = Math.max(1, height - topPad - bottomPad);
       const denom = Math.max(.000001, bucket.animatedMax - bucket.animatedMin);
       const getY = value => topPad + chartHeight - ((value - bucket.animatedMin) / denom) * chartHeight;
+      const plotTop = topPad + 10;
+      const plotBottom = height - bottomPad - 10;
+      const getPlotY = value => clamp(getY(value), plotTop, plotBottom);
       const smoothOffset = Math.min((Date.now() - bucket.lastSampleAt) / 1000, 1);
       const stepX = usableWidth / (terminalChartState.maxPoints - 1);
       const firstX = -smoothOffset * stepX;
       const liveX = usableWidth;
-      const liveY = clamp(getY(bucket.animatedLivePrice), topPad + 10, height - bottomPad - 10);
+      const liveY = getPlotY(bucket.animatedLivePrice);
 
       ctx.save();
       ctx.lineWidth = 1;
@@ -3970,16 +4282,16 @@
 
       const drawPath = () => {
         ctx.beginPath();
-        ctx.moveTo(firstX, getY(bucket.prices[0]));
+        ctx.moveTo(firstX, getPlotY(bucket.prices[0]));
         for (let i = 1; i < bucket.prices.length; i++) {
           const x = (i - smoothOffset) * stepX;
-          const y = getY(bucket.prices[i]);
+          const y = getPlotY(bucket.prices[i]);
           const prevX = (i - 1 - smoothOffset) * stepX;
-          const prevY = getY(bucket.prices[i - 1]);
+          const prevY = getPlotY(bucket.prices[i - 1]);
           ctx.bezierCurveTo((prevX + x) / 2, prevY, (prevX + x) / 2, y, x, y);
         }
         const lastX = (bucket.prices.length - 1 - smoothOffset) * stepX;
-        const lastY = getY(bucket.prices[bucket.prices.length - 1]);
+        const lastY = getPlotY(bucket.prices[bucket.prices.length - 1]);
         ctx.bezierCurveTo((lastX + liveX) / 2, lastY, (lastX + liveX) / 2, liveY, liveX, liveY);
       };
 
@@ -4119,6 +4431,8 @@
     function executeMarketOrder(side, amount) {
       const market = getMarket(state.currentMarketId);
       const ms = getMarketState(market.id);
+      const marketWindow = getTerminalMarketWindow(market, ms);
+      const targetPrice = getTerminalMarketTarget(market, ms, marketWindow);
       const priceCents = getSidePrice(market.id, side);
       const shares = amount / (priceCents / 100);
       const now = Date.now();
@@ -4132,10 +4446,10 @@
         sharePrice: priceCents,
         shares,
         openAssetPrice: ms.currentPrice,
-        targetPrice: ms.openPrice,
-        candleOpenedAt: ms.openedAt,
+        targetPrice,
+        candleOpenedAt: marketWindow.openedAt,
         openedAt: now,
-        expiresAt: ms.openedAt + market.minutes * 60000,
+        expiresAt: marketWindow.closesAt,
         status: "open"
       };
 
@@ -4169,6 +4483,8 @@
       }
       const now = Date.now();
       const ms = getMarketState(market.id);
+      const marketWindow = getTerminalMarketWindow(market, ms);
+      const targetPrice = getTerminalMarketTarget(market, ms, marketWindow);
       const order = {
         id: "lim_" + now,
         marketId: market.id,
@@ -4177,9 +4493,10 @@
         side,
         amount,
         limitPrice,
+        targetPrice,
         createdAt: now,
-        openedAt: ms.openedAt,
-        expiresAt: ms.openedAt + market.minutes * 60000,
+        openedAt: marketWindow.openedAt,
+        expiresAt: marketWindow.closesAt,
         status: "pending"
       };
       state.balance -= amount; // резервируем средства под заявку
@@ -4241,7 +4558,7 @@
             sharePrice: o.limitPrice,
             shares,
             openAssetPrice: ms.currentPrice,
-            targetPrice: ms.openPrice,
+            targetPrice: Number.isFinite(Number(o.targetPrice)) ? Number(o.targetPrice) : ms.openPrice,
             candleOpenedAt: orderOpenedAt,
             openedAt: now,
             expiresAt: orderExpiresAt,
@@ -4391,7 +4708,13 @@
 
     function cashOutMarket() {
       const market = getMarket(state.currentMarketId);
-      const open = state.positions.filter(p => p.marketId === market.id && p.status === "open" && Date.now() >= p.expiresAt);
+      const marketWindow = getTerminalMarketWindow(market);
+      const open = state.positions.filter(p =>
+        p.marketId === market.id &&
+        p.status === "open" &&
+        p.expiresAt === marketWindow.closesAt &&
+        Date.now() >= p.expiresAt
+      );
       if (!open.length) return;
       pendingCloseAction = "doCashOutMarket()";
       showCloseConfirm(open, "cashout");
@@ -4401,7 +4724,13 @@
       pendingCloseAction = "";
       closeModal();
       const market = getMarket(state.currentMarketId);
-      const open = state.positions.filter(p => p.marketId === market.id && p.status === "open" && Date.now() >= p.expiresAt);
+      const marketWindow = getTerminalMarketWindow(market);
+      const open = state.positions.filter(p =>
+        p.marketId === market.id &&
+        p.status === "open" &&
+        p.expiresAt === marketWindow.closesAt &&
+        Date.now() >= p.expiresAt
+      );
       if (!open.length) return;
       open.forEach(settlePosition);
       pushBalancePoint(true);
