@@ -1799,6 +1799,12 @@
       animation: dropdownIn .2s cubic-bezier(.4, 0, .2, 1);
     }
     .trm-market-menu.show { display: grid; gap: 3px; }
+    .trm-market-menu.hide {
+      display: grid;
+      gap: 3px;
+      pointer-events: none;
+      animation: dropdownOut .18s cubic-bezier(.4, 0, .2, 1) forwards;
+    }
     .trm-market-menu button {
       min-height: 46px;
       display: grid;
@@ -1826,7 +1832,9 @@
       position: absolute;
       z-index: 4;
       left: 50%;
-      bottom: 14px;
+      top: 50%;
+      width: max-content;
+      max-width: calc(100% - 28px);
       min-height: 42px;
       padding: 0 16px;
       border-radius: var(--radius-sm);
@@ -1835,10 +1843,11 @@
       box-shadow: 0 8px 20px rgba(34, 158, 217, .24);
       font-size: 12px;
       font-weight: 950;
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
+      text-align: center;
       white-space: nowrap;
     }
-    .trm-chart-next:active { transform: translateX(-50%) scale(.96); }
+    .trm-chart-next:active { transform: translate(-50%, -50%) scale(.96); }
     .trm-market-result {
       display: none;
       gap: 10px;
@@ -2330,6 +2339,13 @@
       min-width: 0;
       box-shadow: none;
       transition: transform .12s ease, opacity .12s ease;
+    }
+    .trm-dir:disabled {
+      opacity: .48;
+      filter: saturate(.55);
+      cursor: default;
+      pointer-events: none;
+      box-shadow: none;
     }
     .trm-dir:active { transform: scale(.97); opacity: .92; }
     .trm-dir.up { background: var(--green); }
@@ -3034,6 +3050,7 @@
     // Отложенное намерение по сделке, ожидающее подтверждения в модалке
     let pendingOrder = null;
     let terminalMarketMenuOpen = false;
+    let terminalMarketMenuCloseTimer = 0;
     let terminalSelectedCloseAt = 0;
     let terminalMarketSelectorSignature = "";
     const terminalMarketOpenSeen = new Set();
@@ -3042,6 +3059,7 @@
       maxPoints: 120,
       markets: {},
       livePrices: {},
+      livePriceUpdatedAt: {},
       raf: 0,
       streamsStarted: false
     };
@@ -3650,7 +3668,8 @@
       let closePrice = Number(record.closePrice);
       if (!Number.isFinite(closePrice)) {
         const rememberedClose = Number(state.marketCloses?.[key]);
-        const chartPrice = Number(terminalChartState.markets[market.id]?.latestPrice);
+        const chartKey = marketCloseKey(market.id, window.openedAt);
+        const chartPrice = Number(terminalChartState.markets[chartKey]?.latestPrice);
         closePrice = Number.isFinite(rememberedClose)
           ? rememberedClose
           : (Number.isFinite(chartPrice) ? chartPrice : ms.currentPrice);
@@ -3689,7 +3708,27 @@
       const menu = container.querySelector(".trm-market-menu");
       moreButton?.classList.toggle("open", terminalMarketMenuOpen);
       moreButton?.setAttribute("aria-expanded", String(terminalMarketMenuOpen));
-      menu?.classList.toggle("show", terminalMarketMenuOpen);
+      if (!menu) return;
+
+      if (terminalMarketMenuOpen) {
+        if (terminalMarketMenuCloseTimer) clearTimeout(terminalMarketMenuCloseTimer);
+        terminalMarketMenuCloseTimer = 0;
+        menu.classList.remove("hide");
+        menu.classList.add("show");
+        return;
+      }
+
+      if (!menu.classList.contains("show")) {
+        menu.classList.remove("hide");
+        return;
+      }
+      if (menu.classList.contains("hide")) return;
+
+      menu.classList.add("hide");
+      terminalMarketMenuCloseTimer = setTimeout(() => {
+        menu.classList.remove("show", "hide");
+        terminalMarketMenuCloseTimer = 0;
+      }, 180);
     }
 
     function scrollTerminalMarketIntoView(behavior = "smooth") {
@@ -4122,9 +4161,9 @@
       }
 
       if (marketResult.closed) {
-        freezeTerminalChart(market.id, displayPrice, targetPrice);
+        freezeTerminalChart(market.id, marketWindow, displayPrice, targetPrice, marketResult.record);
       } else {
-        updateTerminalChart(market.id, ms.currentPrice, targetPrice);
+        updateTerminalChart(market.id, marketWindow, ms.currentPrice, targetPrice);
       }
     }
 
@@ -4284,9 +4323,11 @@
       if (!upBtn || !downBtn || !cashoutBtn || !limitBtn) return;
       cashoutBtn.style.display = hasExpiredOpen ? "block" : "none";
       limitBtn.style.display = (!marketClosed && !hasExpiredOpen && isLimit) ? "block" : "none";
-      const showDir = !marketClosed && !hasExpiredOpen && !isLimit;
+      const showDir = marketClosed || (!hasExpiredOpen && !isLimit);
       upBtn.style.display = showDir ? "" : "none";
       downBtn.style.display = showDir ? "" : "none";
+      upBtn.disabled = marketClosed;
+      downBtn.disabled = marketClosed;
     }
 
     function isTerminalMarketClosed() {
@@ -4314,12 +4355,16 @@
     }
 
     function getLiveMarketPrice(market) {
-      return terminalChartState.livePrices[marketStreamKey(market)];
+      const key = marketStreamKey(market);
+      const updatedAt = Number(terminalChartState.livePriceUpdatedAt[key] || 0);
+      if (Date.now() - updatedAt > 15000) return undefined;
+      return terminalChartState.livePrices[key];
     }
 
     function setLiveMarketPrice(assetKey, price) {
       if (!Number.isFinite(price)) return;
       terminalChartState.livePrices[assetKey] = price;
+      terminalChartState.livePriceUpdatedAt[assetKey] = Date.now();
       markets.forEach(market => {
         if (marketStreamKey(market) !== assetKey) return;
         const ms = getMarketState(market.id);
@@ -4337,7 +4382,9 @@
       setText("terminalPrice", marketPriceText(price));
       setText("polyCurrentLabel", marketPriceText(targetPrice));
       updateTerminalCandleChange(price, targetPrice);
-      updateTerminalChart(currentMarket.id, price, targetPrice);
+      if (marketWindow.isCurrent) {
+        updateTerminalChart(currentMarket.id, marketWindow, price, targetPrice);
+      }
     }
 
     function initTerminalChartStreams() {
@@ -4372,52 +4419,97 @@
       } catch (e) {}
     }
 
-    function getTerminalChartBucket(marketId, price, targetPrice) {
-      const ms = getMarketState(marketId);
-      const bucket = terminalChartState.markets[marketId];
-      if (bucket) {
-        if (bucket.openedAt !== ms.openedAt) {
-          sampleTerminalChartBucket(bucket);
-          const candleOpen = Number.isFinite(ms.openPrice) ? ms.openPrice : price;
-          bucket.prices.push(candleOpen);
-          if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
-          bucket.openedAt = ms.openedAt;
-          bucket.latestPrice = price;
-          bucket.animatedLivePrice = candleOpen;
-          bucket.targetPrice = candleOpen;
-          bucket.lastSampleAt = Date.now();
-          bucket.lastFrameAt = 0;
-        }
-        return bucket;
+    function createHistoricalTerminalChartPrices(market, openedAt, targetPrice, closePrice) {
+      const count = terminalChartState.maxPoints;
+      const start = Number.isFinite(targetPrice) ? targetPrice : closePrice;
+      const end = Number.isFinite(closePrice) ? closePrice : start;
+      let seed = 2166136261;
+      const seedText = `${market.id}:${openedAt}`;
+      for (let i = 0; i < seedText.length; i++) {
+        seed ^= seedText.charCodeAt(i);
+        seed = Math.imul(seed, 16777619);
       }
-      const prices = Array(terminalChartState.maxPoints).fill(price);
-      terminalChartState.markets[marketId] = {
-        openedAt: ms.openedAt,
+      const random = () => {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+      const delta = end - start;
+      const amplitude = Math.max(
+        Math.abs(delta) * .45,
+        Math.abs(start) * .00045,
+        market.price > 100 ? 1 : .003
+      );
+      const phase = random() * Math.PI * 2;
+      let drift = 0;
+      const prices = [];
+      for (let i = 0; i < count; i++) {
+        const progress = i / (count - 1);
+        const envelope = Math.sin(progress * Math.PI);
+        drift = clamp(drift + (random() - .5) * amplitude * .16, -amplitude, amplitude);
+        const wave = Math.sin(progress * Math.PI * 6 + phase) * amplitude * .5;
+        prices.push(start + delta * progress + envelope * (wave + drift * .45));
+      }
+      prices[0] = start;
+      prices[prices.length - 1] = end;
+      return prices;
+    }
+
+    function getTerminalChartBucket(marketId, window, price, targetPrice, record = null) {
+      const market = getMarket(marketId);
+      const key = marketCloseKey(marketId, window.openedAt);
+      const existing = terminalChartState.markets[key];
+      if (existing) return existing;
+
+      const storedPrices = Array.isArray(record?.chartPrices)
+        ? record.chartPrices.map(Number).filter(Number.isFinite).slice(-terminalChartState.maxPoints)
+        : [];
+      const prices = storedPrices.length >= 2
+        ? storedPrices
+        : createHistoricalTerminalChartPrices(
+            market,
+            window.openedAt,
+            targetPrice,
+            price
+          );
+      const latestPrice = Number.isFinite(price) ? price : prices[prices.length - 1];
+      terminalChartState.markets[key] = {
+        key,
+        openedAt: window.openedAt,
+        closesAt: window.closesAt,
         prices,
-        latestPrice: price,
-        animatedLivePrice: price,
+        latestPrice,
+        animatedLivePrice: latestPrice,
         animatedMin: null,
         animatedMax: null,
         targetPrice,
-        lastSampleAt: Date.now(),
+        frozen: Date.now() >= window.closesAt,
+        lastSampleAt: Date.now() >= window.closesAt ? window.closesAt : Date.now(),
         lastFrameAt: 0
       };
-      return terminalChartState.markets[marketId];
+      return terminalChartState.markets[key];
     }
 
     function sampleTerminalChartBucket(bucket, now = Date.now()) {
       if (!bucket || !Number.isFinite(bucket.latestPrice)) return;
       if (!Number.isFinite(bucket.animatedLivePrice)) bucket.animatedLivePrice = bucket.latestPrice;
-      while (now - bucket.lastSampleAt >= 1000) {
+      if (!Number.isFinite(bucket.lastSampleAt) || bucket.lastSampleAt > now) {
+        bucket.lastSampleAt = now;
+        return;
+      }
+      const elapsedSteps = Math.floor((now - bucket.lastSampleAt) / 1000);
+      if (elapsedSteps <= 0) return;
+      const visibleSteps = Math.min(elapsedSteps, terminalChartState.maxPoints);
+      for (let i = 0; i < visibleSteps; i++) {
         bucket.prices.push(bucket.animatedLivePrice);
         if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
-        bucket.lastSampleAt += 1000;
       }
+      bucket.lastSampleAt += elapsedSteps * 1000;
     }
 
-    function updateTerminalChart(marketId, price, targetPrice) {
+    function updateTerminalChart(marketId, window, price, targetPrice) {
       if (!Number.isFinite(price)) return;
-      const bucket = getTerminalChartBucket(marketId, price, targetPrice);
+      const record = getTerminalMarketRecord(getMarket(marketId), window);
+      const bucket = getTerminalChartBucket(marketId, window, price, targetPrice, record);
       const now = Date.now();
       bucket.frozen = false;
       bucket.latestPrice = price;
@@ -4426,10 +4518,11 @@
       startTerminalChartLoop();
     }
 
-    function freezeTerminalChart(marketId, price, targetPrice) {
+    function freezeTerminalChart(marketId, window, price, targetPrice, record) {
       if (!Number.isFinite(price)) return;
-      const bucket = getTerminalChartBucket(marketId, price, targetPrice);
-      if (!bucket.frozen || bucket.latestPrice !== price || bucket.targetPrice !== targetPrice) {
+      const bucket = getTerminalChartBucket(marketId, window, price, targetPrice, record);
+      const needsFinalPoint = bucket.prices[bucket.prices.length - 1] !== price;
+      if (!bucket.frozen || needsFinalPoint || bucket.targetPrice !== targetPrice) {
         bucket.prices.push(price);
         if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
         bucket.latestPrice = price;
@@ -4441,12 +4534,25 @@
         bucket.lastFrameAt = 0;
       }
       bucket.frozen = true;
+      if (!Array.isArray(record.chartPrices) || record.chartPrices.length < 2) {
+        record.chartPrices = bucket.prices.slice(-terminalChartState.maxPoints);
+        saveState();
+      }
       startTerminalChartLoop();
     }
 
     function startTerminalChartLoop() {
       if (terminalChartState.raf) return;
       terminalChartState.raf = requestAnimationFrame(drawTerminalChartFrame);
+    }
+
+    function restartTerminalChartLoop() {
+      if (terminalChartState.raf) cancelAnimationFrame(terminalChartState.raf);
+      terminalChartState.raf = 0;
+      Object.values(terminalChartState.markets).forEach(bucket => {
+        bucket.lastFrameAt = 0;
+      });
+      startTerminalChartLoop();
     }
 
     function fitTerminalCanvas(canvas, ctx) {
@@ -4463,7 +4569,8 @@
     }
 
     function drawTerminalChartFrame() {
-      terminalChartState.raf = requestAnimationFrame(drawTerminalChartFrame);
+      terminalChartState.raf = 0;
+      startTerminalChartLoop();
       const canvas = document.getElementById("terminalChartCanvas");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -4472,7 +4579,8 @@
       ctx.clearRect(0, 0, width, height);
 
       const market = getMarket(state.currentMarketId);
-      const bucket = terminalChartState.markets[market.id];
+      const window = getTerminalMarketWindow(market);
+      const bucket = terminalChartState.markets[marketCloseKey(market.id, window.openedAt)];
       if (!bucket || bucket.prices.length < 2) return;
       if (!bucket.frozen) sampleTerminalChartBucket(bucket);
 
@@ -6088,6 +6196,10 @@
     }
 
     document.body.dataset.screen = "home";
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) restartTerminalChartLoop();
+    });
+    window.addEventListener("resize", restartTerminalChartLoop, { passive: true });
     initTelegram();
     lockPortraitOrientation();
     applyTheme();
