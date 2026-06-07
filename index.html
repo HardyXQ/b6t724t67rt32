@@ -5106,13 +5106,16 @@
           row("Доходность", yieldText, yieldProfit >= 0 ? "var(--green)" : "var(--red)");
       }
 
-      document.getElementById("modalTitle").textContent = mode === "cashout" ? "Вывод средств" : "Закрытие позиции";
+      const isMultiple = positions.length > 1;
+      document.getElementById("modalTitle").textContent = mode === "cashout"
+        ? "Вывод средств"
+        : (isMultiple ? "Закрыть все позиции?" : "Закрытие позиции");
       document.getElementById("modalText").innerHTML = `<div style="text-align:left;">` + rows + `</div>`;
 
       const confirmCall = pendingCloseAction;
       document.getElementById("modalActions").innerHTML =
         `<button class="ghost" type="button" onclick="cancelClose()">Отмена</button>` +
-        `<button class="primary" type="button" onclick="${confirmCall}">${mode === "cashout" ? "Вывести" : "Закрыть"}</button>`;
+        `<button class="primary" type="button" onclick="${confirmCall}">${mode === "cashout" ? "Вывести" : (isMultiple ? "Закрыть все" : "Закрыть")}</button>`;
       showModal();
       haptic("selection");
     }
@@ -5448,11 +5451,22 @@
         showToast("Нет открытых позиций", "Откройте сделку на экране рынков.");
         return;
       }
+      pendingCloseAction = "doSettleAllOpen()";
+      showCloseConfirm(open, "close");
+    }
+
+    function doSettleAllOpen() {
+      pendingCloseAction = "";
+      closeModal();
+      const open = state.positions.filter(p => p.status === "open");
+      if (!open.length) return;
       open.forEach(settlePosition);
       pushBalancePoint(true);
       saveState();
       renderAll();
-      showToast("Позиции закрыты", "Демо-экспирация рассчитана локально.");
+      const total = open.reduce((sum, p) => sum + (p.payout || 0), 0);
+      showToast("Позиции закрыты", `Закрыто позиций: ${open.length}. Зачислено ${money(total)}.`);
+      haptic("success");
     }
 
     function getPositionCandleOpenedAt(position, market) {
