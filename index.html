@@ -69,14 +69,18 @@
     html {
       min-height: 100%;
       background: var(--bg);
-      overscroll-behavior: none;
+      overscroll-behavior-x: none;
+      overscroll-behavior-y: auto;
     }
     body {
       min-height: 100%;
       min-height: 100dvh;
       margin: 0;
       color: var(--text);
-      overscroll-behavior: none;
+      overflow-y: scroll;
+      overscroll-behavior-x: none;
+      overscroll-behavior-y: auto;
+      -webkit-overflow-scrolling: touch;
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
@@ -172,6 +176,8 @@
       min-height: 100dvh;
       margin: 0 auto;
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
+      overscroll-behavior-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     body.ptr-active .app,
@@ -403,7 +409,11 @@
     }
 
     .screen { display: none; animation: slideUp .24s cubic-bezier(0.4, 0, 0.2, 1); }
-    .screen.active { display: block; }
+    .screen.active {
+      display: block;
+      min-height: calc(100dvh - 76px);
+      padding-bottom: clamp(88px, 14dvh, 140px);
+    }
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
