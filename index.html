@@ -1077,11 +1077,11 @@
       display: flex;
       align-items: flex-start;
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      width: 500%;
+      width: 400%;
     }
     .market-slide {
-      width: 20%;
-      flex: 0 0 20%;
+      width: 25%;
+      flex: 0 0 25%;
       padding: 12px var(--page-gutter) 0;
     }
 
@@ -1493,7 +1493,7 @@
     body[data-screen="portfolio"],
     body[data-screen="markets"],
     body[data-screen="home"],
-    body[data-screen="settings"] {
+    body[data-screen="account"] {
       background: var(--bg);
     }
 
@@ -1501,7 +1501,7 @@
     body[data-screen="portfolio"] .app,
     body[data-screen="markets"] .app,
     body[data-screen="home"] .app,
-    body[data-screen="settings"] .app {
+    body[data-screen="account"] .app {
       width: min(100%, var(--app-max));
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
       background: transparent;
@@ -1511,7 +1511,7 @@
     body[data-screen="portfolio"] .topbar,
     body[data-screen="markets"] .topbar,
     body[data-screen="home"] .topbar,
-    body[data-screen="settings"] .topbar {
+    body[data-screen="account"] .topbar {
       display: flex;
     }
     .bottom-nav {
@@ -2445,6 +2445,20 @@
       transition: transform .12s ease, opacity .12s ease;
     }
     .trm-dir-submit:active { transform: scale(.97); opacity: .92; }
+    .trm-wallet-connect {
+      grid-column: 1 / -1;
+      min-height: 56px;
+      border-radius: var(--radius);
+      background: var(--tg-blue);
+      color: #fff;
+      font-size: clamp(15px, 4.4vw, 17px);
+      font-weight: 950;
+    }
+    .trm-amount.wallet-locked {
+      opacity: .48;
+      pointer-events: none;
+      user-select: none;
+    }
     /* Панель лимитного ордера */
     .trm-limit-panel { display: grid; gap: 9px; }
     #limitSideSeg .seg svg, #limitSideSeg .seg.active svg { fill: none; }
@@ -2718,7 +2732,7 @@
       <div class="section-title" style="margin-top:28px">
         <h3>Рынки</h3>
       </div>
-      <div class="segmented five" style="margin-bottom:12px" id="marketFilterSeg">
+      <div class="segmented four" style="margin-bottom:12px" id="marketFilterSeg">
         <div class="seg-glider"></div>
         <button class="seg" type="button" data-filter-expiry="fav" onclick="filterMarkets('fav', this)" aria-label="Избранные" style="display: grid; place-items: center;">
           <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 3;">
@@ -2726,7 +2740,6 @@
           </svg>
         </button>
         <button class="seg active" type="button" data-filter-expiry="all" onclick="filterMarkets('all', this)">Все</button>
-        <button class="seg" type="button" data-filter-expiry="5м" onclick="filterMarkets('5м', this)">5м</button>
         <button class="seg" type="button" data-filter-expiry="15м" onclick="filterMarkets('15м', this)">15м</button>
         <button class="seg" type="button" data-filter-expiry="1ч" onclick="filterMarkets('1ч', this)">1ч</button>
       </div>
@@ -2734,7 +2747,6 @@
         <div class="market-slider-inner" id="marketSlider">
           <div class="market-slide" id="markets-fav"></div>
           <div class="market-slide" id="markets-all"></div>
-          <div class="market-slide" id="markets-5м"></div>
           <div class="market-slide" id="markets-15м"></div>
           <div class="market-slide" id="markets-1ч"></div>
         </div>
@@ -2750,7 +2762,7 @@
           </button>
           <div class="trm-top-title">
             <strong id="terminalAsset">BTC/USD</strong>
-            <span id="terminalExpiry">Прогноз · 5м</span>
+            <span id="terminalExpiry">Прогноз · 15м</span>
           </div>
           <button class="trm-icon-btn trm-fav" type="button" id="terminalFavBtn" onclick="toggleFavorite(state.currentMarketId, event)" aria-label="В избранное">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -2914,10 +2926,10 @@
       </section>
     </section>
 
-    <section class="screen" id="screen-settings">
+    <section class="screen" id="screen-account">
       <div class="section-title" style="margin-top:8px">
-        <h3>Настройки</h3>
-        <span>Тема, демо-данные</span>
+        <h3>Аккаунт</h3>
+        <span>Настройки приложения</span>
       </div>
 
       <div class="setting-block">
@@ -2986,6 +2998,7 @@
     </button>
     <button class="trm-dir-cashout" type="button" id="terminalCashout" onclick="cashOutMarket()" style="display:none;">Вывести средства</button>
     <button class="trm-dir-submit" type="button" id="terminalLimitSubmit" onclick="submitLimitOrder()" style="display:none;">Создать лимит</button>
+    <button class="trm-wallet-connect" type="button" id="terminalWalletConnect" onclick="connectTonWallet()" style="display:none;">Подключить TON-кошелёк</button>
   </div>
 
   <nav class="bottom-nav" aria-label="Навигация">
@@ -3012,12 +3025,12 @@
         </svg>
         Портфель
       </button>
-      <button class="nav-item" type="button" data-nav="settings" onclick="go('settings')">
+      <button class="nav-item" type="button" data-nav="account" onclick="go('account')">
         <svg viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="3.5" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          <circle cx="12" cy="8" r="3.5" />
+          <path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6" />
         </svg>
-        Настройки
+        Аккаунт
       </button>
     </div>
   </nav>
@@ -3045,16 +3058,14 @@
     const usdtIcon = `<svg viewBox="-2 -2 343 299"><path fill="#50af95" d="M62.15,1.45l-61.89,130a2.52,2.52,0,0,0,.54,2.94L167.95,294.56a2.55,2.55,0,0,0,3.53,0L338.63,134.4a2.52,2.52,0,0,0,.54-2.94l-61.89-130A2.5,2.5,0,0,0,275,0H64.45a2.5,2.5,0,0,0-2.3,1.45h0Z"/><path fill="white" d="M191.19,144.8v0c-1.2.09-7.4,0.46-21.23,0.46-11,0-18.81-.33-21.55-0.46v0c-42.51-1.87-74.24-9.27-74.24-18.13s31.73-16.25,74.24-18.15v28.91c2.78,0.2,10.74.67,21.74,0.67,13.2,0,19.81-.55,21-0.66v-28.9c42.42,1.89,74.08,9.29,74.08,18.13s-31.65,16.24-74.08,18.12h0Zm0-39.25V79.68h59.2V40.23H89.21V79.68H148.4v25.86c-48.11,2.21-84.29,11.74-84.29,23.16s36.18,20.94,84.29,23.16v82.9h42.78V151.83c48-2.21,84.12-11.73,84.12-23.14s-36.09-20.93-84.12-23.15h0Zm0,0h0Z"/></svg>`;
 
     const markets = [
-      { id: "BTC-USD-5", asset: "BTC/USD", expiry: "5м", minutes: 5, price: 67420.50, change: 1.84, icon: btcIcon, iconClass: "svg-icon", vol: "1.2M" },
       { id: "BTC-USD-15", asset: "BTC/USD", expiry: "15м", minutes: 15, price: 67428.90, change: 1.61, icon: btcIcon, iconClass: "svg-icon", vol: "850K" },
       { id: "BTC-USD-60", asset: "BTC/USD", expiry: "1ч", minutes: 60, price: 67450.00, change: 1.25, icon: btcIcon, iconClass: "svg-icon", vol: "2.4M" },
-      { id: "ETH-USD-5", asset: "ETH/USD", expiry: "5м", minutes: 5, price: 3512.18, change: -0.42, icon: ethIcon, iconClass: "svg-icon eth-svg", vol: "620K" },
       { id: "ETH-USD-15", asset: "ETH/USD", expiry: "15м", minutes: 15, price: 3517.44, change: 0.27, icon: ethIcon, iconClass: "svg-icon eth-svg", vol: "410K" },
       { id: "ETH-USD-60", asset: "ETH/USD", expiry: "1ч", minutes: 60, price: 3525.50, change: 0.85, icon: ethIcon, iconClass: "svg-icon eth-svg", vol: "1.1M" },
-      { id: "TON-USD-5", asset: "TON/USD", expiry: "5м", minutes: 5, price: 6.84, change: 3.11, icon: tonIcon, iconClass: "svg-icon", vol: "320K" },
       { id: "TON-USD-15", asset: "TON/USD", expiry: "15м", minutes: 15, price: 6.87, change: 2.76, icon: tonIcon, iconClass: "svg-icon", vol: "180K" },
       { id: "TON-USD-60", asset: "TON/USD", expiry: "1ч", minutes: 60, price: 6.95, change: 2.10, icon: tonIcon, iconClass: "svg-icon", vol: "540K" }
     ];
+    const removedMarketIds = new Set(["BTC-USD-5", "ETH-USD-5", "TON-USD-5"]);
 
     const defaultState = () => ({
       balance: 0,
@@ -3120,6 +3131,70 @@
         const raw = localStorage.getItem(storageKey);
         if (!raw) return defaultState();
         const loaded = { ...defaultState(), ...JSON.parse(raw) };
+        let migrated = false;
+
+        const removedPositions = (loaded.positions || []).filter(position =>
+          removedMarketIds.has(position.marketId) && position.status === "open"
+        );
+        const removedLimits = (loaded.limitOrders || []).filter(order =>
+          removedMarketIds.has(order.marketId) && order.status === "pending"
+        );
+        const refund = removedPositions.reduce((sum, position) => sum + Number(position.amount || 0), 0) +
+          removedLimits.reduce((sum, order) => sum + Number(order.amount || 0), 0);
+        if (refund > 0) {
+          loaded.balance = Number(loaded.balance || 0) + refund;
+          loaded.balanceHistory = Array.isArray(loaded.balanceHistory) ? loaded.balanceHistory : [];
+          loaded.balanceHistory.push({
+            t: Date.now(),
+            value: Number((loaded.balance - Number(loaded.initialBalance || 0)).toFixed(2))
+          });
+          migrated = true;
+        }
+        if ((loaded.positions || []).some(position => removedMarketIds.has(position.marketId))) {
+          loaded.positions = loaded.positions.filter(position => !removedMarketIds.has(position.marketId));
+          migrated = true;
+        }
+        if ((loaded.limitOrders || []).some(order => removedMarketIds.has(order.marketId))) {
+          loaded.limitOrders = loaded.limitOrders.filter(order => !removedMarketIds.has(order.marketId));
+          migrated = true;
+        }
+        const visibleHistory = (loaded.history || []).filter(item => !/(^|\s)5м(\s|$)/.test(String(item.text || "")));
+        if (visibleHistory.length !== (loaded.history || []).length) {
+          loaded.history = visibleHistory;
+          migrated = true;
+        }
+        const validFavorites = (loaded.favorites || []).filter(id => markets.some(market => market.id === id));
+        if (validFavorites.length !== (loaded.favorites || []).length) {
+          loaded.favorites = validFavorites;
+          migrated = true;
+        }
+        if (!markets.some(market => market.id === loaded.currentMarketId)) {
+          loaded.currentMarketId = markets[0].id;
+          loaded.lastMarketScreen = "markets";
+          migrated = true;
+        }
+        if (loaded.filterExpiry === "5м") {
+          loaded.filterExpiry = "all";
+          migrated = true;
+        }
+        removedMarketIds.forEach(id => {
+          if (loaded.marketState?.[id]) {
+            delete loaded.marketState[id];
+            migrated = true;
+          }
+          Object.keys(loaded.marketCloses || {}).forEach(key => {
+            if (key.startsWith(id + ":")) {
+              delete loaded.marketCloses[key];
+              migrated = true;
+            }
+          });
+          Object.keys(loaded.marketWindows || {}).forEach(key => {
+            if (key.startsWith(id + ":")) {
+              delete loaded.marketWindows[key];
+              migrated = true;
+            }
+          });
+        });
 
         // Fill gaps in balance history while app was closed
         const history = loaded.balanceHistory;
@@ -3146,6 +3221,7 @@
           }
         }
 
+        if (migrated) localStorage.setItem(storageKey, JSON.stringify(loaded));
         return loaded;
       } catch (error) {
         return defaultState();
@@ -3366,44 +3442,85 @@
     }
 
     let tonConnectUI;
+    let tonConnectInitPromise;
+    let connectedTonWallet = null;
 
     async function initTonConnect() {
-      try {
-        tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-          manifestUrl: state.manifestUrl || 'https://raw.githubusercontent.com/ton-blockchain/ton-connect/main/packages/sdk/test/manifest.json',
-          buttonRootId: null
-        });
-        tonConnectUI.onStatusChange(wallet => {
-          updateWalletChip(wallet);
-        });
-        if (tonConnectUI.wallet) {
-          updateWalletChip(tonConnectUI.wallet);
-        } else {
-          updateWalletChip(null);
+      if (tonConnectUI) return tonConnectUI;
+      if (tonConnectInitPromise) return tonConnectInitPromise;
+      tonConnectInitPromise = (async () => {
+        try {
+          tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: state.manifestUrl || 'https://raw.githubusercontent.com/ton-blockchain/ton-connect/main/packages/sdk/test/manifest.json',
+            buttonRootId: null
+          });
+          tonConnectUI.onStatusChange(wallet => {
+            connectedTonWallet = wallet || null;
+            updateWalletChip(connectedTonWallet);
+            syncWalletAccessUI();
+          });
+          connectedTonWallet = tonConnectUI.wallet || null;
+          updateWalletChip(connectedTonWallet);
+          syncWalletAccessUI();
+          return tonConnectUI;
+        } catch (e) {
+          console.error("TonConnect init error", e);
+          return null;
+        } finally {
+          tonConnectInitPromise = null;
         }
+      })();
+      return tonConnectInitPromise;
+    }
+
+    function isTonWalletConnected() {
+      return !!connectedTonWallet?.account?.address;
+    }
+
+    async function connectTonWallet() {
+      const ui = await initTonConnect();
+      if (!ui || isTonWalletConnected()) return;
+      try {
+        await ui.connectWallet();
       } catch (e) {
-        console.error("TonConnect init error", e);
+        console.error("TonConnect connection error", e);
       }
+    }
+
+    function requireTonWallet(message = "Подключите свой TON-кошелёк, чтобы продолжить.") {
+      if (isTonWalletConnected()) return true;
+      showToast("Нужен TON-кошелёк", message);
+      connectTonWallet();
+      return false;
+    }
+
+    function syncWalletAccessUI() {
+      const connected = isTonWalletConnected();
+      document.body.classList.toggle("wallet-connected", connected);
+      document.getElementById("terminalTradeForm")?.classList.toggle("wallet-locked", !connected);
+      if (!connected && document.body.dataset.screen === "portfolio") {
+        go("home");
+        return;
+      }
+      setTerminalTradingLocked(isTerminalMarketClosed());
+      updateTerminalActions();
     }
 
     function updateWalletChip(wallet) {
       const chip = document.getElementById('walletChip');
       if (!chip) return;
 
-      if (state.demoWalletActive) {
-        chip.textContent = "EQDe...demo";
-        chip.onclick = () => showWalletMenu();
-        return;
-      }
-
       if (wallet) {
         const addr = wallet.account.address;
         const short = addr.slice(0, 4) + '...' + addr.slice(-4);
         chip.textContent = short;
         chip.onclick = () => showWalletMenu();
+      } else if (state.demoWalletActive) {
+        chip.textContent = "Demo · Connect";
+        chip.onclick = () => connectTonWallet();
       } else {
         chip.textContent = 'Connect';
-        chip.onclick = () => tonConnectUI.connectWallet();
+        chip.onclick = () => connectTonWallet();
       }
     }
 
@@ -3426,7 +3543,7 @@
     }
 
     function handleWalletAction(action) {
-      const isDemo = state.demoWalletActive;
+      const isDemo = state.demoWalletActive && !isTonWalletConnected();
       let addr = "";
       if (isDemo) {
         addr = "EQDe...demo_address_active";
@@ -3513,10 +3630,10 @@
     }
 
     function initTelegram() {
+      initTonConnect();
       if (!tg) return;
       tg.ready();
       tg.expand();
-      initTonConnect();
 
       // Enter fullscreen when the client supports it (Bot API 8.0+).
       try {
@@ -3557,6 +3674,9 @@
     }
 
     function go(screen) {
+      if (screen === "portfolio" && !requireTonWallet("Подключите свой TON-кошелёк, чтобы открыть портфель.")) {
+        return;
+      }
       const isFirstLoad = !document.body.dataset.screen;
       // Запоминаем последнее под-состояние вкладки «Рынки» (список или терминал),
       // чтобы при возврате на вкладку восстановить его.
@@ -3861,8 +3981,8 @@
     }
 
     function renderMarkets(noAnimate = false) {
-      const filter = state.filterExpiry || "all";
-      const filters = ["fav", "all", "5м", "15м", "1ч"];
+      const filters = ["fav", "all", "15м", "1ч"];
+      const filter = filters.includes(state.filterExpiry) ? state.filterExpiry : "all";
 
       filters.forEach(f => {
         const el = document.getElementById(`markets-${f}`);
@@ -3887,7 +4007,7 @@
       if (slider) {
         const idx = filters.indexOf(filter);
         if (noAnimate) slider.classList.add('no-animate');
-        slider.style.transform = `translateX(-${idx * 20}%)`;
+        slider.style.transform = `translateX(-${idx * 25}%)`;
 
         // Handle height/overflow to prevent scrolling on inactive slides
         filters.forEach(f => {
@@ -4086,9 +4206,11 @@
 
     function setTerminalTradingLocked(locked) {
       const form = document.getElementById("terminalTradeForm");
+      const accessLocked = !isTonWalletConnected();
       form?.classList.toggle("market-closed", locked);
+      form?.classList.toggle("wallet-locked", accessLocked);
       form?.querySelectorAll("input, button").forEach(control => {
-        control.disabled = locked;
+        control.disabled = locked || accessLocked;
       });
     }
 
@@ -4356,7 +4478,17 @@
       const downBtn = document.getElementById("terminalDownBtn");
       const cashoutBtn = document.getElementById("terminalCashout");
       const limitBtn = document.getElementById("terminalLimitSubmit");
-      if (!upBtn || !downBtn || !cashoutBtn || !limitBtn) return;
+      const connectBtn = document.getElementById("terminalWalletConnect");
+      if (!upBtn || !downBtn || !cashoutBtn || !limitBtn || !connectBtn) return;
+      const connected = isTonWalletConnected();
+      connectBtn.style.display = connected ? "none" : "block";
+      if (!connected) {
+        upBtn.style.display = "none";
+        downBtn.style.display = "none";
+        cashoutBtn.style.display = "none";
+        limitBtn.style.display = "none";
+        return;
+      }
       cashoutBtn.style.display = hasExpiredOpen ? "block" : "none";
       limitBtn.style.display = (!marketClosed && !hasExpiredOpen && isLimit) ? "block" : "none";
       const showDir = marketClosed || (!hasExpiredOpen && !isLimit);
@@ -4804,6 +4936,7 @@
     }
 
     function placeOrder(side) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы торговать.")) return;
       if (isTerminalMarketClosed()) {
         showToast("Рынок закрыт", "Перейдите к новому рынку, чтобы сделать прогноз.");
         return;
@@ -4869,6 +5002,11 @@
     }
 
     function confirmOrder() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы подтвердить сделку.")) {
+        pendingOrder = null;
+        closeModal();
+        return;
+      }
       closeModal();
       if (!pendingOrder) return;
       const { side, amount } = pendingOrder;
@@ -4885,6 +5023,7 @@
     }
 
     function executeMarketOrder(side, amount) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы торговать.")) return;
       if (isTerminalMarketClosed()) {
         showToast("Рынок закрыт", "Заявка не может быть исполнена после закрытия рынка.");
         return;
@@ -4935,6 +5074,7 @@
 
     // === Лимитные ордера ===
     function placeLimitOrder(side, amount) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы создать лимитную заявку.")) return;
       if (isTerminalMarketClosed()) {
         showToast("Рынок закрыт", "Лимитная заявка недоступна после закрытия рынка.");
         return;
@@ -5049,6 +5189,7 @@
     }
 
     function cancelLimitOrder(id) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы управлять заявками.")) return;
       const o = (state.limitOrders || []).find(x => x.id === id);
       if (!o || o.status !== "pending") return;
       o.status = "cancelled";
@@ -5129,6 +5270,7 @@
 
     // Досрочное закрытие позиции (до истечения времени) — расчёт по текущему результату
     function closePosition(id) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы управлять позициями.")) return;
       const p = state.positions.find(x => x.id === id);
       if (!p || p.status !== "open") return;
       pendingCloseAction = `doClosePosition('${id}')`;
@@ -5136,6 +5278,11 @@
     }
 
     function doClosePosition(id) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы закрыть позицию.")) {
+        pendingCloseAction = "";
+        closeModal();
+        return;
+      }
       pendingCloseAction = "";
       closeModal();
       const p = state.positions.find(x => x.id === id);
@@ -5151,6 +5298,7 @@
 
     // === Вывод средств по истёкшим позициям ===
     function cashOutPosition(id) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
       const p = state.positions.find(x => x.id === id);
       if (!p || p.status !== "open") return;
       if (Date.now() < p.expiresAt) {
@@ -5162,6 +5310,11 @@
     }
 
     function doCashOutPosition(id) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) {
+        pendingCloseAction = "";
+        closeModal();
+        return;
+      }
       pendingCloseAction = "";
       closeModal();
       const p = state.positions.find(x => x.id === id);
@@ -5176,6 +5329,7 @@
     }
 
     function cashOutMarket() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
       const market = getMarket(state.currentMarketId);
       const marketWindow = getTerminalMarketWindow(market);
       const open = state.positions.filter(p =>
@@ -5190,6 +5344,11 @@
     }
 
     function doCashOutMarket() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) {
+        pendingCloseAction = "";
+        closeModal();
+        return;
+      }
       pendingCloseAction = "";
       closeModal();
       const market = getMarket(state.currentMarketId);
@@ -5211,6 +5370,7 @@
     }
 
     function demoDeposit() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы пополнить портфель.")) return;
       const depositAmount = 1000;
       state.balance += depositAmount;
       state.initialBalance += depositAmount;
@@ -5249,6 +5409,7 @@
     }
 
     function openDepositModal() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы пополнить портфель.")) return;
       document.getElementById("modalTitle").textContent = "Депозит криптовалюты";
       document.getElementById("modalText").textContent = "Выберите актив и сеть для пополнения демо-счета.";
 
@@ -5327,6 +5488,7 @@
     }
 
     function openWithdrawModal() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
       if (state.balance <= 0) {
         showToast("Вывод недоступен", "На вашем балансе 0. Чтобы вывести средства, сначала пополните баланс.");
         return;
@@ -5387,6 +5549,7 @@
     }
 
     function confirmWithdraw() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
       const amount = Number(document.getElementById("withdrawAmountInput")?.value || 0);
       if (amount <= 0 || amount > state.balance) {
         showToast("Ошибка", "Некорректная сумма вывода.");
@@ -5431,6 +5594,7 @@
     }
 
     function demoWithdraw() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
       const amount = Math.min(500, state.balance);
       if (amount <= 0) {
         showToast("Вывод недоступен", "На демо-балансе нет средств.");
@@ -5446,6 +5610,7 @@
     }
 
     function settleAllOpen() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы управлять позициями.")) return;
       const open = state.positions.filter(p => p.status === "open");
       if (!open.length) {
         showToast("Нет открытых позиций", "Откройте сделку на экране рынков.");
@@ -5456,6 +5621,11 @@
     }
 
     function doSettleAllOpen() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы закрыть позиции.")) {
+        pendingCloseAction = "";
+        closeModal();
+        return;
+      }
       pendingCloseAction = "";
       closeModal();
       const open = state.positions.filter(p => p.status === "open");
@@ -5570,6 +5740,7 @@
     }
 
     function setBalanceRange(range, button) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы взаимодействовать с портфелем.")) return;
       const container = button.parentElement;
       const buttons = Array.from(container.querySelectorAll(".seg"));
       const prevIndex = buttons.findIndex(btn => btn.classList.contains("active"));
@@ -5586,6 +5757,7 @@
     }
 
     function setPortfolioTab(tab, button) {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы взаимодействовать с портфелем.")) return;
       state.portfolioTab = tab;
       saveState();
       const container = button.parentElement;
@@ -5597,6 +5769,7 @@
     }
 
     function toggleBalancePrivacy() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы взаимодействовать с портфелем.")) return;
       state.balanceHidden = !state.balanceHidden;
       saveState();
       renderAll();
@@ -5662,7 +5835,7 @@
       const positions = state.positions.filter(p => p.status === "open");
       document.getElementById("positionsList").innerHTML = positions.length ? positions.map(positionHtml).join("") : `<div class="empty">Открытых позиций пока нет.</div>`;
 
-      document.getElementById("historyList").innerHTML = state.history.length ? state.history.slice(0, 30).map(historyHtml).join("") : `<div class="empty">История операций появится после депозита, сделки, вывода или демо-закрытия позиции.</div>`;
+      document.getElementById("historyList").innerHTML = state.history.length ? state.history.slice(0, 30).map(historyHtml).join("") : `<div class="empty">Истории транзакций пока нет.</div>`;
       drawBalanceChart();
     }
 
@@ -5843,8 +6016,12 @@
     }
 
     function renderHome() {
+      const now = Date.now();
       const openPositions = state.positions.filter(p => p.status === "open").length;
-      const soon = state.positions.filter(p => p.status === "open" && p.expiresAt - Date.now() < 5 * 60000).length;
+      const soon = state.positions.filter(p => {
+        const remaining = Number(p.expiresAt) - now;
+        return p.status === "open" && remaining > 0 && remaining <= 5 * 60000;
+      }).length;
       const pnl = state.balance - state.initialBalance;
 
       const balanceEl = document.getElementById("homeBalance");
@@ -5880,6 +6057,7 @@
     }
 
     function resetPortfolio() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы изменить портфель.")) return;
       state.balance = 0;
       state.initialBalance = 0;
       state.positions = [];
@@ -5891,6 +6069,7 @@
     }
 
     function resetAll() {
+      if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы сбросить данные портфеля.")) return;
       localStorage.removeItem(storageKey);
       state = defaultState();
       applyTheme();
@@ -6478,6 +6657,8 @@
         renderTerminal();
       } else if (document.getElementById("screen-portfolio").classList.contains("active")) {
         renderPortfolio();
+      } else if (document.getElementById("screen-home").classList.contains("active")) {
+        renderHome();
       } else if (changed) {
         renderAll();
       }
