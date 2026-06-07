@@ -3776,7 +3776,7 @@
       const track = document.querySelector("#terminalMarketSelector .trm-market-times");
       const active = track?.querySelector(".trm-market-time.active");
       if (!track || !active) return;
-      const left = active.offsetLeft - (track.clientWidth - active.offsetWidth) / 2;
+      const left = active.offsetLeft - (track.clientWidth - active.offsetWidth);
       track.scrollTo({ left: Math.max(0, left), behavior });
     }
 
