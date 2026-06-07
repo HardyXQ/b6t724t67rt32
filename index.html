@@ -1500,8 +1500,7 @@
     .trm-top { order: 1; }
     .trm-hero { order: 2; }
     .trm-levels { order: 3; }
-    .trm-chart { order: 4; }
-    .trm-market-selector { order: 5; }
+    .trm-chart-panel { order: 4; }
 
     /* Верхняя панель */
     .trm-top {
@@ -1646,16 +1645,22 @@
     }
 
     /* График */
+    .trm-chart-panel {
+      position: relative;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
     .trm-chart {
       position: relative;
       height: 200px;
-      border-radius: var(--radius-lg);
+      border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
       overflow: hidden;
-      border: 1px solid var(--line);
       background:
         linear-gradient(180deg, color-mix(in srgb, var(--tg-blue) 6%, transparent), transparent 50%),
         linear-gradient(180deg, var(--surface-soft), var(--surface));
-      box-shadow: var(--shadow-soft);
     }
     .trm-chart::before {
       content: "";
@@ -1709,12 +1714,10 @@
       align-items: center;
       gap: 7px;
       min-width: 0;
-      margin-top: -3px;
       padding: 7px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
+      border-top: 1px solid var(--line);
+      border-radius: 0 0 calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px);
       background: color-mix(in srgb, var(--surface) 95%, transparent);
-      box-shadow: var(--shadow-soft);
     }
     .trm-market-times {
       display: flex;
@@ -1737,7 +1740,7 @@
       height: 44px;
       padding: 0 13px;
       border: 1px solid transparent;
-      border-radius: calc(var(--radius-lg) - 7px);
+      border-radius: var(--radius-lg);
       background: var(--surface-2);
       color: var(--muted);
       font-weight: 950;
@@ -1757,9 +1760,10 @@
     .trm-market-time.active {
       color: #fff;
       background: var(--tg-blue);
-      border-color: color-mix(in srgb, var(--tg-blue) 72%, #fff);
-      box-shadow: 0 6px 16px color-mix(in srgb, var(--tg-blue) 30%, transparent);
+      border-color: var(--tg-blue);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22);
     }
+    .trm-market-time.closed:not(.active) { opacity: .58; }
     .trm-market-time:active,
     .trm-market-more:active { transform: scale(.95); }
     .trm-market-more {
@@ -1818,6 +1822,99 @@
       background: color-mix(in srgb, var(--tg-blue) 10%, var(--surface));
     }
     .trm-market-menu button:active { background: var(--surface-2); }
+    .trm-chart-next {
+      position: absolute;
+      z-index: 4;
+      left: 50%;
+      bottom: 14px;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      background: var(--tg-blue);
+      box-shadow: 0 8px 20px rgba(34, 158, 217, .24);
+      font-size: 12px;
+      font-weight: 950;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+    .trm-chart-next:active { transform: translateX(-50%) scale(.96); }
+    .trm-market-result {
+      display: none;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: color-mix(in srgb, var(--surface) 96%, transparent);
+      box-shadow: var(--shadow-soft);
+    }
+    .trm-market-result.show { display: grid; }
+    .trm-result-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .trm-result-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius-sm);
+      color: var(--tg-blue);
+      background: color-mix(in srgb, var(--tg-blue) 12%, var(--surface));
+    }
+    .trm-result-icon svg { width: 20px; height: 20px; }
+    .trm-result-icon.checking svg { animation: resultSpin .8s linear infinite; }
+    @keyframes resultSpin { to { transform: rotate(360deg); } }
+    .trm-result-copy { min-width: 0; }
+    .trm-result-copy strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 950;
+    }
+    .trm-result-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .trm-result-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .trm-result-values div {
+      padding: 9px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+    .trm-result-values span {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .trm-result-values strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+    .trm-market-result.up .trm-result-icon,
+    .trm-market-result.up .trm-result-copy strong { color: var(--green); }
+    .trm-market-result.down .trm-result-icon,
+    .trm-market-result.down .trm-result-copy strong { color: var(--red); }
+    .trm-amount.market-closed {
+      opacity: .52;
+      filter: saturate(.65);
+      pointer-events: none;
+      user-select: none;
+    }
     /* Ключевые уровни */
     .trm-levels {
       display: grid;
@@ -2619,26 +2716,32 @@
             <div class="trm-market-utc" id="terminalMarketUtc">UTC 00:00-00:00</div>
           </div>
           <div class="trm-timer" aria-label="До закрытия">
-            <span>До закрытия</span>
+            <span id="terminalTimerLabel">До закрытия</span>
             <strong><b id="polyMinutes">00</b>:<b id="polySeconds">00</b></strong>
           </div>
         </section>
 
-        <!-- График -->
-        <section class="trm-chart">
-          <div class="trm-chart-tag" id="chartLabel">График цены</div>
-          <div class="trm-chart-now" id="polyCurrentLabel">$0.00</div>
-          <canvas id="terminalChartCanvas" aria-label="График цены"></canvas>
+        <!-- График и выбор рынка -->
+        <section class="trm-chart-panel">
+          <div class="trm-chart">
+            <div class="trm-chart-tag" id="chartLabel">График цены</div>
+            <div class="trm-chart-now" id="polyCurrentLabel">$0.00</div>
+            <canvas id="terminalChartCanvas" aria-label="График цены"></canvas>
+            <button class="trm-chart-next" id="terminalNextMarketBtn" type="button" onclick="goToNextTerminalMarket()" style="display:none;">
+              Перейти к новому рынку
+            </button>
+          </div>
+          <div class="trm-market-selector" id="terminalMarketSelector" aria-label="Выбор времени рынка"></div>
         </section>
-
-        <!-- Выбор рынка по времени закрытия -->
-        <section class="trm-market-selector" id="terminalMarketSelector" aria-label="Выбор времени рынка"></section>
 
         <!-- Мои позиции по рынку -->
         <section class="trm-positions" id="terminalPositions"></section>
 
+        <!-- Проверка и результат закрытого рынка -->
+        <section class="trm-market-result" id="terminalMarketResult" aria-live="polite"></section>
+
         <!-- Сумма -->
-        <section class="trm-amount">
+        <section class="trm-amount" id="terminalTradeForm">
           <div class="trm-amount-head">
             <label for="tradeAmount">Сумма сделки</label>
             <span class="trm-available" onclick="toggleBalancePrivacy()" style="cursor:pointer">Доступно: <b id="trmAvailable">$0.00</b></span>
@@ -2909,6 +3012,7 @@
       balanceHistory: seedBalanceHistory(),
       marketState: {},
       marketCloses: {},
+      marketWindows: {},
       favorites: [],
       currentMarketId: markets[0].id,
       filterExpiry: "all",
@@ -2932,7 +3036,8 @@
     let terminalMarketMenuOpen = false;
     let terminalSelectedCloseAt = 0;
     let terminalMarketSelectorSignature = "";
-    const terminalMarketWindowTargets = {};
+    const terminalMarketOpenSeen = new Set();
+    const terminalMarketChecks = {};
     const terminalChartState = {
       maxPoints: 120,
       markets: {},
@@ -3495,9 +3600,7 @@
     function getTerminalMarketWindow(market, ms = getMarketState(market.id)) {
       const duration = market.minutes * 60000;
       const currentCloseAt = ms.openedAt + duration;
-      if (!terminalSelectedCloseAt || terminalSelectedCloseAt < currentCloseAt) {
-        terminalSelectedCloseAt = currentCloseAt;
-      }
+      if (!terminalSelectedCloseAt) terminalSelectedCloseAt = currentCloseAt;
       return {
         openedAt: terminalSelectedCloseAt - duration,
         closesAt: terminalSelectedCloseAt,
@@ -3505,17 +3608,78 @@
       };
     }
 
-    function getTerminalMarketTarget(market, ms, window) {
-      if (window.isCurrent) {
-        terminalMarketWindowTargets[marketCloseKey(market.id, window.openedAt)] = ms.openPrice;
-        return ms.openPrice;
-      }
+    function getTerminalMarketRecord(market, window) {
+      if (!state.marketWindows) state.marketWindows = {};
       const key = marketCloseKey(market.id, window.openedAt);
-      const stored = Number(terminalMarketWindowTargets[key]);
+      if (!state.marketWindows[key]) {
+        state.marketWindows[key] = {
+          marketId: market.id,
+          openedAt: window.openedAt,
+          closesAt: window.closesAt
+        };
+      }
+      return state.marketWindows[key];
+    }
+
+    function getTerminalMarketTarget(market, ms, window) {
+      const record = getTerminalMarketRecord(market, window);
+      const stored = Number(record.targetPrice);
       if (Number.isFinite(stored)) return stored;
-      const target = Number.isFinite(ms.currentPrice) ? ms.currentPrice : ms.openPrice;
-      terminalMarketWindowTargets[key] = target;
+      const previousWindowClose = Number(
+        state.marketCloses?.[marketCloseKey(market.id, window.openedAt - market.minutes * 60000)]
+      );
+      const target = window.openedAt === ms.openedAt
+        ? ms.openPrice
+        : (Number.isFinite(previousWindowClose)
+            ? previousWindowClose
+            : (Number.isFinite(ms.currentPrice) ? ms.currentPrice : ms.openPrice));
+      record.targetPrice = target;
+      saveState();
       return target;
+    }
+
+    function getTerminalMarketResult(market, ms, window, targetPrice) {
+      const key = marketCloseKey(market.id, window.openedAt);
+      const record = getTerminalMarketRecord(market, window);
+      const closed = Date.now() >= window.closesAt;
+      if (!closed) {
+        terminalMarketOpenSeen.add(key);
+        return { closed: false, checking: false, record };
+      }
+
+      let closePrice = Number(record.closePrice);
+      if (!Number.isFinite(closePrice)) {
+        const rememberedClose = Number(state.marketCloses?.[key]);
+        const chartPrice = Number(terminalChartState.markets[market.id]?.latestPrice);
+        closePrice = Number.isFinite(rememberedClose)
+          ? rememberedClose
+          : (Number.isFinite(chartPrice) ? chartPrice : ms.currentPrice);
+        record.targetPrice = targetPrice;
+        record.closePrice = closePrice;
+        record.winner = closePrice >= targetPrice ? "UP" : "DOWN";
+        record.closedAt = window.closesAt;
+        saveState();
+      }
+
+      if (terminalMarketOpenSeen.has(key) && !terminalMarketChecks[key]) {
+        terminalMarketChecks[key] = Date.now();
+      }
+      const checking = terminalMarketChecks[key]
+        ? Date.now() - terminalMarketChecks[key] < 1800
+        : false;
+      return { closed: true, checking, record };
+    }
+
+    function goToNextTerminalMarket() {
+      const market = getMarket(state.currentMarketId);
+      const ms = getMarketState(market.id);
+      const duration = market.minutes * 60000;
+      const currentCloseAt = ms.openedAt + duration;
+      terminalSelectedCloseAt = Math.max(terminalSelectedCloseAt + duration, currentCloseAt);
+      terminalMarketSelectorSignature = "";
+      renderTerminal();
+      requestAnimationFrame(() => scrollTerminalMarketIntoView());
+      haptic("selection");
     }
 
     function syncTerminalMarketMenu() {
@@ -3560,10 +3724,11 @@
       const ms = getMarketState(currentMarket.id);
       const duration = currentMarket.minutes * 60000;
       const currentCloseAt = ms.openedAt + duration;
-      if (!terminalSelectedCloseAt || terminalSelectedCloseAt < currentCloseAt) {
-        terminalSelectedCloseAt = currentCloseAt;
-      }
-      const marketCloses = Array.from({ length: 8 }, (_, index) => currentCloseAt + index * duration);
+      if (!terminalSelectedCloseAt) terminalSelectedCloseAt = currentCloseAt;
+      const marketCloses = Array.from(
+        { length: 12 },
+        (_, index) => currentCloseAt + (index - 4) * duration
+      ).filter(closesAt => closesAt > 0);
       if (!marketCloses.includes(terminalSelectedCloseAt)) marketCloses.push(terminalSelectedCloseAt);
       marketCloses.sort((a, b) => a - b);
       const signature = [
@@ -3582,8 +3747,9 @@
 
       const marketButton = closesAt => {
         const active = closesAt === terminalSelectedCloseAt;
+        const closed = closesAt <= Date.now();
         return `
-          <button class="trm-market-time${active ? " active" : ""}" type="button"
+          <button class="trm-market-time${active ? " active" : ""}${closed ? " closed" : ""}" type="button"
             onclick="selectTerminalMarket(${closesAt})"
             aria-pressed="${active}" aria-label="${currentMarket.asset}, закрытие ${formatTerminalMarketTime(closesAt)}">
             <span>${formatTerminalMarketTime(closesAt)}</span>
@@ -3603,8 +3769,9 @@
         <div class="trm-market-menu${terminalMarketMenuOpen ? " show" : ""}">
           ${moreMarkets.map(closesAt => {
             const active = closesAt === terminalSelectedCloseAt;
+            const closed = closesAt <= Date.now();
             return `
-              <button class="${active ? "active" : ""}" type="button" onclick="selectTerminalMarket(${closesAt})">
+              <button class="${active ? "active" : ""}${closed ? " closed" : ""}" type="button" onclick="selectTerminalMarket(${closesAt})">
                 <span>${formatTerminalMarketTime(closesAt)}</span>
                 <span></span>
               </button>`;
@@ -3785,6 +3952,66 @@
       if (el) el.textContent = value;
     }
 
+    function renderTerminalMarketResult(result, targetPrice) {
+      const resultEl = document.getElementById("terminalMarketResult");
+      const nextButton = document.getElementById("terminalNextMarketBtn");
+      if (!resultEl || !nextButton) return;
+      if (!result.closed) {
+        resultEl.className = "trm-market-result";
+        resultEl.innerHTML = "";
+        nextButton.style.display = "none";
+        return;
+      }
+
+      if (result.checking) {
+        resultEl.className = "trm-market-result show";
+        resultEl.innerHTML = `
+          <div class="trm-result-head">
+            <div class="trm-result-icon checking">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                <path d="M12 3a9 9 0 1 0 9 9"/>
+              </svg>
+            </div>
+            <div class="trm-result-copy">
+              <strong>Проверяем результат рынка</strong>
+              <span>Фиксируем цену закрытия и определяем победившую сторону</span>
+            </div>
+          </div>`;
+        nextButton.style.display = "none";
+        return;
+      }
+
+      const winnerUp = result.record.winner === "UP";
+      const winnerLabel = winnerUp ? "Вверх" : "Вниз";
+      const winnerIcon = winnerUp
+        ? `<path d="M12 19V5M5 12l7-7 7 7"/>`
+        : `<path d="M12 5v14M5 12l7 7 7-7"/>`;
+      resultEl.className = `trm-market-result show ${winnerUp ? "up" : "down"}`;
+      resultEl.innerHTML = `
+        <div class="trm-result-head">
+          <div class="trm-result-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${winnerIcon}</svg>
+          </div>
+          <div class="trm-result-copy">
+            <strong>Победила сторона «${winnerLabel}»</strong>
+            <span>Рынок закрыт, результат зафиксирован</span>
+          </div>
+        </div>
+        <div class="trm-result-values">
+          <div><span>Целевая цена</span><strong>${marketPriceText(targetPrice)}</strong></div>
+          <div><span>Цена закрытия</span><strong>${marketPriceText(result.record.closePrice)}</strong></div>
+        </div>`;
+      nextButton.style.display = "";
+    }
+
+    function setTerminalTradingLocked(locked) {
+      const form = document.getElementById("terminalTradeForm");
+      form?.classList.toggle("market-closed", locked);
+      form?.querySelectorAll("input, button").forEach(control => {
+        control.disabled = locked;
+      });
+    }
+
     function renderTerminal() {
       const market = getMarket(state.currentMarketId);
       const ms = getMarketState(market.id);
@@ -3792,10 +4019,12 @@
 
       const marketWindow = getTerminalMarketWindow(market, ms);
       const targetPrice = getTerminalMarketTarget(market, ms, marketWindow);
+      const marketResult = getTerminalMarketResult(market, ms, marketWindow, targetPrice);
+      const displayPrice = marketResult.closed ? Number(marketResult.record.closePrice) : ms.currentPrice;
       const remainingMs = Math.max(0, marketWindow.closesAt - Date.now());
       const remainingMinutes = Math.floor(remainingMs / 60000);
       const remainingSeconds = Math.floor((remainingMs % 60000) / 1000);
-      const priceLabel = marketPriceText(ms.currentPrice);
+      const priceLabel = marketPriceText(displayPrice);
       const targetLabel = marketPriceText(targetPrice);
 
       setText("terminalAsset", market.asset);
@@ -3804,12 +4033,15 @@
       setText("polyMinutes", String(remainingMinutes).padStart(2, "0"));
       setText("polySeconds", String(remainingSeconds).padStart(2, "0"));
       setText("terminalPrice", priceLabel);
+      setText("terminalTimerLabel", marketResult.closed ? "Рынок закрыт" : "До закрытия");
       setText("terminalMarketUtc", formatMarketScheduleUtc(marketWindow.openedAt, market.minutes));
       setText("polyCurrentLabel", targetLabel);
       setText("chartLabel", market.asset);
       renderTerminalMarketSelector();
 
-      updateTerminalCandleChange(ms.currentPrice, targetPrice);
+      updateTerminalCandleChange(displayPrice, targetPrice);
+      renderTerminalMarketResult(marketResult, targetPrice);
+      setTerminalTradingLocked(marketResult.closed);
 
       // Доступный баланс
       const availableEl = document.getElementById("trmAvailable");
@@ -3889,7 +4121,11 @@
           </div>`).join("");
       }
 
-      updateTerminalChart(market.id, ms.currentPrice, targetPrice);
+      if (marketResult.closed) {
+        freezeTerminalChart(market.id, displayPrice, targetPrice);
+      } else {
+        updateTerminalChart(market.id, ms.currentPrice, targetPrice);
+      }
     }
 
     function updateMockPrice(marketId) {
@@ -4033,6 +4269,7 @@
       const market = getMarket(state.currentMarketId);
       const ms = getMarketState(market.id);
       const marketWindow = getTerminalMarketWindow(market, ms);
+      const marketClosed = Date.now() >= marketWindow.closesAt;
       const myPositions = state.positions.filter(p =>
         p.marketId === market.id &&
         p.status === "open" &&
@@ -4046,10 +4283,15 @@
       const limitBtn = document.getElementById("terminalLimitSubmit");
       if (!upBtn || !downBtn || !cashoutBtn || !limitBtn) return;
       cashoutBtn.style.display = hasExpiredOpen ? "block" : "none";
-      limitBtn.style.display = (!hasExpiredOpen && isLimit) ? "block" : "none";
-      const showDir = !hasExpiredOpen && !isLimit;
+      limitBtn.style.display = (!marketClosed && !hasExpiredOpen && isLimit) ? "block" : "none";
+      const showDir = !marketClosed && !hasExpiredOpen && !isLimit;
       upBtn.style.display = showDir ? "" : "none";
       downBtn.style.display = showDir ? "" : "none";
+    }
+
+    function isTerminalMarketClosed() {
+      const market = getMarket(state.currentMarketId);
+      return Date.now() >= getTerminalMarketWindow(market).closesAt;
     }
 
     function setTradeAmount(value) {
@@ -4091,6 +4333,7 @@
       ms.currentPrice = price;
       const marketWindow = getTerminalMarketWindow(currentMarket, ms);
       const targetPrice = getTerminalMarketTarget(currentMarket, ms, marketWindow);
+      if (Date.now() >= marketWindow.closesAt) return;
       setText("terminalPrice", marketPriceText(price));
       setText("polyCurrentLabel", marketPriceText(targetPrice));
       updateTerminalCandleChange(price, targetPrice);
@@ -4176,9 +4419,28 @@
       if (!Number.isFinite(price)) return;
       const bucket = getTerminalChartBucket(marketId, price, targetPrice);
       const now = Date.now();
+      bucket.frozen = false;
       bucket.latestPrice = price;
       bucket.targetPrice = targetPrice;
       sampleTerminalChartBucket(bucket, now);
+      startTerminalChartLoop();
+    }
+
+    function freezeTerminalChart(marketId, price, targetPrice) {
+      if (!Number.isFinite(price)) return;
+      const bucket = getTerminalChartBucket(marketId, price, targetPrice);
+      if (!bucket.frozen || bucket.latestPrice !== price || bucket.targetPrice !== targetPrice) {
+        bucket.prices.push(price);
+        if (bucket.prices.length > terminalChartState.maxPoints) bucket.prices.shift();
+        bucket.latestPrice = price;
+        bucket.animatedLivePrice = price;
+        bucket.targetPrice = targetPrice;
+        bucket.animatedMin = null;
+        bucket.animatedMax = null;
+        bucket.lastSampleAt = Date.now() - 1000;
+        bucket.lastFrameAt = 0;
+      }
+      bucket.frozen = true;
       startTerminalChartLoop();
     }
 
@@ -4212,16 +4474,18 @@
       const market = getMarket(state.currentMarketId);
       const bucket = terminalChartState.markets[market.id];
       if (!bucket || bucket.prices.length < 2) return;
-      sampleTerminalChartBucket(bucket);
+      if (!bucket.frozen) sampleTerminalChartBucket(bucket);
 
       const frameNow = performance.now();
       const frameDelta = bucket.lastFrameAt ? Math.min(50, frameNow - bucket.lastFrameAt) : 16.67;
       bucket.lastFrameAt = frameNow;
-      const liveEase = 1 - Math.exp(-frameDelta / 380);
-      const liveDiff = bucket.latestPrice - bucket.animatedLivePrice;
-      bucket.animatedLivePrice = Math.abs(liveDiff) < .0000001
-        ? bucket.latestPrice
-        : bucket.animatedLivePrice + liveDiff * liveEase;
+      if (!bucket.frozen) {
+        const liveEase = 1 - Math.exp(-frameDelta / 380);
+        const liveDiff = bucket.latestPrice - bucket.animatedLivePrice;
+        bucket.animatedLivePrice = Math.abs(liveDiff) < .0000001
+          ? bucket.latestPrice
+          : bucket.animatedLivePrice + liveDiff * liveEase;
+      }
       const visiblePrices = bucket.prices.slice(-terminalChartState.maxPoints);
       let min = Math.min(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
       let max = Math.max(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
@@ -4259,7 +4523,7 @@
       const plotTop = topPad + 10;
       const plotBottom = height - bottomPad - 10;
       const getPlotY = value => clamp(getY(value), plotTop, plotBottom);
-      const smoothOffset = Math.min((Date.now() - bucket.lastSampleAt) / 1000, 1);
+      const smoothOffset = bucket.frozen ? 1 : Math.min((Date.now() - bucket.lastSampleAt) / 1000, 1);
       const stepX = usableWidth / (terminalChartState.maxPoints - 1);
       const firstX = -smoothOffset * stepX;
       const liveX = usableWidth;
@@ -4335,7 +4599,7 @@
         ctx.restore();
       }
 
-      const pulse = 8 + Math.sin(Date.now() / 190) * 1.4;
+      const pulse = bucket.frozen ? 8 : 8 + Math.sin(Date.now() / 190) * 1.4;
       ctx.save();
       ctx.beginPath();
       ctx.arc(liveX, liveY, pulse, 0, Math.PI * 2);
@@ -4352,6 +4616,10 @@
     }
 
     function placeOrder(side) {
+      if (isTerminalMarketClosed()) {
+        showToast("Рынок закрыт", "Перейдите к новому рынку, чтобы сделать прогноз.");
+        return;
+      }
       const market = getMarket(state.currentMarketId);
       const amount = Number(document.getElementById("tradeAmount").value || 0);
       if (!amount || amount < 1) {
@@ -4429,6 +4697,10 @@
     }
 
     function executeMarketOrder(side, amount) {
+      if (isTerminalMarketClosed()) {
+        showToast("Рынок закрыт", "Заявка не может быть исполнена после закрытия рынка.");
+        return;
+      }
       const market = getMarket(state.currentMarketId);
       const ms = getMarketState(market.id);
       const marketWindow = getTerminalMarketWindow(market, ms);
@@ -4475,6 +4747,10 @@
 
     // === Лимитные ордера ===
     function placeLimitOrder(side, amount) {
+      if (isTerminalMarketClosed()) {
+        showToast("Рынок закрыт", "Лимитная заявка недоступна после закрытия рынка.");
+        return;
+      }
       const market = getMarket(state.currentMarketId);
       const limitPrice = clamp(Math.round(Number(document.getElementById("limitPrice")?.value || 0)), 1, 99);
       if (!limitPrice) {
@@ -4631,7 +4907,9 @@
           row("Рынок", `${p.asset} · ${p.expiry}`) +
           row("Направление", dir, dirColor) +
           row("Ставка", money(p.amount)) +
-          row("Выплата", money(result.payout), result.payout > 0 ? "var(--green)" : "var(--muted)") +
+          row("Цена покупки", cents(p.sharePrice)) +
+          row("Текущая цена доли", `${Math.round(result.currentSharePrice)}¢`) +
+          row(mode === "cashout" ? "Выплата" : "Текущая стоимость", money(result.payout), result.payout > 0 ? "var(--green)" : "var(--muted)") +
           row("Доходность", yieldText, yieldProfit >= 0 ? "var(--green)" : "var(--red)");
       } else {
         rows =
@@ -5020,18 +5298,40 @@
       return closePrice;
     }
 
+    function getPositionMarketRecord(position, market) {
+      const openedAt = getPositionCandleOpenedAt(position, market);
+      return state.marketWindows?.[marketCloseKey(position.marketId, openedAt)];
+    }
+
     function getPositionResult(position) {
       const market = getMarket(position.marketId);
       const ms = getMarketState(position.marketId);
       const expired = Date.now() >= position.expiresAt;
       const targetPrice = getPositionTargetPrice(position, market);
-      const resultPrice = expired ? getPositionClosePrice(position, market) : ms.currentPrice;
-      const wentUp = resultPrice >= targetPrice;
-      const win = (position.side === "UP" && wentUp) || (position.side === "DOWN" && !wentUp);
-      const payout = win ? position.shares : 0;
+      const marketRecord = expired ? getPositionMarketRecord(position, market) : null;
+      const recordedClose = Number(marketRecord?.closePrice);
+      const resultPrice = expired
+        ? (Number.isFinite(recordedClose) ? recordedClose : getPositionClosePrice(position, market))
+        : ms.currentPrice;
+      const winningSide = marketRecord?.winner || (resultPrice >= targetPrice ? "UP" : "DOWN");
+      const currentSharePrice = expired
+        ? (position.side === winningSide ? 100 : 0)
+        : getSidePrice(position.marketId, position.side);
+      const payout = position.shares * (currentSharePrice / 100);
       const pnl = payout - position.amount;
       const pct = position.amount > 0 ? (pnl / position.amount) * 100 : 0;
-      return { market, targetPrice, resultPrice, win, payout, pnl, pct };
+      const win = expired ? position.side === winningSide : pnl >= 0;
+      return {
+        market,
+        targetPrice,
+        resultPrice,
+        winningSide,
+        currentSharePrice,
+        win,
+        payout,
+        pnl,
+        pct
+      };
     }
 
     function settlePosition(position) {
@@ -5173,8 +5473,9 @@
       const pct = result.pct;
       const pnlClass = pnl >= 0 ? "up" : "down";
       const sign = pnl >= 0 ? "+" : "";
-      const displayedPayout = expired ? result.payout : p.shares;
+      const displayedPayout = result.payout;
       const payoutClass = expired && displayedPayout <= 0 ? " neutral" : "";
+      const payoutLabel = expired ? "выплата" : "стоимость";
       const cashoutBtn = expired
         ? `<button class="trm-pos-cashout" type="button" onclick="event.stopPropagation(); cashOutPosition('${p.id}')">Вывести средства</button>`
         : `<button class="trm-pos-close" type="button" onclick="event.stopPropagation(); closePosition('${p.id}')">Закрыть позицию</button>`;
@@ -5191,12 +5492,12 @@
             </div>
             <div class="trm-pos-right">
               <strong class="trm-pos-payout${payoutClass}">${money(displayedPayout)}</strong>
-              <span class="trm-pos-payout-label">выплата</span>
+              <span class="trm-pos-payout-label">${payoutLabel}</span>
             </div>
           </div>
           <div class="trm-pos-foot">
             <div class="trm-pos-stat"><span>ДОЛИ</span><strong>${p.shares.toFixed(2)}</strong></div>
-            <div class="trm-pos-stat"><span>Ср. цена</span><strong>${cents(p.sharePrice)}</strong></div>
+            <div class="trm-pos-stat"><span>Цена покупки</span><strong>${cents(p.sharePrice)}</strong></div>
             <div class="trm-pos-stat"><span>Доходность</span><strong class="${pnlClass}">${sign}${money(pnl)}<small>(${sign}${pct.toFixed(1)}%)</small></strong></div>
           </div>
           ${cashoutBtn}
@@ -5225,10 +5526,13 @@
 
     function positionHtml(p) {
       const market = getMarket(p.marketId);
+      const result = getPositionResult(p);
       const direction = p.side === "UP" ? "Вверх" : "Вниз";
       const statusClass = p.status === "open" ? "mini-badge" : (p.status === "won" ? "mini-badge up" : "mini-badge down");
       const statusText = p.status === "open" ? "Открыта" : (p.status === "won" ? "Win" : "Loss");
       const expired = Date.now() >= p.expiresAt;
+      const pnlSign = result.pnl >= 0 ? "+" : "";
+      const pnlClass = result.pnl >= 0 ? "up" : "down";
       const closeBtn = p.status === "open"
         ? `<button class="position-close-btn ${expired ? "expired" : ""}" type="button" onclick="${expired ? "cashOutPosition" : "closePosition"}('${p.id}')">${expired ? "Вывести средства" : "Закрыть позицию"}</button>`
         : "";
@@ -5250,6 +5554,11 @@
             <div class="meta-cell"><span>Shares</span><strong>${p.shares.toFixed(2)}</strong></div>
             <div class="meta-cell"><span>Открытие</span><strong>${p.openAssetPrice > 100 ? money(p.openAssetPrice) : "$" + p.openAssetPrice.toFixed(3)}</strong></div>
             <div class="meta-cell"><span>Экспирация</span><strong>${new Date(p.expiresAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: getTimezoneValue(state.timezone) })}</strong></div>
+          </div>
+          <div class="position-meta">
+            <div class="meta-cell"><span>Тек. цена доли</span><strong>${Math.round(result.currentSharePrice)}¢</strong></div>
+            <div class="meta-cell"><span>Стоимость</span><strong>${money(result.payout)}</strong></div>
+            <div class="meta-cell"><span>Доходность</span><strong class="${pnlClass}">${pnlSign}${money(result.pnl)} (${pnlSign}${result.pct.toFixed(1)}%)</strong></div>
           </div>
           ${closeBtn}
         </article>`;
@@ -5791,6 +6100,8 @@
       refreshMarketCardQuotes();
       if (document.getElementById("screen-terminal").classList.contains("active")) {
         renderTerminal();
+      } else if (document.getElementById("screen-portfolio").classList.contains("active")) {
+        renderPortfolio();
       } else if (changed) {
         renderAll();
       }
