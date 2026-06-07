@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Opton — Telegram Mini App</title>
-  <meta name="theme-color" content="#229ED9" />
+  <meta name="theme-color" content="#FFFFFF" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
     :root {
       --tg-blue: #229ED9;
       --tg-blue-dark: #168AC2;
-      --bg: #f4f7fb;
+      --bg: #FFFFFF;
       --surface: #ffffff;
       --surface-soft: #f7fafc;
       --surface-2: #edf3f8;
@@ -47,7 +47,7 @@
     }
 
     [data-theme="dark"] {
-      --bg: #0e1621;
+      --bg: #0E1621;
       --surface: #17212b;
       --surface-soft: #1b2733;
       --surface-2: #202e3a;
@@ -95,10 +95,7 @@
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      background:
-        radial-gradient(circle at 0% -8%, rgba(34,158,217,.20), transparent 32%),
-        radial-gradient(circle at 104% 0%, rgba(23,178,106,.11), transparent 26%),
-        linear-gradient(180deg, color-mix(in srgb, var(--bg) 88%, #fff 12%), var(--bg));
+      background: var(--bg);
     }
 
     body.no-scroll {
@@ -112,7 +109,11 @@
     body.kb-open .bottom-nav { display: none; }
     body.kb-open .trm-actions {
       position: static;
+      left: auto;
       bottom: auto;
+      width: auto;
+      max-width: none;
+      transform: none;
     }
     /* Модалки при открытой клавиатуре крепим к верху, чтобы поле ввода
        не уезжало за клавиатуру (по центру модалку перекрывало бы). */
@@ -187,15 +188,13 @@
       transform: translate3d(0, calc(var(--ptr-pull, 0px) * -1), 0);
       will-change: transform;
     }
-
     body.ptr-settling .app {
-      transition: transform .72s cubic-bezier(.16, .86, .24, 1);
+      transition: transform .82s cubic-bezier(.18, 1.12, .28, 1);
     }
 
     body.ptr-settling .topbar {
-      transition: transform .72s cubic-bezier(.16, .86, .24, 1);
+      transition: transform .82s cubic-bezier(.18, 1.12, .28, 1);
     }
-
     .pull-refresh {
       position: fixed;
       top: calc(76px + var(--safe-top) + var(--content-top));
@@ -403,7 +402,32 @@
     }
 
     .screen { display: none; animation: slideUp .24s cubic-bezier(0.4, 0, 0.2, 1); }
-    .screen.active { display: block; }
+    .screen.active {
+      display: block;
+      min-height: calc(100dvh - 76px);
+      padding-bottom: clamp(88px, 14dvh, 140px);
+    }
+    body.edge-pull-bottom .screen.active,
+    body.edge-bottom-settling .screen.active {
+      transform: translate3d(0, calc(var(--edge-bottom-pull, 0px) * -1), 0);
+      transform-origin: center bottom;
+      will-change: transform;
+    }
+    body.edge-bottom-settling .screen.active {
+      transition: transform .82s cubic-bezier(.18, 1.16, .28, 1);
+    }
+    body[data-screen="terminal"].edge-pull-bottom #screen-terminal,
+    body[data-screen="terminal"].edge-bottom-settling #screen-terminal {
+      transform: none;
+    }
+    body[data-screen="terminal"].edge-pull-bottom #screen-terminal .trm > :not(.trm-actions),
+    body[data-screen="terminal"].edge-bottom-settling #screen-terminal .trm > :not(.trm-actions) {
+      transform: translate3d(0, calc(var(--edge-bottom-pull, 0px) * -1), 0);
+      will-change: transform;
+    }
+    body[data-screen="terminal"].edge-bottom-settling #screen-terminal .trm > :not(.trm-actions) {
+      transition: transform .82s cubic-bezier(.18, 1.16, .28, 1);
+    }
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -1495,7 +1519,12 @@
     }
 
     /* ===== Terminal (экран сделки) ===== */
-    .trm { display: grid; gap: 12px; color: var(--text); }
+    .trm {
+      display: grid;
+      gap: 12px;
+      padding-bottom: 96px;
+      color: var(--text);
+    }
     .trm > * { order: 10; }
     .trm-top { order: 1; }
     .trm-hero { order: 2; }
@@ -2315,9 +2344,12 @@
 
     /* Кнопки направления (липкий CTA) */
     .trm-actions {
-      position: sticky;
+      position: fixed;
+      left: 50%;
       bottom: calc(var(--nav-height) + 10px + var(--safe-bottom));
-      z-index: 20;
+      z-index: 65;
+      width: calc(100% - var(--page-gutter) - var(--page-gutter));
+      max-width: calc(var(--app-max) - var(--page-gutter) - var(--page-gutter));
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -2328,6 +2360,10 @@
       box-shadow: var(--shadow-soft);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
+      transform: translateX(-50%);
+    }
+    body:not([data-screen="terminal"]) .trm-actions {
+      display: none;
     }
     .trm-dir {
       display: grid;
@@ -2558,7 +2594,7 @@
         display: grid;
         place-items: center;
         padding: 40px 0;
-        background: #000;
+        background: var(--bg);
       }
       .app {
         width: 390px;
@@ -2814,27 +2850,6 @@
         <!-- Лимитные заявки по рынку -->
         <section class="trm-positions" id="terminalLimitOrders"></section>
 
-        <!-- Кнопки направления -->
-        <div class="trm-actions">
-          <button class="trm-dir up" type="button" id="terminalUpBtn" onclick="placeOrder('UP')">
-            <span class="trm-dir-head">
-              <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
-              <span class="trm-dir-name">Вверх</span>
-              <span class="trm-dir-pct" id="upButtonPrice">50¢</span>
-            </span>
-            <span class="trm-dir-payout">Выплата <b id="upButtonReturn">$0.00</b></span>
-          </button>
-          <button class="trm-dir down" type="button" id="terminalDownBtn" onclick="placeOrder('DOWN')">
-            <span class="trm-dir-head">
-              <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span>
-              <span class="trm-dir-name">Вниз</span>
-              <span class="trm-dir-pct" id="downButtonPrice">50¢</span>
-            </span>
-            <span class="trm-dir-payout">Выплата <b id="downButtonReturn">$0.00</b></span>
-          </button>
-          <button class="trm-dir-cashout" type="button" id="terminalCashout" onclick="cashOutMarket()" style="display:none;">Вывести средства</button>
-          <button class="trm-dir-submit" type="button" id="terminalLimitSubmit" onclick="submitLimitOrder()" style="display:none;">Создать лимит</button>
-        </div>
       </section>
     </section>
 
@@ -2951,6 +2966,28 @@
     </section>
   </main>
 
+  <!-- Фиксированные действия терминала вынесены из прокручиваемых экранов -->
+  <div class="trm-actions">
+    <button class="trm-dir up" type="button" id="terminalUpBtn" onclick="placeOrder('UP')">
+      <span class="trm-dir-head">
+        <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+        <span class="trm-dir-name">Вверх</span>
+        <span class="trm-dir-pct" id="upButtonPrice">50¢</span>
+      </span>
+      <span class="trm-dir-payout">Выплата <b id="upButtonReturn">$0.00</b></span>
+    </button>
+    <button class="trm-dir down" type="button" id="terminalDownBtn" onclick="placeOrder('DOWN')">
+      <span class="trm-dir-head">
+        <span class="trm-dir-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg></span>
+        <span class="trm-dir-name">Вниз</span>
+        <span class="trm-dir-pct" id="downButtonPrice">50¢</span>
+      </span>
+      <span class="trm-dir-payout">Выплата <b id="downButtonReturn">$0.00</b></span>
+    </button>
+    <button class="trm-dir-cashout" type="button" id="terminalCashout" onclick="cashOutMarket()" style="display:none;">Вывести средства</button>
+    <button class="trm-dir-submit" type="button" id="terminalLimitSubmit" onclick="submitLimitOrder()" style="display:none;">Создать лимит</button>
+  </div>
+
   <nav class="bottom-nav" aria-label="Навигация">
     <div class="nav-inner">
       <div class="nav-glider" id="navGlider"></div>
@@ -3060,6 +3097,9 @@
       markets: {},
       livePrices: {},
       livePriceUpdatedAt: {},
+      streamSockets: {},
+      streamMessageAt: {},
+      reconnectTimers: {},
       raf: 0,
       streamsStarted: false
     };
@@ -3274,7 +3314,8 @@
       document.body.dataset.theme = resolved;
       // Match Telegram's own chrome (header + background behind the fullscreen
       // controls) to our background so nothing shows through as a broken strip.
-      const bg = resolved === "dark" ? "#0e1621" : "#f4f7fb";
+      const bg = resolved === "dark" ? "#0E1621" : "#FFFFFF";
+      document.querySelector('meta[name="theme-color"]')?.setAttribute("content", bg);
       try {
         tg?.setBackgroundColor?.(bg);
         tg?.setHeaderColor?.(bg);
@@ -3893,7 +3934,7 @@
       const up = getSidePrice(m.id, "UP");
       const down = getSidePrice(m.id, "DOWN");
       const ms = getMarketState(m.id);
-      updateMockPrice(m.id);
+      updateMarketPrice(m.id);
       const priceText = marketPriceText(ms.currentPrice);
       const change = marketCandleChange(ms.currentPrice, ms.openPrice);
       const isFav = state.favorites && state.favorites.includes(m.id);
@@ -4054,7 +4095,7 @@
     function renderTerminal() {
       const market = getMarket(state.currentMarketId);
       const ms = getMarketState(market.id);
-      updateMockPrice(market.id);
+      updateMarketPrice(market.id);
 
       const marketWindow = getTerminalMarketWindow(market, ms);
       const targetPrice = getTerminalMarketTarget(market, ms, marketWindow);
@@ -4167,18 +4208,13 @@
       }
     }
 
-    function updateMockPrice(marketId) {
+    function updateMarketPrice(marketId) {
       const market = getMarket(marketId);
       const ms = getMarketState(marketId);
       const livePrice = getLiveMarketPrice(market);
       if (Number.isFinite(livePrice)) {
         ms.currentPrice = livePrice;
-        return;
       }
-      const elapsed = (Date.now() - ms.openedAt) / 1000;
-      const wave = Math.sin(elapsed / 7 + market.price) * 0.0017;
-      const bias = (ms.upCents - 50) / 50 * 0.002;
-      ms.currentPrice = market.price * (1 + wave + bias);
     }
 
     function renderSharesPreview() {
@@ -4231,7 +4267,7 @@
     function refreshMarketCardQuotes() {
       if (!document.querySelector("[data-market-price]")) return;
       markets.forEach(market => {
-        updateMockPrice(market.id);
+        updateMarketPrice(market.id);
         updateMarketCardQuote(market.id);
       });
     }
@@ -4387,71 +4423,113 @@
       }
     }
 
-    function initTerminalChartStreams() {
-      if (terminalChartState.streamsStarted || typeof WebSocket === "undefined") return;
-      terminalChartState.streamsStarted = true;
+    function scheduleTerminalStreamReconnect(name, connect) {
+      if (terminalChartState.reconnectTimers[name]) return;
+      terminalChartState.reconnectTimers[name] = setTimeout(() => {
+        terminalChartState.reconnectTimers[name] = 0;
+        connect();
+      }, 1500);
+    }
+
+    function connectTerminalPriceStream(name, url, onOpen, onMessage) {
+      const current = terminalChartState.streamSockets[name];
+      if (current && (current.readyState === WebSocket.CONNECTING || current.readyState === WebSocket.OPEN)) return;
+
+      let socket;
       try {
-        const binance = new WebSocket("wss://stream.binance.com:9443/ws");
-        binance.onopen = () => {
-          binance.send(JSON.stringify({ method: "SUBSCRIBE", params: ["btcusdt@miniTicker", "ethusdt@miniTicker"], id: 1 }));
+        socket = new WebSocket(url);
+        terminalChartState.streamSockets[name] = socket;
+        terminalChartState.streamMessageAt[name] = Date.now();
+        socket.onopen = () => {
+          terminalChartState.streamMessageAt[name] = Date.now();
+          onOpen?.(socket);
         };
-        binance.onmessage = event => {
+        socket.onmessage = event => {
+          terminalChartState.streamMessageAt[name] = Date.now();
+          onMessage(event);
+        };
+        socket.onerror = () => {
+          try { socket.close(); } catch (e) {}
+        };
+        socket.onclose = () => {
+          if (terminalChartState.streamSockets[name] === socket) {
+            delete terminalChartState.streamSockets[name];
+          }
+          scheduleTerminalStreamReconnect(name, () => connectTerminalPriceStream(name, url, onOpen, onMessage));
+        };
+      } catch (e) {
+        scheduleTerminalStreamReconnect(name, () => connectTerminalPriceStream(name, url, onOpen, onMessage));
+      }
+    }
+
+    function connectBinanceTerminalStream() {
+      connectTerminalPriceStream(
+        "binance",
+        "wss://stream.binance.com:9443/ws",
+        socket => socket.send(JSON.stringify({
+          method: "SUBSCRIBE",
+          params: ["btcusdt@miniTicker", "ethusdt@miniTicker"],
+          id: 1
+        })),
+        event => {
           try {
             const msg = JSON.parse(event.data);
             if (msg.s === "BTCUSDT") setLiveMarketPrice("BTC", Number(msg.c));
             if (msg.s === "ETHUSDT") setLiveMarketPrice("ETH", Number(msg.c));
           } catch (e) {}
-        };
-      } catch (e) {}
+        }
+      );
+    }
 
-      try {
-        const bybit = new WebSocket("wss://stream.bybit.com/v5/public/linear");
-        bybit.onopen = () => {
-          bybit.send(JSON.stringify({ op: "subscribe", args: ["tickers.TONUSDT"] }));
-        };
-        bybit.onmessage = event => {
+    function connectBybitTerminalStream() {
+      connectTerminalPriceStream(
+        "bybit",
+        "wss://stream.bybit.com/v5/public/linear",
+        socket => socket.send(JSON.stringify({ op: "subscribe", args: ["tickers.TONUSDT"] })),
+        event => {
           try {
             const msg = JSON.parse(event.data);
             const price = msg?.data?.lastPrice;
             if (price) setLiveMarketPrice("TON", Number(price));
           } catch (e) {}
-        };
-      } catch (e) {}
+        }
+      );
     }
 
-    function createHistoricalTerminalChartPrices(market, openedAt, targetPrice, closePrice) {
-      const count = terminalChartState.maxPoints;
-      const start = Number.isFinite(targetPrice) ? targetPrice : closePrice;
-      const end = Number.isFinite(closePrice) ? closePrice : start;
-      let seed = 2166136261;
-      const seedText = `${market.id}:${openedAt}`;
-      for (let i = 0; i < seedText.length; i++) {
-        seed ^= seedText.charCodeAt(i);
-        seed = Math.imul(seed, 16777619);
-      }
-      const random = () => {
-        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-        return seed / 4294967296;
-      };
-      const delta = end - start;
-      const amplitude = Math.max(
-        Math.abs(delta) * .45,
-        Math.abs(start) * .00045,
-        market.price > 100 ? 1 : .003
-      );
-      const phase = random() * Math.PI * 2;
-      let drift = 0;
-      const prices = [];
-      for (let i = 0; i < count; i++) {
-        const progress = i / (count - 1);
-        const envelope = Math.sin(progress * Math.PI);
-        drift = clamp(drift + (random() - .5) * amplitude * .16, -amplitude, amplitude);
-        const wave = Math.sin(progress * Math.PI * 6 + phase) * amplitude * .5;
-        prices.push(start + delta * progress + envelope * (wave + drift * .45));
-      }
-      prices[0] = start;
-      prices[prices.length - 1] = end;
-      return prices;
+    function ensureTerminalPriceStreams() {
+      if (typeof WebSocket === "undefined") return;
+      const now = Date.now();
+      Object.entries(terminalChartState.streamSockets).forEach(([name, socket]) => {
+        const lastMessageAt = Number(terminalChartState.streamMessageAt[name] || 0);
+        if (socket.readyState === WebSocket.OPEN && now - lastMessageAt > 30000) {
+          try { socket.close(); } catch (e) {}
+        }
+      });
+      connectBinanceTerminalStream();
+      connectBybitTerminalStream();
+    }
+
+    function initTerminalChartStreams() {
+      if (terminalChartState.streamsStarted || typeof WebSocket === "undefined") return;
+      terminalChartState.streamsStarted = true;
+      ensureTerminalPriceStreams();
+    }
+
+    function createInitialTerminalChartPrices(price) {
+      const initialPrice = Number(price);
+      if (!Number.isFinite(initialPrice)) return [];
+      return Array(terminalChartState.maxPoints).fill(initialPrice);
+    }
+
+    function resetTerminalChartToLivePrice(bucket, price, now) {
+      bucket.prices = createInitialTerminalChartPrices(price);
+      bucket.latestPrice = price;
+      bucket.animatedLivePrice = price;
+      bucket.animatedMin = null;
+      bucket.animatedMax = null;
+      bucket.lastSampleAt = now;
+      bucket.lastFrameAt = 0;
+      bucket.hasLivePrice = true;
     }
 
     function getTerminalChartBucket(marketId, window, price, targetPrice, record = null) {
@@ -4463,14 +4541,12 @@
       const storedPrices = Array.isArray(record?.chartPrices)
         ? record.chartPrices.map(Number).filter(Number.isFinite).slice(-terminalChartState.maxPoints)
         : [];
+      const initialPrice = Number.isFinite(price)
+        ? price
+        : (Number.isFinite(targetPrice) ? targetPrice : market.price);
       const prices = storedPrices.length >= 2
         ? storedPrices
-        : createHistoricalTerminalChartPrices(
-            market,
-            window.openedAt,
-            targetPrice,
-            price
-          );
+        : createInitialTerminalChartPrices(initialPrice);
       const latestPrice = Number.isFinite(price) ? price : prices[prices.length - 1];
       terminalChartState.markets[key] = {
         key,
@@ -4482,6 +4558,7 @@
         animatedMin: null,
         animatedMax: null,
         targetPrice,
+        hasLivePrice: storedPrices.length >= 2 || Number.isFinite(getLiveMarketPrice(market)),
         frozen: Date.now() >= window.closesAt,
         lastSampleAt: Date.now() >= window.closesAt ? window.closesAt : Date.now(),
         lastFrameAt: 0
@@ -4490,7 +4567,7 @@
     }
 
     function sampleTerminalChartBucket(bucket, now = Date.now()) {
-      if (!bucket || !Number.isFinite(bucket.latestPrice)) return;
+      if (!bucket || !bucket.hasLivePrice || !Number.isFinite(bucket.latestPrice)) return;
       if (!Number.isFinite(bucket.animatedLivePrice)) bucket.animatedLivePrice = bucket.latestPrice;
       if (!Number.isFinite(bucket.lastSampleAt) || bucket.lastSampleAt > now) {
         bucket.lastSampleAt = now;
@@ -4512,6 +4589,9 @@
       const bucket = getTerminalChartBucket(marketId, window, price, targetPrice, record);
       const now = Date.now();
       bucket.frozen = false;
+      if (Number.isFinite(getLiveMarketPrice(getMarket(marketId))) && !bucket.hasLivePrice) {
+        resetTerminalChartToLivePrice(bucket, price, now);
+      }
       bucket.latestPrice = price;
       bucket.targetPrice = targetPrice;
       sampleTerminalChartBucket(bucket, now);
@@ -4908,7 +4988,7 @@
         if (o.status !== "pending") return;
         const market = getMarket(o.marketId);
         const ms = getMarketState(o.marketId);
-        updateMockPrice(o.marketId);
+        updateMarketPrice(o.marketId);
         const orderOpenedAt = o.openedAt ?? marketWindowStart(market.minutes, o.createdAt || Date.now());
         const orderExpiresAt = o.expiresAt ?? (orderOpenedAt + market.minutes * 60000);
         const remaining = orderExpiresAt - Date.now();
@@ -5391,7 +5471,7 @@
       const expired = Date.now() >= position.expiresAt;
       if (!expired) {
         const ms = getMarketState(position.marketId);
-        updateMockPrice(position.marketId);
+        updateMarketPrice(position.marketId);
         return Number.isFinite(ms.currentPrice) ? ms.currentPrice : getPositionTargetPrice(position, market);
       }
       const candleOpenedAt = getPositionCandleOpenedAt(position, market);
@@ -5400,7 +5480,7 @@
       const ms = getMarketState(position.marketId);
       const rolledClose = state.marketCloses?.[marketCloseKey(position.marketId, candleOpenedAt)];
       if (Number.isFinite(rolledClose)) return rolledClose;
-      updateMockPrice(position.marketId);
+      updateMarketPrice(position.marketId);
       const closePrice = Number.isFinite(ms.currentPrice) ? ms.currentPrice : getPositionTargetPrice(position, market);
       if (ms.openedAt === candleOpenedAt) rememberMarketClose(position.marketId, candleOpenedAt, closePrice);
       return closePrice;
@@ -5933,6 +6013,122 @@
       else tg.HapticFeedback.selectionChanged();
     }
 
+    function initBottomEdgeSpring() {
+      const app = document.querySelector(".app");
+      if (!app || document.body.dataset.edgeSpringReady === "1") return;
+      document.body.dataset.edgeSpringReady = "1";
+
+      const root = document.documentElement;
+      const settleMs = 860;
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+      let pulling = false;
+      let settleTimer = 0;
+      let targetPull = 0;
+      let currentPull = 0;
+      let pullRaf = 0;
+
+      const usesAppScroller = () => app.scrollHeight > app.clientHeight + 2 && getComputedStyle(app).overflowY !== "visible";
+      const isAtBottom = () => {
+        if (usesAppScroller()) {
+          return app.scrollTop + app.clientHeight >= app.scrollHeight - 2;
+        }
+        const scrollTop = Math.max(window.scrollY || 0, document.documentElement.scrollTop || 0, document.body.scrollTop || 0);
+        const viewport = window.innerHeight || document.documentElement.clientHeight;
+        const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        return scrollTop + viewport >= height - 2;
+      };
+      const rubber = distance => {
+        const capped = Math.max(0, distance);
+        return Math.min(82, (1 - Math.exp(-capped / 92)) * 82);
+      };
+      const applyPull = value => {
+        root.style.setProperty("--edge-bottom-pull", `${value.toFixed(1)}px`);
+      };
+      const paint = value => {
+        targetPull = value;
+        if (pullRaf) return;
+        const tick = () => {
+          currentPull += (targetPull - currentPull) * .26;
+          if (Math.abs(targetPull - currentPull) < .2) currentPull = targetPull;
+          applyPull(currentPull);
+          if (currentPull !== targetPull) {
+            pullRaf = requestAnimationFrame(tick);
+          } else {
+            pullRaf = 0;
+          }
+        };
+        pullRaf = requestAnimationFrame(tick);
+      };
+      const paintImmediate = value => {
+        if (pullRaf) cancelAnimationFrame(pullRaf);
+        pullRaf = 0;
+        targetPull = value;
+        currentPull = value;
+        applyPull(value);
+      };
+      const clearSettle = () => {
+        if (settleTimer) clearTimeout(settleTimer);
+        settleTimer = 0;
+        document.body.classList.remove("edge-bottom-settling");
+      };
+      const release = () => {
+        tracking = false;
+        if (!pulling) return;
+        pulling = false;
+        clearSettle();
+        document.body.classList.add("edge-bottom-settling");
+        document.body.classList.remove("edge-pull-bottom");
+        document.body.offsetHeight;
+        paintImmediate(0);
+        settleTimer = setTimeout(() => {
+          settleTimer = 0;
+          document.body.classList.remove("edge-bottom-settling");
+        }, settleMs);
+      };
+
+      document.addEventListener("touchstart", event => {
+        if (event.touches.length !== 1) return;
+        if (document.body.classList.contains("no-scroll") || document.body.classList.contains("kb-open")) return;
+        if (event.target.closest?.("button, a, input, textarea, select, [role='button'], .topbar, .bottom-nav, .trm-actions, .modal, .toast-container")) return;
+        clearSettle();
+        paintImmediate(0);
+        const touch = event.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        tracking = true;
+        pulling = false;
+      }, { passive: true });
+
+      document.addEventListener("touchmove", event => {
+        if (!tracking || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        if (!pulling) {
+          if (Math.abs(dx) > Math.abs(dy) || dy >= 0) return;
+          if (!isAtBottom()) {
+            startX = touch.clientX;
+            startY = touch.clientY;
+            return;
+          }
+          if (dy > -7) return;
+          pulling = true;
+          document.body.classList.add("edge-pull-bottom");
+        }
+        if (dy >= 0) {
+          paint(0);
+          return;
+        }
+        if (event.cancelable) event.preventDefault();
+        paint(rubber(-dy));
+      }, { passive: false });
+
+      document.addEventListener("touchend", release, { passive: true });
+      document.addEventListener("touchcancel", release, { passive: true });
+    }
+
     function initPullToRefresh() {
       const app = document.querySelector(".app");
       const indicator = document.getElementById("pullRefresh");
@@ -5943,7 +6139,7 @@
       const root = document.documentElement;
       const threshold = 142;
       const refreshPull = 116;
-      const settleMs = 760;
+      const settleMs = 860;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -5967,9 +6163,8 @@
 
       const canStartFrom = target => {
         if (refreshing) return false;
-        if (scrollTop() > 1) return false;
         if (document.body.classList.contains("no-scroll") || document.body.classList.contains("kb-open")) return false;
-        return !target.closest("button, a, input, textarea, select, [role='button'], .modal, .toast-container, #balanceChartContainer");
+        return !target.closest("button, a, input, textarea, select, [role='button'], .topbar, .modal, .toast-container, #balanceChartContainer");
       };
 
       const rubber = distance => {
@@ -6010,8 +6205,8 @@
         }
         if (raf) return;
         const tick = () => {
-          currentPull += (lastPull - currentPull) * .34;
-          if (Math.abs(lastPull - currentPull) < .35) currentPull = lastPull;
+          currentPull += (lastPull - currentPull) * .26;
+          if (Math.abs(lastPull - currentPull) < .2) currentPull = lastPull;
           applyPullFrame(currentPull);
           if (currentPull !== lastPull) {
             raf = requestAnimationFrame(tick);
@@ -6125,6 +6320,11 @@
         const dy = touch.clientY - startY;
 
         if (!locked) {
+          if (dy > 0 && scrollTop() > 1) {
+            startX = touch.clientX;
+            startY = touch.clientY;
+            return;
+          }
           if (Math.abs(dx) > 10 && Math.abs(dx) > dy) {
             pulling = false;
             release();
@@ -6182,6 +6382,51 @@
       if (isTextField(event.target)) document.body.classList.remove("kb-open");
     });
 
+    // Mobile WebViews can suppress the synthetic click while inertial scrolling
+    // is still settling. Dispatch a real click for a short stationary tap.
+    let fastTap = null;
+    const fastTapSelector = 'button, a, [role="button"], [onclick]';
+    document.addEventListener("touchstart", event => {
+      if (event.touches.length !== 1) {
+        fastTap = null;
+        return;
+      }
+      const target = event.target.closest?.(fastTapSelector);
+      if (!target || target.disabled || target.getAttribute("aria-disabled") === "true") {
+        fastTap = null;
+        return;
+      }
+      const touch = event.touches[0];
+      fastTap = {
+        target,
+        x: touch.clientX,
+        y: touch.clientY,
+        startedAt: performance.now(),
+        moved: false
+      };
+    }, { passive: true, capture: true });
+
+    document.addEventListener("touchmove", event => {
+      if (!fastTap || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      if (Math.hypot(touch.clientX - fastTap.x, touch.clientY - fastTap.y) > 12) {
+        fastTap.moved = true;
+      }
+    }, { passive: true, capture: true });
+
+    document.addEventListener("touchend", event => {
+      const tap = fastTap;
+      fastTap = null;
+      if (!tap || tap.moved || performance.now() - tap.startedAt > 600) return;
+      if (!tap.target.isConnected || tap.target.disabled || tap.target.getAttribute("aria-disabled") === "true") return;
+      if (event.cancelable) event.preventDefault();
+      tap.target.click();
+    }, { passive: false, capture: true });
+
+    document.addEventListener("touchcancel", () => {
+      fastTap = null;
+    }, { passive: true, capture: true });
+
     window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
       if (state.themeMode === "system") applyTheme();
     });
@@ -6197,17 +6442,22 @@
 
     document.body.dataset.screen = "home";
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) restartTerminalChartLoop();
+      if (!document.hidden) {
+        ensureTerminalPriceStreams();
+        restartTerminalChartLoop();
+      }
     });
     window.addEventListener("resize", restartTerminalChartLoop, { passive: true });
     initTelegram();
     lockPortraitOrientation();
     applyTheme();
+    initBottomEdgeSpring();
     initPullToRefresh();
     initTerminalChartStreams();
     initChartScrubbing();
     renderAll();
     setInterval(() => {
+      ensureTerminalPriceStreams();
       const changed = processLimitOrders();
       refreshMarketCardQuotes();
       if (document.getElementById("screen-terminal").classList.contains("active")) {
