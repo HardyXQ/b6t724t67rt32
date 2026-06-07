@@ -69,18 +69,14 @@
     html {
       min-height: 100%;
       background: var(--bg);
-      overscroll-behavior-x: none;
-      overscroll-behavior-y: auto;
+      overscroll-behavior: none;
     }
     body {
       min-height: 100%;
       min-height: 100dvh;
       margin: 0;
       color: var(--text);
-      overflow-y: scroll;
-      overscroll-behavior-x: none;
-      overscroll-behavior-y: auto;
-      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: none;
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
@@ -176,8 +172,6 @@
       min-height: 100dvh;
       margin: 0 auto;
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
-      overscroll-behavior-y: auto;
-      -webkit-overflow-scrolling: touch;
     }
 
     body.ptr-active .app,
@@ -5979,7 +5973,7 @@
         if (refreshing) return false;
         if (scrollTop() > 1) return false;
         if (document.body.classList.contains("no-scroll") || document.body.classList.contains("kb-open")) return false;
-        return !target.closest("button, a, input, textarea, select, [role='button'], .modal, .toast-container, #balanceChartContainer");
+        return !target.closest("button, a, input, textarea, select, [role='button'], .topbar, .modal, .toast-container, #balanceChartContainer");
       };
 
       const rubber = distance => {
