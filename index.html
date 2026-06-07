@@ -405,6 +405,23 @@
       min-height: calc(100dvh - 76px);
       padding-bottom: clamp(88px, 14dvh, 140px);
     }
+    body.edge-pull-bottom .screen.active,
+    body.edge-bottom-settling .screen.active {
+      transform: translate3d(0, calc(var(--edge-bottom-pull, 0px) * -1), 0);
+      transform-origin: center bottom;
+      will-change: transform;
+    }
+    body.edge-bottom-settling .screen.active {
+      transition: transform .64s cubic-bezier(.16, .86, .24, 1);
+    }
+    body[data-screen="terminal"].edge-pull-bottom .trm-actions,
+    body[data-screen="terminal"].edge-bottom-settling .trm-actions {
+      transform: translate3d(0, var(--edge-bottom-pull, 0px), 0);
+      will-change: transform;
+    }
+    body[data-screen="terminal"].edge-bottom-settling .trm-actions {
+      transition: transform .64s cubic-bezier(.16, .86, .24, 1);
+    }
     @keyframes slideUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -5935,6 +5952,90 @@
       else tg.HapticFeedback.selectionChanged();
     }
 
+    function initBottomEdgeSpring() {
+      const app = document.querySelector(".app");
+      if (!app || document.body.dataset.edgeSpringReady === "1") return;
+      document.body.dataset.edgeSpringReady = "1";
+
+      const root = document.documentElement;
+      const settleMs = 680;
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+      let pulling = false;
+      let settleTimer = 0;
+
+      const usesAppScroller = () => app.scrollHeight > app.clientHeight + 2 && getComputedStyle(app).overflowY !== "visible";
+      const isAtBottom = () => {
+        if (usesAppScroller()) {
+          return app.scrollTop + app.clientHeight >= app.scrollHeight - 2;
+        }
+        const scrollTop = Math.max(window.scrollY || 0, document.documentElement.scrollTop || 0, document.body.scrollTop || 0);
+        const viewport = window.innerHeight || document.documentElement.clientHeight;
+        const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        return scrollTop + viewport >= height - 2;
+      };
+      const rubber = distance => {
+        const capped = Math.max(0, distance);
+        return Math.min(82, (1 - Math.exp(-capped / 92)) * 82);
+      };
+      const paint = value => {
+        root.style.setProperty("--edge-bottom-pull", `${value.toFixed(1)}px`);
+      };
+      const clearSettle = () => {
+        if (settleTimer) clearTimeout(settleTimer);
+        settleTimer = 0;
+        document.body.classList.remove("edge-bottom-settling");
+      };
+      const release = () => {
+        tracking = false;
+        if (!pulling) return;
+        pulling = false;
+        clearSettle();
+        document.body.classList.add("edge-bottom-settling");
+        document.body.classList.remove("edge-pull-bottom");
+        paint(0);
+        settleTimer = setTimeout(() => {
+          settleTimer = 0;
+          document.body.classList.remove("edge-bottom-settling");
+        }, settleMs);
+      };
+
+      document.addEventListener("touchstart", event => {
+        if (event.touches.length !== 1) return;
+        if (document.body.classList.contains("no-scroll") || document.body.classList.contains("kb-open")) return;
+        if (event.target.closest?.(".topbar, .bottom-nav, .modal, .toast-container")) return;
+        clearSettle();
+        paint(0);
+        const touch = event.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        tracking = isAtBottom();
+        pulling = false;
+      }, { passive: true });
+
+      document.addEventListener("touchmove", event => {
+        if (!tracking || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        if (!pulling) {
+          if (Math.abs(dx) > Math.abs(dy) || dy > -7 || !isAtBottom()) return;
+          pulling = true;
+          document.body.classList.add("edge-pull-bottom");
+        }
+        if (dy >= 0) {
+          paint(0);
+          return;
+        }
+        if (event.cancelable) event.preventDefault();
+        paint(rubber(-dy));
+      }, { passive: false });
+
+      document.addEventListener("touchend", release, { passive: true });
+      document.addEventListener("touchcancel", release, { passive: true });
+    }
+
     function initPullToRefresh() {
       const app = document.querySelector(".app");
       const indicator = document.getElementById("pullRefresh");
@@ -6250,6 +6351,7 @@
     initTelegram();
     lockPortraitOrientation();
     applyTheme();
+    initBottomEdgeSpring();
     initPullToRefresh();
     initTerminalChartStreams();
     initChartScrubbing();
