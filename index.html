@@ -2967,8 +2967,8 @@
         </div>
 
         <div class="setting-row">
-          <h4>Демо кошелёк (без TonConnect)</h4>
-          <p>Используйте этот режим для быстрого тестирования интерфейса без реального подключения.</p>
+          <h4>Демо кошелёк (эмуляция TonConnect)</h4>
+          <p>При включении приложение считает демо-кошелёк подключённым и открывает торговлю и портфель.</p>
           <div class="two-col">
             <button class="primary" type="button" onclick="toggleDemoWallet()">Вкл/Выкл Демо</button>
             <button class="ghost" type="button" onclick="showToast('Демо адрес', 'EQDe...demo_address_active')">Инфо</button>
@@ -3444,6 +3444,7 @@
     let tonConnectUI;
     let tonConnectInitPromise;
     let connectedTonWallet = null;
+    const demoTonWalletAddress = "EQDe...demo_address_active";
 
     async function initTonConnect() {
       if (tonConnectUI) return tonConnectUI;
@@ -3473,13 +3474,17 @@
       return tonConnectInitPromise;
     }
 
-    function isTonWalletConnected() {
+    function isRealTonWalletConnected() {
       return !!connectedTonWallet?.account?.address;
+    }
+
+    function isTonWalletConnected() {
+      return isRealTonWalletConnected() || !!state.demoWalletActive;
     }
 
     async function connectTonWallet() {
       const ui = await initTonConnect();
-      if (!ui || isTonWalletConnected()) return;
+      if (!ui || isRealTonWalletConnected()) return;
       try {
         await ui.connectWallet();
       } catch (e) {
@@ -3510,14 +3515,15 @@
       const chip = document.getElementById('walletChip');
       if (!chip) return;
 
-      if (wallet) {
+      if (wallet?.account?.address) {
         const addr = wallet.account.address;
         const short = addr.slice(0, 4) + '...' + addr.slice(-4);
         chip.textContent = short;
         chip.onclick = () => showWalletMenu();
       } else if (state.demoWalletActive) {
-        chip.textContent = "Demo · Connect";
-        chip.onclick = () => connectTonWallet();
+        const short = demoTonWalletAddress.slice(0, 4) + '...' + demoTonWalletAddress.slice(-4);
+        chip.textContent = "Demo · " + short;
+        chip.onclick = () => showWalletMenu();
       } else {
         chip.textContent = 'Connect';
         chip.onclick = () => connectTonWallet();
@@ -3543,12 +3549,12 @@
     }
 
     function handleWalletAction(action) {
-      const isDemo = state.demoWalletActive && !isTonWalletConnected();
+      const isDemo = state.demoWalletActive && !isRealTonWalletConnected();
       let addr = "";
       if (isDemo) {
-        addr = "EQDe...demo_address_active";
-      } else if (tonConnectUI?.wallet) {
-        addr = tonConnectUI.wallet.account.address;
+        addr = demoTonWalletAddress;
+      } else if (connectedTonWallet?.account?.address) {
+        addr = connectedTonWallet.account.address;
       }
 
       if (action === 'copy') {
@@ -3560,7 +3566,7 @@
         if (isDemo) {
           toggleDemoWallet();
         } else {
-          tonConnectUI.disconnect();
+          tonConnectUI?.disconnect();
         }
       }
 
@@ -3593,10 +3599,14 @@
     function toggleDemoWallet() {
       state.demoWalletActive = !state.demoWalletActive;
       saveState();
-      updateWalletChip(tonConnectUI?.wallet || null);
+      updateWalletChip(connectedTonWallet);
+      syncWalletAccessUI();
+      renderAll(true);
       showToast(
         state.demoWalletActive ? "Демо-кошелек включен" : "Демо-кошелек выключен",
-        state.demoWalletActive ? "Теперь в хедере отображается тестовый адрес." : "Возврат к обычному режиму TonConnect."
+        state.demoWalletActive
+          ? "Демо-кошелёк эмулирует подключение TonConnect."
+          : "Возврат к обычному режиму TonConnect."
       );
     }
 
@@ -6073,6 +6083,8 @@
       localStorage.removeItem(storageKey);
       state = defaultState();
       applyTheme();
+      updateWalletChip(connectedTonWallet);
+      syncWalletAccessUI();
       renderAll();
       showToast("Данные сброшены", "Прототип вернулся к начальному состоянию.");
     }
