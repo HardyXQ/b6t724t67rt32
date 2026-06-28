@@ -2844,10 +2844,91 @@
         position: absolute;
       }
     }
+
+    /* ── First-launch splash / loading screen ─────────────────────────── */
+    .splash {
+      position: fixed; inset: 0; z-index: 10000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 26px;
+      background: var(--bg);
+      padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    .splash::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(125% 70% at 50% -5%, color-mix(in srgb, var(--tg-blue) 26%, transparent), transparent 58%),
+        radial-gradient(95% 55% at 50% 105%, color-mix(in srgb, var(--tg-blue) 12%, transparent), transparent 55%);
+    }
+    .splash.hide { opacity: 0; visibility: hidden; }
+    .splash-logo {
+      position: relative; width: 112px; height: 112px; border-radius: 31px;
+      display: grid; place-items: center;
+      background: linear-gradient(145deg, #2BB2EC, #1B7FB0);
+      box-shadow: 0 24px 64px rgba(34,158,217,.45), inset 0 1px 0 rgba(255,255,255,.28);
+      animation: splashPop .65s cubic-bezier(.2,.85,.25,1) both, splashFloat 3s ease-in-out .65s infinite;
+    }
+    .splash-logo svg {
+      width: 52px; height: 54px; fill: #fff;
+      filter: drop-shadow(0 4px 9px rgba(0,0,0,.18));
+    }
+    .splash-logo::after {
+      content: ""; position: absolute; inset: 0; border-radius: 31px;
+      animation: splashRing 2.1s ease-out infinite;
+    }
+    .splash-text { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .splash-title {
+      font-size: 30px; font-weight: 900; letter-spacing: .4px; color: var(--text);
+      animation: splashFade .6s ease .25s both;
+    }
+    .splash-sub {
+      font-size: 13.5px; font-weight: 750; color: var(--muted); letter-spacing: .2px;
+      animation: splashFade .6s ease .38s both;
+    }
+    .splash-bar {
+      position: relative; width: 158px; height: 5px; border-radius: 3px; overflow: hidden;
+      background: color-mix(in srgb, var(--tg-blue) 16%, transparent);
+      animation: splashFade .6s ease .5s both;
+    }
+    .splash-bar > span {
+      position: absolute; inset: 0; width: 42%; border-radius: 3px;
+      background: linear-gradient(90deg, transparent, var(--tg-blue), transparent);
+      animation: splashSlide 1.15s ease-in-out infinite;
+    }
+    @keyframes splashPop {
+      from { opacity: 0; transform: scale(.6) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes splashFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    @keyframes splashRing {
+      0% { box-shadow: 0 0 0 0 rgba(34,158,217,.42); }
+      70% { box-shadow: 0 0 0 26px rgba(34,158,217,0); }
+      100% { box-shadow: 0 0 0 0 rgba(34,158,217,0); }
+    }
+    @keyframes splashSlide { 0% { transform: translateX(-130%); } 100% { transform: translateX(320%); } }
+    @keyframes splashFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      .splash-logo, .splash-logo::after, .splash-title, .splash-sub, .splash-bar, .splash-bar > span { animation: none; }
+    }
   </style>
 </head>
 
 <body>
+  <!-- Экран загрузки при первом запуске -->
+  <div class="splash" id="splash" role="status" aria-label="Загрузка Opton">
+    <div class="splash-logo">
+      <svg viewBox="0 0 805 832" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M545.467 252.058C553.2 256.591 559.333 265.658 561.333 275.391C563.467 285.258 562.4 335.925 560 342.858C557.6 349.525 550.267 357.925 543.467 361.525C538.267 364.325 535.867 364.458 502 365.125C464.133 365.791 461.733 366.191 458.4 372.191C457.067 374.458 456.533 409.925 456 540.058L455.333 704.858L451.333 710.725C448.667 714.458 444.8 717.658 440.133 720.058C432.933 723.791 432.8 723.791 404.4 723.791C388.267 723.791 373.333 723.125 370.133 722.325C362.667 720.458 355.6 714.591 352.133 707.391C349.333 701.658 349.333 701.258 349.333 539.658C349.333 388.191 349.2 377.525 346.933 373.125C343.2 365.525 341.467 365.125 305.2 365.125C268.8 365.125 262.933 364.191 254.4 357.125C251.733 354.858 247.867 349.658 245.733 345.391L242 337.791V306.325V274.991L246 267.125C250.4 258.591 256.933 252.591 264.8 249.791C269.2 248.191 292.533 247.925 404.667 248.191L539.333 248.458L545.467 252.058Z"/>
+        <path d="M580.933 1.12459C586.267 1.79126 595.333 3.92455 600.933 5.79121C625.2 13.9245 640.933 27.6579 664.533 61.1246C672.533 72.4579 682 85.658 685.333 90.458C688.8 95.258 704.4 117.658 720 140.458C735.733 163.125 753.067 188.058 758.533 195.791C790.133 240.058 797.067 252.458 802 273.125C804.933 285.791 805.067 819.258 802.133 824.991C797.333 834.191 784.933 833.658 777.067 824.058C775.467 821.925 757.2 802.191 736.533 780.191C704.8 746.191 698.4 738.591 694.267 730.325C684.933 711.925 685.333 722.591 685.333 510.991C685.333 324.591 685.333 319.925 682.667 309.791C681.2 304.058 678.4 296.591 676.4 293.258C672.533 286.458 619.067 210.058 592 172.458C582.533 159.258 572.133 146.191 569.067 143.391C561.333 136.591 549.2 130.858 538.667 129.125C532.8 128.058 487.733 127.791 396.667 128.058L263.333 128.458L255.333 131.658C238.8 138.325 235.067 142.058 211.6 175.125C203.333 186.858 187.867 208.725 177.2 223.791C140.4 275.391 132.267 287.391 128.133 295.391C119.6 312.458 120 302.191 120 511.525C120 723.658 120.4 711.791 110.667 731.125C106.267 739.658 101.467 745.791 86.2668 762.058C75.8668 773.125 57.4667 792.725 45.4667 805.658C33.4667 818.458 21.8667 829.658 19.8667 830.591C14.2667 832.858 7.46674 831.125 3.46674 826.325L6.57241e-05 822.191V554.725C6.57241e-05 293.925 0.133419 286.858 2.66675 275.125C6.26675 258.591 14.1334 243.525 33.7334 215.791C42.6667 202.991 61.6001 176.191 75.4667 156.458C89.4667 136.591 112 104.591 125.6 85.2579C156.933 40.8579 165.867 29.6579 176.267 21.7912C190.8 10.7245 210.133 3.12456 230 0.724564C239.2 -0.475436 572 -0.0754113 580.933 1.12459Z"/>
+      </svg>
+    </div>
+    <div class="splash-text">
+      <div class="splash-title">Opton</div>
+      <div class="splash-sub">Рынок прогнозов в Telegram</div>
+    </div>
+    <div class="splash-bar"><span></span></div>
+  </div>
+
   <!-- Блокировка горизонтальной ориентации (фолбэк, если клиент не поддерживает lockOrientation) -->
   <div class="orientation-lock" aria-hidden="true">
     <div class="orientation-lock-inner">
@@ -3236,10 +3317,9 @@
         <img id="shareImage" alt="Карточка позиции" />
       </div>
       <div class="share-actions">
+        <button class="secondary" type="button" onclick="closeShareModal()">Закрыть</button>
         <button class="primary" type="button" onclick="shareShareImage()">Поделиться</button>
-        <button class="secondary" type="button" onclick="saveShareImage()">Сохранить</button>
       </div>
-      <button class="ghost share-close" type="button" onclick="closeShareModal()">Закрыть</button>
     </div>
   </div>
 
@@ -4552,7 +4632,7 @@
               </div>
               <div style="min-width: 0; flex: 1;">
                 <h4>${m.asset} · ${m.expiry}</h4>
-                <span>Vol: ${m.vol || '0'}</span>
+                <span>Объем: ${m.vol || '0'}</span>
               </div>
             </div>
             <div class="badge-row">
@@ -4813,7 +4893,7 @@
       el.innerHTML = `
         <div class="trm-pool-head">
           <strong>Пул раунда</strong>
-          <em>${money(total)} всего · комиссия ${(FEE_BPS / 100).toFixed(0)}%</em>
+          <em>${money(total)} всего</em>
         </div>
         <div class="trm-pool-bar">
           <span class="up" style="width:${upPct}%"></span>
@@ -4823,7 +4903,7 @@
           <div class="up"><b>Вверх ${upPct}%</b><span>${money(up)}</span></div>
           <div class="down"><b>Вниз ${downPct}%</b><span>${money(down)}</span></div>
         </div>
-        <p class="trm-pool-note">Выплата зависит от соотношения пулов на момент закрытия — оно может измениться после вашей ставки.</p>`;
+        <p class="trm-pool-note">Победители делят весь банк пропорционально своим ставкам. Чем меньше людей выбрало вашу сторону — тем выше выплата.</p>`;
     }
 
     function updateTerminalCandleChange(currentPrice, openPrice) {
@@ -5071,9 +5151,20 @@
       const initialPrice = Number.isFinite(price)
         ? price
         : (Number.isFinite(targetPrice) ? targetPrice : market.price);
+      // Continue the price line from the previous window so a fresh market does
+      // not reset the chart to a flat baseline — the line should scroll on as a
+      // continuation, with only the per-window overlays (target, timer) resetting.
+      const prevKey = marketCloseKey(marketId, window.openedAt - market.minutes * 60000);
+      const prevBucket = terminalChartState.markets[prevKey];
+      const prevStored = Array.isArray(state.marketWindows?.[prevKey]?.chartPrices)
+        ? state.marketWindows[prevKey].chartPrices.map(Number).filter(Number.isFinite)
+        : [];
+      const carryOver = (prevBucket && Array.isArray(prevBucket.prices) && prevBucket.prices.length >= 2
+        ? prevBucket.prices
+        : prevStored).slice(-terminalChartState.maxPoints);
       const prices = storedPrices.length >= 2
         ? storedPrices
-        : createInitialTerminalChartPrices(initialPrice);
+        : (carryOver.length >= 2 ? carryOver.slice() : createInitialTerminalChartPrices(initialPrice));
       const latestPrice = Number.isFinite(price) ? price : prices[prices.length - 1];
       terminalChartState.markets[key] = {
         key,
@@ -5085,7 +5176,7 @@
         animatedMin: null,
         animatedMax: null,
         targetPrice,
-        hasLivePrice: storedPrices.length >= 2 || Number.isFinite(getLiveMarketPrice(market)),
+        hasLivePrice: storedPrices.length >= 2 || carryOver.length >= 2 || Number.isFinite(getLiveMarketPrice(market)),
         frozen: Date.now() >= window.closesAt,
         lastSampleAt: Date.now() >= window.closesAt ? window.closesAt : Date.now(),
         lastFrameAt: 0
@@ -6087,7 +6178,12 @@
 
     function pushBalancePoint(isTrade = false) {
       if (isTrade) {
-        const pnl = state.balance - state.initialBalance;
+        // Treat open positions as "in flight" — their stake hasn't been lost yet.
+        // Only settled losses should pull the curve down.
+        const openStake = (state.positions || [])
+          .filter(p => p.status === "open")
+          .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const pnl = (state.balance + openStake) - state.initialBalance;
         state.balanceHistory.push({ t: Date.now(), value: Number(pnl.toFixed(2)) });
         state.balanceHistory = state.balanceHistory.slice(-200);
       }
@@ -6130,8 +6226,15 @@
       haptic("selection");
     }
 
+    function calcPnl() {
+      const openStake = (state.positions || [])
+        .filter(p => p.status === "open")
+        .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      return (state.balance + openStake) - state.initialBalance;
+    }
+
     function renderPortfolio(noAnimate = false) {
-      const pnl = state.balance - state.initialBalance;
+      const pnl = calcPnl();
       const balanceEl = document.getElementById("portfolioBalance");
       if (balanceEl) {
         balanceEl.textContent = money(state.balance);
@@ -6353,9 +6456,12 @@
       const market = getMarket(p.marketId);
       const result = getPositionResult(p);
       const dir = p.side === "UP" ? "Вверх" : "Вниз";
+      const arrow = p.side === "UP" ? "▲" : "▼";
       const win = result.pnl >= 0;
       const sideColor = p.side === "UP" ? "#1FC977" : "#F0584F";
       const accent = win ? "#1FC977" : "#F0584F";
+      const accentRgb = win ? "31,201,119" : "240,88,79";
+      const sideRgb = p.side === "UP" ? "31,201,119" : "240,88,79";
       const pnlSign = win ? "+" : "";
       const coin = COIN_DISPLAY_NAMES[String(p.asset).split("/")[0]] || String(p.asset).split("/")[0];
 
@@ -6366,22 +6472,30 @@
       const dateStr = new Date(openedAt).toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: tz });
       const schedule = `${dateStr}, ${fmtT(openedAt)}–${fmtT(p.expiresAt)}`;
 
-      const W = 1080, H = 1080, pad = 90;
+      const W = 1080, H = 1080, pad = 84;
       const FONT = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
       const canvas = document.createElement("canvas");
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
 
-      // Background + brand glow
+      // ── Background: dark gradient + brand glow on top, result-tinted glow
+      //    on the bottom so a win/loss reads at a glance even muted ──────────
       const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, "#0E1621"); bg.addColorStop(1, "#16212C");
+      bg.addColorStop(0, "#0D141E"); bg.addColorStop(1, "#161F2A");
       ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-      const glow = ctx.createRadialGradient(W * 0.5, 0, 60, W * 0.5, 0, 820);
-      glow.addColorStop(0, "rgba(34,158,217,0.32)"); glow.addColorStop(1, "rgba(34,158,217,0)");
+      let glow = ctx.createRadialGradient(W * 0.5, -120, 60, W * 0.5, -120, 900);
+      glow.addColorStop(0, "rgba(34,158,217,0.26)"); glow.addColorStop(1, "rgba(34,158,217,0)");
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+      glow = ctx.createRadialGradient(W * 0.5, H + 180, 80, W * 0.5, H + 180, 780);
+      glow.addColorStop(0, `rgba(${accentRgb},0.20)`); glow.addColorStop(1, `rgba(${accentRgb},0)`);
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
-      // Header — real Opton logo (from the topbar) inside a brand tile
-      const logoBox = 86;
+      // Inner hairline frame for a finished, framed look
+      roundRectPath(ctx, 22, 22, W - 44, H - 44, 46);
+      ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 2; ctx.stroke();
+
+      // ── Header: Opton logo tile + wordmark, asset pill on the right ───────
+      const logoBox = 84;
       roundRectPath(ctx, pad, pad, logoBox, logoBox, 22);
       const lg = ctx.createLinearGradient(pad, pad, pad + logoBox, pad + logoBox);
       lg.addColorStop(0, "#229ED9"); lg.addColorStop(1, "#1B7FB0");
@@ -6390,68 +6504,93 @@
       if (logoEl) {
         const logoSvg = logoEl.outerHTML.replace(/currentColor/g, "#ffffff");
         const logoImg = await svgToImage(logoSvg, 120);
-        const lpad = 22; // breathing room so the mark isn't edge-to-edge
+        const lpad = 22;
         drawContain(ctx, logoImg, pad + lpad, pad + lpad, logoBox - lpad * 2, logoBox - lpad * 2);
       }
       ctx.textBaseline = "alphabetic";
       ctx.fillStyle = "#fff"; ctx.font = `800 46px ${FONT}`;
-      ctx.fillText("Opton", pad + 110, pad + 38);
-      ctx.fillStyle = "#8FA3B5"; ctx.font = `600 27px ${FONT}`;
-      ctx.fillText("Прогнозы в Telegram", pad + 110, pad + 74);
+      ctx.fillText("Opton", pad + 104, pad + 36);
+      ctx.fillStyle = "#8FA3B5"; ctx.font = `600 26px ${FONT}`;
+      ctx.fillText("Прогнозы в Telegram", pad + 104, pad + 72);
 
-      // Asset/expiry pill (top-right)
-      ctx.font = `800 30px ${FONT}`;
+      ctx.font = `800 29px ${FONT}`;
       const pillText = `${p.asset} · ${p.expiry}`;
-      const pillW = ctx.measureText(pillText).width + 56;
-      roundRectPath(ctx, W - pad - pillW, pad + 12, pillW, 62, 31);
-      ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.fill();
+      const pillW = ctx.measureText(pillText).width + 54;
+      roundRectPath(ctx, W - pad - pillW, pad + 10, pillW, 62, 31);
+      ctx.fillStyle = "rgba(255,255,255,0.08)"; ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.fillStyle = "#DCE6EF"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(pillText, W - pad - pillW / 2, pad + 12 + 33);
+      ctx.fillText(pillText, W - pad - pillW / 2, pad + 10 + 32);
       ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 
-      // Asset icon + direction (aspect-preserved, centered in a 150px box)
-      const icon = await svgToImage(market.icon, 150);
-      drawContain(ctx, icon, pad, 270, 150, 150);
-      ctx.fillStyle = "#fff"; ctx.font = `900 62px ${FONT}`;
-      const coinText = coin + " ";
-      ctx.fillText(coinText, pad + 186, 340);
-      const cw = ctx.measureText(coinText).width;
-      ctx.fillStyle = sideColor;
-      ctx.fillText(dir, pad + 186 + cw, 340);
-      ctx.fillStyle = "#8FA3B5"; ctx.font = `600 30px ${FONT}`;
-      ctx.fillText(schedule, pad + 186, 392);
+      // ── Asset row: coin icon, name, direction badge, schedule ────────────
+      const icon = await svgToImage(market.icon, 132);
+      drawContain(ctx, icon, pad, 246, 132, 132);
+      ctx.fillStyle = "#fff"; ctx.font = `900 60px ${FONT}`;
+      ctx.fillText(coin, pad + 168, 318);
+      const coinW = ctx.measureText(coin).width;
 
-      // PnL hero
-      ctx.fillStyle = "#8FA3B5"; ctx.font = `700 34px ${FONT}`;
-      ctx.fillText("Доходность", pad, 560);
-      ctx.fillStyle = accent; ctx.font = `900 150px ${FONT}`;
-      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, pad, 690);
-      ctx.fillStyle = "#fff"; ctx.font = `800 46px ${FONT}`;
-      ctx.fillText(`Выплата ${money(result.payout)}`, pad, 752);
+      // Direction badge (arrow + Вверх/Вниз) in the side color
+      ctx.font = `800 34px ${FONT}`;
+      const badgeText = `${arrow} ${dir}`;
+      const badgeW = ctx.measureText(badgeText).width + 44;
+      const badgeH = 58, badgeX = pad + 168 + coinW + 28, badgeY = 318 - 47;
+      roundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, 29);
+      ctx.fillStyle = `rgba(${sideRgb},0.16)`; ctx.fill();
+      ctx.fillStyle = sideColor; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1);
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 
-      // Stat boxes
+      ctx.fillStyle = "#8FA3B5"; ctx.font = `600 29px ${FONT}`;
+      ctx.fillText(schedule, pad + 168, 370);
+
+      // ── PnL hero panel: accent-tinted card with a side bar ───────────────
+      const panelX = pad, panelY = 452, panelW = W - pad * 2, panelH = 292;
+      roundRectPath(ctx, panelX, panelY, panelW, panelH, 36);
+      ctx.fillStyle = `rgba(${accentRgb},0.10)`; ctx.fill();
+      ctx.strokeStyle = `rgba(${accentRgb},0.34)`; ctx.lineWidth = 2; ctx.stroke();
+      roundRectPath(ctx, panelX + 32, panelY + 42, 8, panelH - 84, 4);
+      ctx.fillStyle = accent; ctx.fill();
+      const textX = panelX + 66;
+      ctx.fillStyle = "#9DB0C2"; ctx.font = `700 32px ${FONT}`;
+      ctx.fillText("Доходность", textX, panelY + 78);
+      // result tag on the right of the panel
+      ctx.font = `800 28px ${FONT}`;
+      const tag = win ? "ПРИБЫЛЬ" : "УБЫТОК";
+      const tagW = ctx.measureText(tag).width + 44;
+      roundRectPath(ctx, panelX + panelW - 32 - tagW, panelY + 40, tagW, 52, 26);
+      ctx.fillStyle = `rgba(${accentRgb},0.18)`; ctx.fill();
+      ctx.fillStyle = accent; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(tag, panelX + panelW - 32 - tagW / 2, panelY + 40 + 27);
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = accent; ctx.font = `900 132px ${FONT}`;
+      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, textX, panelY + 206);
+      ctx.fillStyle = "#fff"; ctx.font = `800 42px ${FONT}`;
+      ctx.fillText(`Выплата ${money(result.payout)}`, textX, panelY + 262);
+
+      // ── Stat boxes ───────────────────────────────────────────────────────
       const boxes = [
         { label: "МНОЖИТЕЛЬ", value: formatMultiplier(p.entryMultiplier || result.multiplier) },
         { label: "ШАНС", value: `${Math.round((p.entryProb ?? result.impliedProb) * 100)}%` },
         { label: "СТАВКА", value: money(p.amount) }
       ];
-      const boxY = 820, boxH = 158, gap = 30;
+      const boxY = 794, boxH = 162, gap = 28;
       const boxW = (W - pad * 2 - gap * 2) / 3;
       boxes.forEach((b, i) => {
         const bx = pad + i * (boxW + gap);
-        roundRectPath(ctx, bx, boxY, boxW, boxH, 26);
-        ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
+        roundRectPath(ctx, bx, boxY, boxW, boxH, 28);
+        ctx.fillStyle = "rgba(255,255,255,0.045)"; ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = "#8FA3B5"; ctx.font = `800 26px ${FONT}`;
-        ctx.fillText(b.label, bx + 26, boxY + 56);
-        ctx.fillStyle = "#fff"; ctx.font = `900 44px ${FONT}`;
-        ctx.fillText(b.value, bx + 26, boxY + 116);
+        ctx.fillStyle = "#8094A6"; ctx.font = `800 25px ${FONT}`;
+        ctx.fillText(b.label, bx + 28, boxY + 58);
+        ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
+        ctx.fillText(b.value, bx + 28, boxY + 118);
       });
 
-      // Footer
-      ctx.fillStyle = "#5E7186"; ctx.font = `600 28px ${FONT}`;
+      // ── Footer ───────────────────────────────────────────────────────────
+      ctx.fillStyle = "#5E7186"; ctx.font = `600 27px ${FONT}`;
       ctx.textAlign = "center";
-      ctx.fillText("Opton · торгуй прогнозами в Telegram", W / 2, H - 56);
+      ctx.fillText("Opton · торгуй прогнозами в Telegram", W / 2, H - 54);
       ctx.textAlign = "left";
 
       return canvas;
@@ -6542,7 +6681,7 @@
       BUY: { color: "blue", svg: `<path d="M17 4v16"/><path d="m21 8-4-4-4 4"/><path d="M7 20V4"/><path d="m3 16 4 4 4-4"/>` },
       LIMIT: { color: "blue", svg: `<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>` },
       LIMIT_CANCEL: { color: "muted", svg: `<path d="M3 8v5h5"/><path d="M3.5 13a9 9 0 1 0 2.2-8.3L3 8"/>` },
-      REFUND: { color: "muted", svg: `<path d="M3 8v5h5"/><path d="M3.5 13a9 9 0 1 0 2.2-8.3L3 8"/>` },
+      REFUND: { color: "blue", svg: `<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>` },
       DEFAULT: { color: "muted", svg: `<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/><circle cx="16.5" cy="14.5" r="1.2"/>` }
     };
 
@@ -6553,9 +6692,17 @@
       LIMIT_CANCEL: "Отмена лимита", REFUND: "Возврат (раунд отменён)", DEFAULT: "Операция"
     };
 
+    // Open history rows are tracked by id so the 1s portfolio re-render
+    // (which rebuilds historyList.innerHTML) doesn't collapse them.
+    const openHistoryIds = new Set();
     function toggleHistoryDetail(el) {
       if (!el) return;
-      el.classList.toggle("open");
+      const id = el.dataset.histId;
+      const isOpen = el.classList.toggle("open");
+      if (id) {
+        if (isOpen) openHistoryIds.add(id);
+        else openHistoryIds.delete(id);
+      }
       haptic("selection");
     }
 
@@ -6590,8 +6737,9 @@
           </div>
         </div></div>`;
 
+      const openClass = openHistoryIds.has(item.id) ? " open" : "";
       return `
-        <article class="card history-row" onclick="toggleHistoryDetail(this)">
+        <article class="card history-row${openClass}" data-hist-id="${item.id}" onclick="toggleHistoryDetail(this)">
           <div class="hist-main">
             <div class="hist-ic ${ic.color}"><svg viewBox="0 0 24 24">${ic.svg}</svg></div>
             <div class="hist-body">
@@ -6659,7 +6807,7 @@
         const remaining = Number(p.expiresAt) - now;
         return p.status === "open" && remaining > 0 && remaining <= 5 * 60000;
       }).length;
-      const pnl = state.balance - state.initialBalance;
+      const pnl = calcPnl();
 
       const balanceEl = document.getElementById("homeBalance");
       if (balanceEl) {
@@ -7289,6 +7437,31 @@
       fastTap = null;
     }, { passive: true, capture: true });
 
+    // Swipe right from the left edge on the terminal screen → back to market list.
+    (function () {
+      let swipeStart = null;
+      document.addEventListener("touchstart", e => {
+        if (document.body.dataset.screen !== "terminal") return;
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        if (t.clientX > 32) return; // only fire from the left-edge zone
+        swipeStart = { x: t.clientX, y: t.clientY };
+      }, { passive: true });
+      document.addEventListener("touchmove", e => {
+        if (!swipeStart || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        const dx = t.clientX - swipeStart.x;
+        const dy = Math.abs(t.clientY - swipeStart.y);
+        if (dx > 60 && dy < dx * 0.6) {
+          swipeStart = null;
+          go("markets");
+          haptic("impact");
+        }
+      }, { passive: true });
+      document.addEventListener("touchend", () => { swipeStart = null; }, { passive: true });
+      document.addEventListener("touchcancel", () => { swipeStart = null; }, { passive: true });
+    })();
+
     window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", () => {
       if (state.themeMode === "system") applyTheme();
     });
@@ -7318,6 +7491,31 @@
     initTerminalChartStreams();
     initChartScrubbing();
     renderAll();
+
+    // Прячем экран загрузки после готовности UI, но держим его минимум ~900мс,
+    // чтобы он не «мигал» на быстрых устройствах. Срабатывает и как фолбэк
+    // по таймеру, если что-то в инициализации зависнет.
+    (function () {
+      const splash = document.getElementById("splash");
+      if (!splash) return;
+      const BOOT_AT = performance.now();
+      const MIN_VISIBLE = 900;
+      let hidden = false;
+      const hideSplash = () => {
+        if (hidden) return;
+        hidden = true;
+        const wait = Math.max(0, MIN_VISIBLE - (performance.now() - BOOT_AT));
+        setTimeout(() => {
+          splash.classList.add("hide");
+          setTimeout(() => splash.remove(), 600);
+        }, wait);
+      };
+      if (document.readyState === "complete") requestAnimationFrame(hideSplash);
+      else window.addEventListener("load", () => requestAnimationFrame(hideSplash), { once: true });
+      // Жёсткий фолбэк, чтобы сплэш никогда не «залип».
+      setTimeout(hideSplash, 4000);
+    })();
+
     let _liveTick = 0;
     setInterval(() => {
       ensureTerminalPriceStreams();
