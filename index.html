@@ -4590,7 +4590,12 @@
       document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
       document.getElementById("screen-" + screen).classList.add("active");
       document.querySelectorAll(".nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.nav === screen || (screen === "terminal" && btn.dataset.nav === "markets")));
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Реальный скроллер — это .app (на мобильных body{overflow:hidden}),
+      // поэтому сбрасываем прокрутку именно у него, иначе новый экран
+      // открывается «прокрученным», и липкий header перекрывает верх контента.
+      const appScroller = document.querySelector(".app");
+      if (appScroller) appScroller.scrollTop = 0;
+      window.scrollTo({ top: 0 });
       renderAll(true); // Snap animations on screen change
       syncNavGlider(isFirstLoad); // Nav glider snaps on first load
       setTimeout(() => {
