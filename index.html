@@ -7,6 +7,9 @@
   <meta name="theme-color" content="#FFFFFF" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Грузим Inter с наивысшим приоритетом (preload-as-style), чтобы шрифт был
+       готов как можно раньше — splash и весь UI сразу в едином шрифте. -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
@@ -8129,8 +8132,13 @@
     captureInboundReferral();
     lockPortraitOrientation();
     applyTheme();
-    initBottomEdgeSpring();
-    initPullToRefresh();
+    // initBottomEdgeSpring() и initPullToRefresh() временно отключены: их
+    // глобальные non-passive touch-обработчики с preventDefault перехватывали
+    // прокрутку и делали её «не такой», как в настройках (внутри модалки эти
+    // перехватчики не работают → там нативный плавный момент-скролл). Теперь
+    // весь app скроллится нативно. Pull-to-refresh будет переписан с нуля.
+    // initBottomEdgeSpring();
+    // initPullToRefresh();
     initTerminalChartStreams();
     initChartScrubbing();
     renderAll();
