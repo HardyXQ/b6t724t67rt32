@@ -336,7 +336,7 @@
       border-bottom: 1px solid var(--line);
     }
 
-    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; cursor: pointer; user-select: none; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; cursor: pointer; user-select: none; margin-top: 6px; }
     .logo {
       flex: 0 0 auto;
       width: 38px;
@@ -355,7 +355,7 @@
     }
     .brand h1 {
       margin: 0;
-      font-size: 18px;
+      font-size: 15px;
       line-height: 1.05;
       letter-spacing: normal;
     }
@@ -364,7 +364,7 @@
       max-width: 210px;
       margin-top: 3px;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 10.5px;
       line-height: 1.2;
       white-space: nowrap;
       overflow: hidden;
@@ -1371,6 +1371,17 @@
     .hist-dl > b { min-width: 0; text-align: right; color: var(--text); font-weight: 850; }
     .hist-dl > b.up { color: var(--green); }
     .hist-dl > b.down { color: var(--red); }
+    .hist-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 850; padding: 3px 9px; border-radius: 999px;
+    }
+    .hist-status::before {
+      content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    }
+    .hist-status.ok { color: var(--green); background: color-mix(in srgb, var(--green) 14%, transparent); }
+    .hist-status.bad { color: var(--red); background: color-mix(in srgb, var(--red) 14%, transparent); }
+    .hist-status.muted { color: var(--muted); background: var(--surface-2); }
+    .hist-dl-hash { font-family: monospace; font-size: 11px; word-break: break-all; text-align: right; color: var(--muted); }
     .hist-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; }
     .hist-chips span {
       font-size: 11px; font-weight: 800; color: var(--muted);
@@ -1586,35 +1597,75 @@
       background: color-mix(in srgb, var(--tg-blue) 12%, transparent); padding: 6px 11px; border-radius: 999px;
     }
 
-    .referral-card { display: grid; gap: 14px; }
-    .referral-head { display: flex; gap: 12px; align-items: center; }
+    .referral-card {
+      display: grid; gap: 0;
+      background: linear-gradient(135deg, #0f2a3d 0%, #0d1f2e 55%, #0a1929 100%) !important;
+      border-color: rgba(34,158,217,.18) !important;
+      overflow: hidden; position: relative;
+    }
+    .referral-card::before {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(34,158,217,.18) 0%, transparent 65%);
+    }
+    .referral-banner {
+      position: relative; padding: 20px 18px 16px;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
     .referral-gift {
-      flex: 0 0 auto; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
-      color: var(--tg-blue); background: color-mix(in srgb, var(--tg-blue) 12%, transparent);
+      flex: 0 0 auto; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+      background: linear-gradient(135deg, #229ED9 0%, #1a7dab 100%);
+      box-shadow: 0 6px 18px rgba(34,158,217,.38);
     }
-    .referral-gift svg { width: 22px; height: 22px; }
-    .referral-head div b { display: block; font-size: 15px; font-weight: 900; letter-spacing: normal; }
-    .referral-head div span { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 700; color: var(--muted); line-height: 1.4; }
-    .referral-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .referral-stats > div {
-      background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 10px;
-      display: grid; gap: 3px; text-align: center;
+    .referral-gift svg { width: 24px; height: 24px; color: #fff; }
+    .referral-banner-text { flex: 1 1 auto; min-width: 0; }
+    .referral-banner-text b {
+      display: block; font-size: 16px; font-weight: 950; color: #fff; letter-spacing: -.2px;
     }
-    .referral-stats b { font-size: 22px; font-weight: 950; line-height: 1; }
-    .referral-stats span { font-size: 11px; font-weight: 800; color: var(--muted); }
+    .referral-banner-text span {
+      display: block; margin-top: 4px; font-size: 12.5px; font-weight: 700;
+      color: rgba(255,255,255,.55); line-height: 1.45;
+    }
+    .referral-reward-badge {
+      display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
+      background: rgba(34,158,217,.18); border: 1px solid rgba(34,158,217,.32);
+      border-radius: 999px; padding: 4px 11px;
+      font-size: 11.5px; font-weight: 900; color: #3ab7f5;
+    }
+    .referral-reward-badge svg { width: 13px; height: 13px; }
+    .referral-divider {
+      height: 1px; background: rgba(255,255,255,.07); margin: 0 18px;
+    }
+    .referral-stats {
+      display: grid; grid-template-columns: 1fr 1fr;
+      position: relative; padding: 14px 18px;
+    }
+    .referral-stats > div { display: grid; gap: 2px; }
+    .referral-stats > div:first-child { border-right: 1px solid rgba(255,255,255,.07); }
+    .referral-stats b { font-size: 24px; font-weight: 950; line-height: 1; color: #fff; }
+    .referral-stats span { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.4); margin-top: 2px; }
     .referral-link {
       display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-      background: var(--surface-2); border: 1px dashed color-mix(in srgb, var(--tg-blue) 35%, var(--line));
-      border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer;
-      font: inherit; color: var(--text); -webkit-tap-highlight-color: transparent;
+      background: rgba(255,255,255,.06); border: 1px dashed rgba(34,158,217,.4);
+      border-radius: var(--radius-sm); padding: 11px 14px; cursor: pointer;
+      font: inherit; color: #fff; -webkit-tap-highlight-color: transparent;
+      transition: background .18s;
     }
-    .referral-link:active { transform: scale(.99); }
+    .referral-link:active { background: rgba(255,255,255,.1); }
     .referral-link span {
-      flex: 1 1 auto; min-width: 0; font-size: 12.5px; font-weight: 800; color: var(--text);
+      flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 800; color: rgba(255,255,255,.7);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .referral-link svg { flex: 0 0 auto; width: 17px; height: 17px; color: var(--tg-blue); stroke: currentColor; }
-    .referral-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .referral-link svg { flex: 0 0 auto; width: 16px; height: 16px; color: #3ab7f5; }
+    .referral-footer {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      padding: 0 18px 18px;
+    }
+    .referral-footer .ghost {
+      border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.7);
+    }
+    .referral-footer .ghost:active { background: rgba(255,255,255,.08); }
+    .referral-link-wrap { padding: 0 18px 12px; }
 
     .account-action {
       display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
@@ -2664,34 +2715,75 @@
     }
 
     /* Краткая подсказка для новичков под рынком */
-    .trm-howto {
+    /* Аккордеон — общие стили для описания монеты и "Как это работает" */
+    .trm-accordion {
       margin-top: 12px;
-      padding: 14px 16px;
       border-radius: var(--radius);
       background: var(--surface-soft);
       border: 1px solid var(--line);
+      overflow: hidden;
     }
-    .trm-howto-head {
+    .trm-accordion-head {
       display: flex; align-items: center; gap: 8px;
-      font-size: 13.5px; font-weight: 900; color: var(--text); letter-spacing: normal;
+      padding: 13px 15px;
+      font-size: 13.5px; font-weight: 900; color: var(--text);
+      cursor: pointer; user-select: none; -webkit-user-select: none;
     }
-    .trm-howto-head svg { width: 16px; height: 16px; color: var(--tg-blue); flex: 0 0 auto; }
-    .trm-howto ol {
-      margin: 10px 0 0; padding: 0; list-style: none;
-      display: grid; gap: 8px; counter-reset: howto;
+    .trm-accordion-head:active { opacity: .72; }
+    .trm-accordion-head-icon {
+      flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+      overflow: hidden; display: grid; place-items: center;
+      background: var(--surface);
     }
-    .trm-howto li {
+    .trm-accordion-head-icon svg { width: 28px; height: 28px; display: block; }
+    .trm-accordion-head-icon.eth-svg {
+      background: #fff !important;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .trm-accordion-head-icon.eth-svg svg {
+      width: 100%; height: 100%; display: block;
+    }
+    .trm-accordion-head > svg { width: 16px; height: 16px; color: var(--tg-blue); flex: 0 0 auto; }
+    .trm-accordion-head-icon.svg-icon { width: 32px !important; height: 32px !important; padding: 0; }
+    .trm-accordion-chevron {
+      margin-left: auto; flex: 0 0 auto;
+      width: 18px; height: 18px; color: var(--muted);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+    }
+    .trm-accordion.open .trm-accordion-chevron { transform: rotate(180deg); }
+    .trm-accordion-body {
+      display: grid; grid-template-rows: 0fr;
+      transition: grid-template-rows .28s cubic-bezier(.4,0,.2,1);
+    }
+    .trm-accordion.open .trm-accordion-body { grid-template-rows: 1fr; }
+    .trm-accordion-inner { overflow: hidden; min-height: 0; }
+    .trm-accordion-content {
+      padding: 0 15px 14px;
+      font-size: 12.5px; font-weight: 620; color: var(--muted); line-height: 1.55;
+      border-top: 1px solid var(--line);
+    }
+    /* "Как это работает" — нумерованный список */
+    .trm-accordion-content ol {
+      margin: 0; padding: 0; list-style: none;
+      display: grid; gap: 8px; counter-reset: howto; padding-top: 12px;
+    }
+    .trm-accordion-content li {
       position: relative; padding-left: 30px;
-      font-size: 12.5px; font-weight: 650; line-height: 1.4; color: var(--muted);
       counter-increment: howto;
     }
-    .trm-howto li::before {
+    .trm-accordion-content li::before {
       content: counter(howto);
       position: absolute; left: 0; top: 0;
       width: 20px; height: 20px; border-radius: 50%;
       display: grid; place-items: center;
       font-size: 11px; font-weight: 900; color: #fff;
       background: var(--tg-blue);
+    }
+    /* Краткая подпись под заголовком (видна всегда) */
+    .trm-accordion-sub {
+      font-size: 11.5px; font-weight: 650; color: var(--muted);
+      margin-top: 1px; line-height: 1.3;
     }
 
     /* Кнопки направления (липкий CTA) */
@@ -3019,7 +3111,7 @@
     }
     .splash-text { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .splash-title {
-      font-size: 30px; font-weight: 900; letter-spacing: .4px; color: var(--text);
+      font-size: 30px; font-weight: 700; letter-spacing: .4px; color: var(--text);
       animation: splashFade .6s ease .25s both;
     }
     .splash-sub {
@@ -3064,8 +3156,8 @@
       </svg>
     </div>
     <div class="splash-text">
-      <div class="splash-title">Opton</div>
-      <div class="splash-sub" id="splashSub">Рынок прогнозов в Telegram</div>
+      <div class="splash-title">Opton Market</div>
+      <div class="splash-sub" id="splashSub">Первый рынок прогнозов в Telegram</div>
     </div>
     <div class="splash-bar"><span></span></div>
   </div>
@@ -3095,7 +3187,7 @@
           </svg>
         </div>
         <div>
-          <h1>Opton</h1>
+          <h1>Opton Market</h1>
           <span>Рынок прогнозов</span>
         </div>
       </div>
@@ -3157,7 +3249,7 @@
           <div class="value" id="homeBalance">$0.00</div>
           <div class="delta" id="homePnl">PnL $0.00</div>
         </article>
-        <article class="card stat">
+        <article class="card stat" onclick="go('portfolio')" style="cursor:pointer">
           <div class="label">Позиции</div>
           <div class="value" id="homePositions">0</div>
           <div class="delta down" id="homeExpiring">0 истекают скоро</div>
@@ -3275,17 +3367,32 @@
         <!-- Пул раунда (parimutuel) -->
         <div class="trm-pool" id="poolPanel" aria-label="Пул раунда"></div>
 
-        <!-- Краткая подсказка для новичков -->
-        <div class="trm-howto" aria-label="Как это работает">
-          <div class="trm-howto-head">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            Как это работает
+        <!-- О монете + Как это работает (единый аккордеон) -->
+        <div class="trm-accordion open" id="terminalAssetDesc" aria-label="О монете" onclick="toggleTrmAccordion(this)">
+          <div class="trm-accordion-head">
+            <div class="trm-accordion-head-icon" id="terminalAssetDescIcon"></div>
+            <div>
+              <div id="terminalAssetDescName" style="font-size:13.5px;font-weight:900;color:var(--text)"></div>
+              <div class="trm-accordion-sub">О монете · Как это работает</div>
+            </div>
+            <svg class="trm-accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </div>
-          <ol>
-            <li>Реши, куда пойдёт цена за время раунда — <b>Вверх</b> или <b>Вниз</b>.</li>
-            <li>Укажи сумму ставки и подтверди — она уходит в общий банк раунда.</li>
-            <li>Угадал к закрытию — забираешь выплату: победители делят весь банк. Не угадал — ставка остаётся в банке.</li>
-          </ol>
+          <div class="trm-accordion-body">
+            <div class="trm-accordion-inner">
+              <div class="trm-accordion-content">
+                <p id="terminalAssetDescText" style="margin:12px 0 16px;"></p>
+                <div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--tg-blue);flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  Как это работает
+                </div>
+                <ol>
+                  <li>Реши, куда пойдёт цена за время раунда — <b>Вверх</b> или <b>Вниз</b>.</li>
+                  <li>Укажи сумму ставки и подтверди — она уходит в общий банк раунда.</li>
+                  <li>Угадал к закрытию — забираешь выплату: победители делят весь банк. Не угадал — ставка остаётся в банке.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
         </div>
 
       </section>
@@ -3307,11 +3414,11 @@
       </div>
       <div class="segmented five" style="margin-bottom:12px">
         <div class="seg-glider"></div>
-        <button class="seg" type="button" onclick="setBalanceRange('1d', this)">1D</button>
-        <button class="seg" type="button" onclick="setBalanceRange('1w', this)">1W</button>
-        <button class="seg" type="button" onclick="setBalanceRange('1m', this)">1M</button>
-        <button class="seg" type="button" onclick="setBalanceRange('1y', this)">1Y</button>
-        <button class="seg active" type="button" onclick="setBalanceRange('all', this)">All</button>
+        <button class="seg" type="button" data-range="1d" onclick="setBalanceRange('1d', this)">1Д</button>
+        <button class="seg" type="button" data-range="1w" onclick="setBalanceRange('1w', this)">1Н</button>
+        <button class="seg" type="button" data-range="1m" onclick="setBalanceRange('1m', this)">1М</button>
+        <button class="seg" type="button" data-range="1y" onclick="setBalanceRange('1y', this)">1Г</button>
+        <button class="seg active" type="button" data-range="all" onclick="setBalanceRange('all', this)">ВСЕ</button>
       </div>
       <div class="pnl-chart card" style="padding:0" id="balanceChartContainer">
         <div class="pnl-chart-info" id="balanceChartInfo"></div>
@@ -3354,7 +3461,7 @@
         <div class="portfolio-slider-inner" id="portfolioSlider">
           <div class="portfolio-slide" id="positionsView">
             <div class="section-title" style="margin: 0 2px 10px; justify-content: flex-end;">
-              <a href="#" onclick="settleAllOpen(); return false;">Получить выплаты</a>
+              <a href="#" onclick="settleAllOpen(); return false;">Закрыть все</a>
             </div>
             <section id="positionsList"></section>
           </div>
@@ -3591,6 +3698,12 @@
     const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
     const usdtIcon = `<svg viewBox="-2 -2 343 299"><path fill="#50af95" d="M62.15,1.45l-61.89,130a2.52,2.52,0,0,0,.54,2.94L167.95,294.56a2.55,2.55,0,0,0,3.53,0L338.63,134.4a2.52,2.52,0,0,0,.54-2.94l-61.89-130A2.5,2.5,0,0,0,275,0H64.45a2.5,2.5,0,0,0-2.3,1.45h0Z"/><path fill="white" d="M191.19,144.8v0c-1.2.09-7.4,0.46-21.23,0.46-11,0-18.81-.33-21.55-0.46v0c-42.51-1.87-74.24-9.27-74.24-18.13s31.73-16.25,74.24-18.15v28.91c2.78,0.2,10.74.67,21.74,0.67,13.2,0,19.81-.55,21-0.66v-28.9c42.42,1.89,74.08,9.29,74.08,18.13s-31.65,16.24-74.08,18.12h0Zm0-39.25V79.68h59.2V40.23H89.21V79.68H148.4v25.86c-48.11,2.21-84.29,11.74-84.29,23.16s36.18,20.94,84.29,23.16v82.9h42.78V151.83c48-2.21,84.12-11.73,84.12-23.14s-36.09-20.93-84.12-23.15h0Zm0,0h0Z"/></svg>`;
 
+    const ASSET_DESCRIPTIONS = {
+      "BTC/USD": "Bitcoin — первая и крупнейшая криптовалюта. Децентрализованная цифровая валюта без посредников, работает на блокчейне с ограниченной эмиссией 21 млн монет.",
+      "ETH/USD": "Ethereum — блокчейн-платформа для смарт-контрактов и децентрализованных приложений. ETH используется для оплаты комиссий и является базовым активом экосистемы DeFi.",
+      "GRAM/USD": "GRAM — токен, торгующийся на блокчейне TON, разработанном командой Telegram. Используется для оплаты транзакций, стейкинга и работы Telegram Mini Apps."
+    };
+
     const markets = [
       { id: "BTC-USD-15", asset: "BTC/USD", expiry: "15м", minutes: 15, price: 67428.90, change: 1.61, icon: btcIcon, iconClass: "svg-icon", vol: "850K" },
       { id: "BTC-USD-60", asset: "BTC/USD", expiry: "1ч", minutes: 60, price: 67450.00, change: 1.25, icon: btcIcon, iconClass: "svg-icon", vol: "2.4M" },
@@ -3632,6 +3745,10 @@
     let terminalMarketMenuOpen = false;
     let terminalMarketMenuCloseTimer = 0;
     let terminalSelectedCloseAt = 0;
+    // Пока true — терминал «следует» за живым окном: выбранная свеча продвигается
+    // вместе с currentCloseAt при перекате. Сбрасывается в false, когда пользователь
+    // осознанно выбирает прошлую/будущую свечу в селекторе.
+    let terminalFollowLive = true;
     let terminalMarketSelectorSignature = "";
     const terminalMarketOpenSeen = new Set();
     const terminalMarketChecks = {};
@@ -3643,6 +3760,7 @@
       streamSockets: {},
       streamMessageAt: {},
       reconnectTimers: {},
+      activeStreamSource: "binance",
       raf: 0,
       streamsStarted: false
     };
@@ -4682,6 +4800,7 @@
     function openTerminal(id) {
       state.currentMarketId = id;
       terminalSelectedCloseAt = 0;
+      terminalFollowLive = true;
       terminalMarketSelectorSignature = "";
       terminalMarketMenuOpen = false;
       getMarketState(id);
@@ -4702,7 +4821,12 @@
     function getTerminalMarketWindow(market, ms = getMarketState(market.id)) {
       const duration = market.minutes * 60000;
       const currentCloseAt = ms.openedAt + duration;
-      if (!terminalSelectedCloseAt) terminalSelectedCloseAt = currentCloseAt;
+      // Следуем за живым окном: если режим follow-live (или выбор ещё не задан),
+      // всегда указываем на текущую свечу, чтобы при перезаходе/перекате свечи не
+      // остаться на уже закрытом окне (заморозка графика и застывшая целевая цена).
+      if (terminalFollowLive || !terminalSelectedCloseAt) {
+        terminalSelectedCloseAt = currentCloseAt;
+      }
       return {
         openedAt: terminalSelectedCloseAt - duration,
         closesAt: terminalSelectedCloseAt,
@@ -4783,6 +4907,7 @@
       const duration = market.minutes * 60000;
       const currentCloseAt = ms.openedAt + duration;
       terminalSelectedCloseAt = Math.max(terminalSelectedCloseAt + duration, currentCloseAt);
+      terminalFollowLive = terminalSelectedCloseAt === currentCloseAt;
       terminalMarketSelectorSignature = "";
       renderTerminal();
       requestAnimationFrame(() => scrollTerminalMarketIntoView());
@@ -4831,6 +4956,10 @@
       const nextCloseAt = Number(closesAt);
       if (!Number.isFinite(nextCloseAt)) return;
       terminalSelectedCloseAt = nextCloseAt;
+      const selMarket = getMarket(state.currentMarketId);
+      const selMs = getMarketState(selMarket.id);
+      // Выбор текущей свечи возобновляет follow-live; прошлой/будущей — выключает.
+      terminalFollowLive = nextCloseAt === selMs.openedAt + selMarket.minutes * 60000;
       terminalMarketMenuOpen = false;
       terminalMarketSelectorSignature = "";
       renderTerminal();
@@ -5271,6 +5400,18 @@
         terminalIcon.className = "poly-coin " + (market.iconClass || "");
       }
 
+      const assetKey = market.asset.split("/")[0];
+      const assetFullNames = { BTC: "Bitcoin", ETH: "Ethereum", GRAM: "GRAM (TON)" };
+      const descIconEl = document.getElementById("terminalAssetDescIcon");
+      const descNameEl = document.getElementById("terminalAssetDescName");
+      const descTextEl = document.getElementById("terminalAssetDescText");
+      if (descIconEl) {
+        descIconEl.innerHTML = market.icon;
+        descIconEl.className = "trm-accordion-head-icon" + (market.iconClass ? " " + market.iconClass : "");
+      }
+      if (descNameEl) descNameEl.textContent = assetFullNames[assetKey] || assetKey;
+      if (descTextEl) descTextEl.textContent = ASSET_DESCRIPTIONS[market.asset] || "";
+
       // Множители и выплаты на кнопках считает renderSharesPreview.
       renderSharesPreview();
       renderPoolPanel(market.id);
@@ -5537,20 +5678,46 @@
       }
     }
 
+    // Binance — главный источник цен по всем активам. Bybit держим «тёплым»
+    // резервом: его сокет подключён всегда, но цены из него применяем, только
+    // когда Binance перестал отвечать (мгновенный failover без переподключения).
+    const STREAM_PRIMARY = "binance";
+    const STREAM_SECONDARY = "bybit";
+    const PRIMARY_STALE_MS = 8000; // нет тиков Binance дольше — переключаемся на Bybit
+
+    function isBinanceHealthy() {
+      const socket = terminalChartState.streamSockets[STREAM_PRIMARY];
+      if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+      const last = Number(terminalChartState.streamMessageAt[STREAM_PRIMARY] || 0);
+      return Date.now() - last <= PRIMARY_STALE_MS;
+    }
+
+    function applyStreamPrice(source, assetKey, price) {
+      // Bybit — только резерв: применяем его цены, лишь когда Binance молчит.
+      if (source === STREAM_SECONDARY && isBinanceHealthy()) return;
+      const wasFallback = terminalChartState.activeStreamSource === STREAM_SECONDARY;
+      const nowFallback = source === STREAM_SECONDARY;
+      if (wasFallback !== nowFallback) {
+        terminalChartState.activeStreamSource = source;
+      }
+      setLiveMarketPrice(assetKey, price);
+    }
+
     function connectBinanceTerminalStream() {
       connectTerminalPriceStream(
         "binance",
         "wss://stream.binance.com:9443/ws",
         socket => socket.send(JSON.stringify({
           method: "SUBSCRIBE",
-          params: ["btcusdt@miniTicker", "ethusdt@miniTicker"],
+          params: ["btcusdt@miniTicker", "ethusdt@miniTicker", "tonusdt@miniTicker"],
           id: 1
         })),
         event => {
           try {
             const msg = JSON.parse(event.data);
-            if (msg.s === "BTCUSDT") setLiveMarketPrice("BTC", Number(msg.c));
-            if (msg.s === "ETHUSDT") setLiveMarketPrice("ETH", Number(msg.c));
+            if (msg.s === "BTCUSDT") applyStreamPrice("binance", "BTC", Number(msg.c));
+            if (msg.s === "ETHUSDT") applyStreamPrice("binance", "ETH", Number(msg.c));
+            if (msg.s === "TONUSDT") applyStreamPrice("binance", "GRAM", Number(msg.c));
           } catch (e) {}
         }
       );
@@ -5559,13 +5726,21 @@
     function connectBybitTerminalStream() {
       connectTerminalPriceStream(
         "bybit",
-        "wss://stream.bybit.com/v5/public/linear",
-        socket => socket.send(JSON.stringify({ op: "subscribe", args: ["tickers.TONUSDT"] })),
+        "wss://stream.bybit.com/v5/public/spot",
+        socket => socket.send(JSON.stringify({
+          op: "subscribe",
+          args: ["tickers.BTCUSDT", "tickers.ETHUSDT", "tickers.TONUSDT"]
+        })),
         event => {
           try {
             const msg = JSON.parse(event.data);
             const price = msg?.data?.lastPrice;
-            if (price) setLiveMarketPrice("GRAM", Number(price));
+            if (!price) return;
+            const symbol = msg?.data?.symbol
+              || (typeof msg.topic === "string" ? msg.topic.split(".")[1] : "");
+            if (symbol === "BTCUSDT") applyStreamPrice("bybit", "BTC", Number(price));
+            else if (symbol === "ETHUSDT") applyStreamPrice("bybit", "ETH", Number(price));
+            else if (symbol === "TONUSDT") applyStreamPrice("bybit", "GRAM", Number(price));
           } catch (e) {}
         }
       );
@@ -5779,22 +5954,22 @@
       const visiblePrices = bucket.prices.slice(-terminalChartState.maxPoints);
       let min = Math.min(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
       let max = Math.max(...visiblePrices, bucket.animatedLivePrice, bucket.latestPrice, bucket.targetPrice);
-      const minRange = Math.max(market.price * 0.0003, market.price > 100 ? 4 : 0.007);
+      const minRange = Math.max(market.price * 0.00004, market.price > 100 ? 0.8 : 0.0015);
       if (max - min < minRange) {
         const mid = (max + min) / 2;
         min = mid - minRange / 2;
         max = mid + minRange / 2;
       }
       const range = max - min;
-      min -= range * 0.03;
-      max += range * 0.03;
+      min -= range * 0.005;
+      max += range * 0.005;
       if (bucket.animatedMin === null) bucket.animatedMin = min;
       if (bucket.animatedMax === null) bucket.animatedMax = max;
       const currentRange = Math.max(.000001, bucket.animatedMax - bucket.animatedMin);
       const cameraNeedsExpand = max > bucket.animatedMax || min < bucket.animatedMin;
       const nearEdge = bucket.animatedLivePrice > bucket.animatedMax - currentRange * .18 || bucket.animatedLivePrice < bucket.animatedMin + currentRange * .18;
       const expandEase = cameraNeedsExpand ? .38 : (nearEdge ? .24 : .07);
-      const contractEase = .12;
+      const contractEase = .18;
       bucket.animatedMin += (min - bucket.animatedMin) * (min < bucket.animatedMin ? expandEase : contractEase);
       bucket.animatedMax += (max - bucket.animatedMax) * (max > bucket.animatedMax ? expandEase : contractEase);
 
@@ -6256,8 +6431,9 @@
           responseDestination: walletRawAddress(),
           gasTon: 0.15,
         });
+        let depResult;
         try {
-          await tonConnectUI.sendTransaction({
+          depResult = await tonConnectUI.sendTransaction({
             validUntil: Math.floor(Date.now() / 1000) + 300,
             messages: [{ address: tx.address, amount: tx.amount, payload: tx.payload }],
           });
@@ -6265,6 +6441,16 @@
           showToast("Транзакция отменена", "Депозит USDT не отправлен.");
           return;
         }
+        const depHash = depResult?.boc
+          ? (() => { try { return window.OptonChain?.bocToHash?.(depResult.boc) || depResult.boc.slice(0, 64); } catch { return depResult.boc.slice(0, 64); } })()
+          : (depResult?.hash || "");
+        state.history.unshift({
+          id: "hist_" + Date.now(), type: "DEPOSIT",
+          text: "Депозит USDT",
+          amount: depositAmount, time: Date.now(),
+          txHash: depHash,
+        });
+        saveState();
         showToast("Депозит отправлен", `${depositAmount} USDT будет зачислено в UserProxy после подтверждения.`);
         closeModal();
         return;
@@ -6277,7 +6463,6 @@
         text: "Крипто-депозит",
         amount: depositAmount,
         time: Date.now(),
-        meta: "TON Network"
       });
       saveState();
       renderAll();
@@ -6402,8 +6587,8 @@
         <div class="deposit-wrap">
           <div class="segmented two" id="withdrawAssetSeg">
             <div class="seg-glider"></div>
-            <button class="seg active" type="button" onclick="selectWithdrawAsset('USDT', this)"><div class="seg-icon-wrap">${usdtIcon}</div> USDT</button>
-            <button class="seg" type="button" onclick="selectWithdrawAsset('TON', this)"><div class="seg-icon-wrap">${tonIcon}</div> GRAM</button>
+            <button class="seg active" type="button" data-asset="USDT" onclick="selectWithdrawAsset('USDT', this)"><div class="seg-icon-wrap">${usdtIcon}</div> USDT</button>
+            <button class="seg" type="button" data-asset="TON" onclick="selectWithdrawAsset('TON', this)"><div class="seg-icon-wrap">${tonIcon}</div> GRAM</button>
           </div>
           <div class="field full">
             <label id="withdrawAmountLabel">Сумма вывода (USDT)</label>
@@ -6466,13 +6651,16 @@
           showToast("Proxy не настроен", "Укажите UserProxy address в OPTON_CONFIG.");
           return;
         }
+        const toAddress = walletRawAddress() || "";
+        const histId = "hist_" + Date.now();
         const tx = window.OptonChain.buildProxyWithdrawTx({
           proxyAddress: OPTON_CONFIG.userProxyAddress,
           amountUnits: window.OptonChain.usdtToUnits(amount, OPTON_CONFIG.usdtDecimals || 6),
           gasTon: 0.2,
         });
+        let txResult;
         try {
-          await tonConnectUI.sendTransaction({
+          txResult = await tonConnectUI.sendTransaction({
             validUntil: Math.floor(Date.now() / 1000) + 300,
             messages: [{ address: tx.address, amount: tx.amount, payload: tx.payload }],
           });
@@ -6480,20 +6668,34 @@
           showToast("Транзакция отменена", "Вывод USDT не отправлен.");
           return;
         }
+        // Добавляем запись в историю; хэш появится в boc/hash если кошелёк вернул.
+        const txHash = txResult?.boc
+          ? (() => { try { return window.OptonChain?.bocToHash?.(txResult.boc) || txResult.boc.slice(0, 64); } catch { return txResult.boc.slice(0, 64); } })()
+          : (txResult?.hash || "");
+        state.history.unshift({
+          id: histId, type: "WITHDRAW",
+          text: `Вывод USDT`,
+          amount: -amount, time: Date.now(),
+          toAddress, txHash,
+        });
+        saveState();
         closeModal();
         showToast("Вывод отправлен", `${amount} USDT будет отправлено из UserProxy на ваш кошелёк.`);
         return;
       }
 
+      const activeWithdrawBtn = document.querySelector("#withdrawAssetSeg .seg.active");
+      const withdrawAsset = activeWithdrawBtn?.dataset.asset === "TON" ? "GRAM" : (activeWithdrawBtn?.dataset.asset || "USDT");
+      const demoAddress = document.getElementById("withdrawAddressInput")?.value?.trim() || "";
       state.balance -= amount;
       state.initialBalance -= amount;
       state.history.unshift({
         id: "hist_" + Date.now(),
         type: "WITHDRAW",
-        text: "Демо-вывод GRAM",
+        text: `Демо-вывод ${withdrawAsset}`,
         amount: -amount,
         time: Date.now(),
-        meta: "Успешно"
+        toAddress: demoAddress,
       });
 
       saveState();
@@ -6699,7 +6901,7 @@
       const histType = cancelled ? "REFUND" : (win ? "WIN" : "LOSS");
       const histText = cancelled
         ? `Возврат · ${market.asset} ${market.expiry}`
-        : `${win ? "Win" : "Loss"} · ${market.asset} ${market.expiry}`;
+        : `${win ? "Победа" : "Проигрыш"} · ${market.asset} ${market.expiry}`;
       const histMeta = cancelled
         ? `раунд отменён · возврат ${money(payout)}`
         : `${position.side === "UP" ? "Вверх" : "Вниз"} · close ${marketPriceText(closePrice)} · target ${marketPriceText(targetPrice)} · выплата ${money(payout)}`;
@@ -6789,7 +6991,7 @@
       const rangeContainer = document.querySelector("#screen-portfolio .segmented.five");
       if (rangeContainer) {
         rangeContainer.querySelectorAll(".seg").forEach(btn => {
-          const isMatch = btn.textContent.toLowerCase() === range.toLowerCase();
+          const isMatch = (btn.dataset.range || btn.textContent.toLowerCase()) === range;
           btn.classList.toggle("active", isMatch);
         });
         syncGlider(rangeContainer, noAnimate);
@@ -6871,7 +7073,7 @@
           </div>
           <div class="trm-pos-foot">
             <div class="trm-pos-stat"><span>Множитель</span><strong>${formatMultiplier(p.entryMultiplier || result.multiplier)}</strong></div>
-            <div class="trm-pos-stat"><span>Шанс входа</span><strong>${Math.round((p.entryProb ?? result.impliedProb) * 100)}%</strong></div>
+            <div class="trm-pos-stat"><span>Шанс исхода</span><strong>${Math.round((p.entryProb ?? result.impliedProb) * 100)}%</strong></div>
             ${profitStat}
           </div>
           ${cashoutBtn}
@@ -6929,7 +7131,7 @@
           </div>
           <div class="position-meta">
             <div class="meta-cell"><span>Множитель</span><strong>${multiplierText}</strong></div>
-            <div class="meta-cell"><span>Шанс входа</span><strong>${entryProbText}</strong></div>
+            <div class="meta-cell"><span>Шанс исхода</span><strong>${entryProbText}</strong></div>
             <div class="meta-cell"><span>${outcomeLabel}</span><strong>${outcomeText}</strong></div>
           </div>
           ${closeBtn}
@@ -7261,9 +7463,22 @@
 
     const HISTORY_TYPE_LABELS = {
       DEPOSIT: "Пополнение", WITHDRAW: "Вывод средств",
-      WIN: "Выигрыш", LOSS: "Проигрыш",
+      WIN: "Победа", LOSS: "Проигрыш",
       BUY: "Ставка", LIMIT: "Лимитная заявка",
       LIMIT_CANCEL: "Отмена лимита", REFUND: "Возврат (раунд отменён)", DEFAULT: "Операция"
+    };
+
+    // Статус операции для раскрытого блока. tone: ok (зелёный), bad (красный), muted (серый).
+    const HISTORY_STATUS = {
+      DEPOSIT: { label: "Зачислено", tone: "ok" },
+      WITHDRAW: { label: "Отправлено", tone: "muted" },
+      WIN: { label: "Выплачено", tone: "ok" },
+      LOSS: { label: "Завершено", tone: "bad" },
+      BUY: { label: "Ожидание", tone: "muted" },
+      LIMIT: { label: "Активна", tone: "ok" },
+      LIMIT_CANCEL: { label: "Отменено", tone: "muted" },
+      REFUND: { label: "Возвращено", tone: "ok" },
+      DEFAULT: { label: "Выполнено", tone: "ok" }
     };
 
     // Open history rows are tracked by id so the 1s portfolio re-render
@@ -7286,6 +7501,7 @@
       const amtClass = positive ? "up" : "down";
       const ic = HISTORY_ICONS[item.type] || HISTORY_ICONS.DEFAULT;
       const typeLabel = HISTORY_TYPE_LABELS[item.type] || HISTORY_TYPE_LABELS.DEFAULT;
+      const status = HISTORY_STATUS[item.type] || HISTORY_STATUS.DEFAULT;
 
       const tz = getTimezoneValue(state.timezone);
       const d = new Date(item.time);
@@ -7293,21 +7509,26 @@
       const timeStr = d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: tz });
       const fullDate = d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: tz });
 
-      // Meta is a "·"-separated string of extra fields; show as chips, skipping
-      // internal/no-op values.
-      const rawMeta = String(item.meta || "").trim();
-      const skipMeta = !rawMeta || rawMeta === "—" || rawMeta === "localStorage";
-      const chips = skipMeta ? "" : `<div class="hist-chips">${
-        rawMeta.split("·").map(s => s.trim()).filter(Boolean).map(s => `<span>${s}</span>`).join("")
-      }</div>`;
+      const addrRow = (item.type === "WITHDRAW" && item.toAddress)
+        ? `<div class="hist-dl"><span>Адрес</span><b class="hist-dl-hash">${item.toAddress}</b></div>`
+        : "";
+      const needsHash = item.type === "WITHDRAW" || item.type === "DEPOSIT";
+      const hashRow = needsHash
+        ? (item.txHash
+            ? `<div class="hist-dl"><span>Хэш</span><b class="hist-dl-hash">${item.txHash}</b></div>`
+            : (item.toAddress || item.type === "DEPOSIT")
+              ? `<div class="hist-dl"><span>Хэш</span><b><span class="hist-status muted">Ожидание…</span></b></div>`
+              : "")
+        : "";
 
       const detail = `
         <div class="hist-detail-wrap"><div class="hist-detail-inner">
           <div class="hist-detail">
             <div class="hist-dl"><span>Тип</span><b>${typeLabel}</b></div>
+            <div class="hist-dl"><span>Статус</span><b><span class="hist-status ${status.tone}">${status.label}</span></b></div>
             <div class="hist-dl"><span>Дата и время</span><b>${fullDate}, ${timeStr}</b></div>
             <div class="hist-dl"><span>Сумма</span><b class="${amtClass}">${amountText}</b></div>
-            ${chips}
+            ${addrRow}${hashRow}
           </div>
         </div></div>`;
 
@@ -7473,7 +7694,7 @@
     }
 
     // ── Splash / loader overlay, reused for long operations ────────────────
-    const SPLASH_DEFAULT_SUB = "Рынок прогнозов в Telegram";
+    const SPLASH_DEFAULT_SUB = "Первый рынок прогнозов в Telegram";
     let splashSafetyTimer = 0;
     function showSplash(message, safetyMs = 12000) {
       const el = document.getElementById("splash");
@@ -7619,24 +7840,39 @@
         const earned = Number(ref.earned || 0);
         const reward = OPTON_CONFIG.referralPoints || 100;
         el.innerHTML = `
-          <div class="referral-head">
+          <div class="referral-banner">
             <span class="referral-gift">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
             </span>
-            <div>
-              <b>Приглашайте друзей</b>
-              <span>Дарим ${reward} поинтов за каждого друга, который начнёт торговать.</span>
+            <div class="referral-banner-text">
+              <b>Пригласите друга</b>
+              <span>Получите ${reward} поинтов за каждого друга, который начнёт торговать на Opton.</span>
+              <div class="referral-reward-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                +${reward} поинтов за друга
+              </div>
             </div>
           </div>
+          <div class="referral-divider"></div>
           <div class="referral-stats">
-            <div><b>${invited}</b><span>Приглашено</span></div>
-            <div><b>${earned.toFixed(0)}</b><span>Поинтов</span></div>
+            <div style="padding-right:14px">
+              <b>${invited}</b>
+              <span>Приглашено</span>
+            </div>
+            <div style="padding-left:14px">
+              <b>${earned.toFixed(0)}</b>
+              <span>Поинтов заработано</span>
+            </div>
           </div>
-          <button class="referral-link" type="button" onclick="copyReferralLink()" aria-label="Скопировать ссылку">
-            <span>${escHtml(link.replace(/^https:\/\//, ""))}</span>
-            ${copyIcon}
-          </button>
-          <div class="referral-actions">
+          <div class="referral-divider"></div>
+          <div class="referral-link-wrap">
+            <button class="referral-link" type="button" onclick="copyReferralLink()" aria-label="Скопировать ссылку" style="margin-top:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span>${escHtml(link.replace(/^https:\/\//, ""))}</span>
+              ${copyIcon}
+            </button>
+          </div>
+          <div class="referral-footer">
             <button class="ghost" type="button" onclick="copyReferralLink()">Скопировать</button>
             <button class="primary" type="button" onclick="shareReferralLink()">Пригласить</button>
           </div>`;
@@ -7756,6 +7992,11 @@
         window.addEventListener('mousemove', moveHandler);
         window.addEventListener('mouseup', upHandler);
       });
+    }
+
+    function toggleTrmAccordion(el) {
+      el.classList.toggle("open");
+      haptic("selection");
     }
 
     function haptic(type) {
