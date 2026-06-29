@@ -122,7 +122,7 @@
       min-height: 100%;
       background: var(--bg);
       overscroll-behavior-x: none;
-      overscroll-behavior-y: none;
+      overscroll-behavior-y: contain;
     }
     body {
       height: 100%;
@@ -231,7 +231,7 @@
       margin: 0 auto;
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
       overflow-y: auto;
-      overscroll-behavior-y: none;
+      overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
     }
@@ -274,6 +274,13 @@
         opacity .22s ease,
         transform .30s cubic-bezier(.18, .92, .2, 1);
       will-change: opacity, transform;
+    }
+
+    body.ptr-active .pull-refresh,
+    body.ptr-settling .pull-refresh,
+    body.ptr-refreshing .pull-refresh,
+    .pull-refresh.show {
+      display: grid;
     }
 
     .pull-refresh::before {
@@ -8278,7 +8285,7 @@
       document.addEventListener("touchcancel", release, { passive: true });
     }
 
-    function initPullToRefresh() {
+    function initLegacyPullToRefresh() {
       const app = document.querySelector(".app");
       const indicator = document.getElementById("pullRefresh");
       if (!app || !indicator) return;
@@ -8520,6 +8527,233 @@
       }, { passive: true });
     }
 
+    function initPullToRefresh() {
+      const app = document.querySelector(".app");
+      const indicator = document.getElementById("pullRefresh");
+      if (!app || !indicator) return;
+      if (document.body.dataset.ptrReady === "1") return;
+      document.body.dataset.ptrReady = "1";
+
+      const root = document.documentElement;
+      const threshold = 108;
+      const armedHoldMs = 620;
+      const refreshPull = 78;
+      const settleMs = 520;
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+      let locked = false;
+      let armed = false;
+      let refreshing = false;
+      let refreshWorkDone = false;
+      let releaseAfterRefresh = false;
+      let armedTimer = 0;
+      let settleTimer = 0;
+
+      const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const appScrollTop = () => Math.max(
+        app.scrollTop || 0,
+        window.scrollY || 0,
+        document.documentElement.scrollTop || 0,
+        document.body.scrollTop || 0
+      );
+      const atTop = () => appScrollTop() <= 1;
+      const canStartFrom = target => {
+        if (refreshing || document.body.classList.contains("no-scroll") || document.body.classList.contains("kb-open")) return false;
+        return !target.closest("button, a, input, textarea, select, [role='button'], .topbar, .bottom-nav, .trm-actions, .modal, .toast-container, #balanceChartContainer, .trm-market-times");
+      };
+      const clearArmedTimer = () => {
+        if (armedTimer) window.clearTimeout(armedTimer);
+        armedTimer = 0;
+      };
+      const clearSettleTimer = () => {
+        if (settleTimer) window.clearTimeout(settleTimer);
+        settleTimer = 0;
+      };
+      const rubber = distance => {
+        const d = Math.max(0, Number(distance) || 0);
+        return Math.min(128, (1 - Math.exp(-d / 132)) * 118 + Math.max(0, d - 260) * .035);
+      };
+      const paint = pull => {
+        const progress = Math.min(1, pull / threshold);
+        root.style.setProperty("--ptr-indicator", `${Math.min(82, pull * .46).toFixed(1)}px`);
+        root.style.setProperty("--ptr-opacity", Math.min(1, progress * 1.35).toFixed(3));
+        root.style.setProperty("--ptr-scale", (.72 + progress * .28).toFixed(3));
+        root.style.setProperty("--ptr-progress", progress.toFixed(3));
+        root.style.setProperty("--ptr-rotate", `${Math.round(progress * 230)}deg`);
+        root.style.setProperty("--ptr-dash", `${(18 + progress * 58).toFixed(1)}`);
+        indicator.classList.toggle("show", pull > 7 || refreshing);
+      };
+      const resetVisuals = () => {
+        paint(0);
+        indicator.classList.remove("show");
+      };
+      const finishRefresh = () => {
+        clearSettleTimer();
+        clearArmedTimer();
+        document.body.classList.add("ptr-settling");
+        document.body.classList.remove("ptr-refreshing");
+        refreshing = false;
+        refreshWorkDone = false;
+        releaseAfterRefresh = false;
+        paint(0);
+        settleTimer = window.setTimeout(() => {
+          settleTimer = 0;
+          document.body.classList.remove("ptr-active", "ptr-settling");
+          resetVisuals();
+        }, settleMs);
+      };
+      const settle = () => {
+        tracking = false;
+        locked = false;
+        armed = false;
+        clearArmedTimer();
+        clearSettleTimer();
+        document.body.classList.add("ptr-settling");
+        paint(0);
+        settleTimer = window.setTimeout(() => {
+          settleTimer = 0;
+          document.body.classList.remove("ptr-active", "ptr-settling");
+          resetVisuals();
+        }, settleMs);
+      };
+      const runRefresh = async () => {
+        if (refreshing) return;
+        refreshing = true;
+        refreshWorkDone = false;
+        releaseAfterRefresh = false;
+        clearArmedTimer();
+        clearSettleTimer();
+        document.body.classList.add("ptr-active", "ptr-refreshing");
+        document.body.classList.remove("ptr-settling");
+        paint(refreshPull);
+        indicator.classList.add("show");
+
+        await sleep(420);
+        const changed = processLimitOrders();
+        renderAll(true);
+        if (changed) saveState();
+        if (onchainEnabled()) {
+          syncAllMarketPools();
+          if (document.body.dataset.screen === "terminal") syncTerminalPools();
+        }
+        document.querySelectorAll(".segmented").forEach(c => syncGlider(c, true));
+        closeWalletMenu();
+        haptic("success");
+        await sleep(260);
+
+        refreshWorkDone = true;
+        if (tracking) {
+          releaseAfterRefresh = true;
+          paint(refreshPull);
+          return;
+        }
+        finishRefresh();
+      };
+      const armIfNeeded = pull => {
+        const nextArmed = pull >= threshold;
+        if (nextArmed && !armed) {
+          armed = true;
+          haptic("selection");
+          clearArmedTimer();
+          armedTimer = window.setTimeout(() => {
+            if (tracking && locked && armed && !refreshing) runRefresh();
+          }, armedHoldMs);
+        } else if (!nextArmed && armed) {
+          armed = false;
+          clearArmedTimer();
+        }
+      };
+
+      document.addEventListener("touchstart", event => {
+        if (event.touches.length !== 1 || !canStartFrom(event.target)) {
+          tracking = false;
+          locked = false;
+          return;
+        }
+        const touch = event.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        tracking = true;
+        locked = false;
+        armed = false;
+        clearArmedTimer();
+        clearSettleTimer();
+        if (document.body.classList.contains("ptr-settling")) {
+          document.body.classList.remove("ptr-active", "ptr-settling");
+          resetVisuals();
+        }
+      }, { passive: true });
+
+      document.addEventListener("touchmove", event => {
+        if (refreshing) {
+          if (event.cancelable) event.preventDefault();
+          paint(refreshPull);
+          return;
+        }
+        if (!tracking || event.touches.length !== 1) return;
+
+        const touch = event.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+
+        if (!locked) {
+          if (dy <= 0) {
+            tracking = false;
+            return;
+          }
+          if (Math.abs(dx) > 12 && Math.abs(dx) > dy * 1.08) {
+            tracking = false;
+            return;
+          }
+          if (!atTop()) {
+            startX = touch.clientX;
+            startY = touch.clientY;
+            return;
+          }
+          if (dy < 14) return;
+          locked = true;
+          document.body.classList.add("ptr-active");
+        }
+
+        if (!locked) return;
+        if (event.cancelable) event.preventDefault();
+        const pull = rubber(dy);
+        paint(pull);
+        armIfNeeded(pull);
+      }, { passive: false });
+
+      document.addEventListener("touchend", () => {
+        if (refreshing) {
+          tracking = false;
+          locked = false;
+          armed = false;
+          clearArmedTimer();
+          if (refreshWorkDone || releaseAfterRefresh) finishRefresh();
+          return;
+        }
+        if (!tracking && !locked) return;
+        if (armed) {
+          tracking = false;
+          locked = false;
+          armed = false;
+          runRefresh();
+        } else {
+          settle();
+        }
+      }, { passive: true });
+
+      document.addEventListener("touchcancel", () => {
+        if (refreshing) {
+          tracking = false;
+          locked = false;
+          if (refreshWorkDone || releaseAfterRefresh) finishRefresh();
+          return;
+        }
+        if (tracking || locked) settle();
+      }, { passive: true });
+    }
+
     document.addEventListener("input", event => {
       if (event.target.id === "tradeAmount") renderSharesPreview();
     });
@@ -8636,13 +8870,11 @@
     captureInboundReferral();
     lockPortraitOrientation();
     applyTheme();
-    // initBottomEdgeSpring() и initPullToRefresh() временно отключены: их
-    // глобальные non-passive touch-обработчики с preventDefault перехватывали
-    // прокрутку и делали её «не такой», как в настройках (внутри модалки эти
-    // перехватчики не работают → там нативный плавный момент-скролл). Теперь
-    // весь app скроллится нативно. Pull-to-refresh будет переписан с нуля.
+    // Bottom edge spring оставлен выключенным: нижний глобальный touch-перехват
+    // мешал нативному momentum-scroll. Pull-to-refresh ниже перехватывает жест
+    // только на верхней границе и только после явного длинного pull.
     // initBottomEdgeSpring();
-    // initPullToRefresh();
+    initPullToRefresh();
     initTerminalChartStreams();
     initChartScrubbing();
     renderAll();
