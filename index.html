@@ -99,24 +99,12 @@
       --shadow-soft: 0 8px 22px rgba(0, 0, 0, .18);
     }
 
-    /* ── Android (Telegram WebView) parity + performance ──────────────────
-       Telegram's Android WebView (older Chromium) renders backdrop-filter
-       poorly: it lags badly on the sticky/fixed bars and lets unblurred
-       content bleed through, so the app looks different from iOS. We swap the
-       frosted-glass surfaces for near-opaque solids — visually almost
-       identical, but cheap and smooth. iOS is left untouched as the visual
-       reference. Targets the same elements that use `backdrop-filter`. */
-    html.is-android .topbar {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      background: var(--bg);
-    }
-    html.is-android .bottom-nav,
-    html.is-android .trm-actions {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      background: var(--surface);
-    }
+    /* ── Android = iOS parity ─────────────────────────────────────────────
+       Современный Telegram WebView на Android (Chromium) корректно
+       поддерживает backdrop-filter, поэтому frosted-glass панели (topbar,
+       bottom-nav, trm-actions) рендерятся так же, как на iOS. Раньше здесь
+       стояли solid-фолбэки, которые делали Android-вид другим — теперь обе
+       платформы используют один и тот же размытый фон из базовых стилей. */
 
     * {
       box-sizing: border-box;
@@ -248,11 +236,11 @@
       will-change: transform;
     }
     body.ptr-settling .app {
-      transition: transform .82s cubic-bezier(.18, 1.12, .28, 1);
+      transition: transform .5s cubic-bezier(.22, .61, .36, 1);
     }
 
     body.ptr-settling .topbar {
-      transition: transform .82s cubic-bezier(.18, 1.12, .28, 1);
+      transition: transform .5s cubic-bezier(.22, .61, .36, 1);
     }
     .pull-refresh {
       position: fixed;
@@ -466,6 +454,14 @@
       min-height: calc(100dvh - 76px);
       padding-bottom: clamp(88px, 14dvh, 140px);
     }
+    /* Анимация «назад» (свайп с терминала к рынкам): экран въезжает слева. */
+    @keyframes screenSlideBack {
+      from { transform: translateX(-30px); opacity: .5; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .screen.active.screen-anim-back {
+      animation: screenSlideBack .26s cubic-bezier(.22, .61, .36, 1);
+    }
     body.edge-pull-bottom .screen.active,
     body.edge-bottom-settling .screen.active {
       transform: translate3d(0, calc(var(--edge-bottom-pull, 0px) * -1), 0);
@@ -498,7 +494,7 @@
       align-items: center;
       gap: 12px;
       margin-top: 10px;
-      padding: 12px 12px 12px 12px;
+      padding: 12px;
       border-radius: var(--radius);
       background: color-mix(in srgb, var(--tg-blue) 10%, var(--surface));
       border: 1px solid color-mix(in srgb, var(--tg-blue) 22%, var(--line));
@@ -519,7 +515,7 @@
       position: relative;
       isolation: isolate;
       overflow: hidden;
-      margin-top: 10px;
+      margin-top: 28px;
       min-height: 270px;
       border-radius: var(--radius-lg);
       padding: 20px;
@@ -1019,7 +1015,7 @@
       position: relative;
       isolation: isolate;
       overflow: hidden;
-      margin-top: 10px;
+      margin-top: 28px;
       min-height: 190px;
       border-radius: var(--radius-lg);
       padding: 19px;
@@ -1080,6 +1076,11 @@
     }
     .pnl-chart svg { width: 100%; height: 100%; }
     .pnl-chart { position: relative; touch-action: pan-y; }
+    .balance-grid line {
+      stroke: var(--line);
+      stroke-width: 1;
+      shape-rendering: crispEdges;
+    }
     #balanceCrosshair {
       stroke: var(--tg-blue);
       stroke-width: 1.5;
@@ -1158,8 +1159,9 @@
     .market-slider-inner {
       display: flex;
       align-items: flex-start;
-      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.34s cubic-bezier(.22, .61, .36, 1);
       width: 400%;
+      will-change: transform;
     }
     .market-slide {
       width: 25%;
@@ -1549,7 +1551,7 @@
     /* ── Account screen: profile, referral, settings entry ──────────────── */
     #screen-account > .card,
     #screen-account > .account-action { margin-top: 12px; }
-    #screen-account > .account-user { margin-top: 16px; }
+    #screen-account > .account-user { margin-top: 28px; }
     .account-user { display: flex; align-items: center; gap: 14px; }
     .account-avatar {
       flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
@@ -1577,8 +1579,8 @@
       color: var(--tg-blue); background: color-mix(in srgb, var(--tg-blue) 12%, transparent);
     }
     .referral-gift svg { width: 22px; height: 22px; }
-    .referral-head b { display: block; font-size: 15px; font-weight: 900; letter-spacing: normal; }
-    .referral-head span { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 700; color: var(--muted); line-height: 1.4; }
+    .referral-head div b { display: block; font-size: 15px; font-weight: 900; letter-spacing: normal; }
+    .referral-head div span { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 700; color: var(--muted); line-height: 1.4; }
     .referral-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .referral-stats > div {
       background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 10px;
@@ -1618,7 +1620,8 @@
 
     /* Settings modal */
     .settings-sheet {
-      width: min(100%, 380px); max-height: 86vh; display: flex; flex-direction: column;
+      width: min(100%, 380px); height: auto; max-height: min(72vh, 540px);
+      display: flex; flex-direction: column;
       border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--line);
       box-shadow: 0 20px 60px rgba(0,0,0,.3); overflow: hidden;
       opacity: 0; transform: scale(0.9) translateY(10px);
@@ -1687,7 +1690,7 @@
       background: var(--surface-2);
     }
     .address-box code {
-      font-family: var(--font-mono);
+      font-family: inherit;
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
@@ -1855,6 +1858,7 @@
       grid-template-columns: 42px minmax(0, 1fr) 42px;
       align-items: center;
       gap: 10px;
+      margin-top: 28px;        /* отступ от header как у текста «Рынки» */
       padding: 2px 0 4px;
     }
     .trm-icon-btn {
@@ -2637,11 +2641,43 @@
     .trm-pool-legend .down b { color: var(--red); }
     .trm-pool-legend span { font-size: 12px; font-weight: 800; color: var(--muted); }
     .trm-pool-note {
-      margin: 11px 0 0;
-      font-size: 11.5px;
-      line-height: 1.45;
-      font-weight: 700;
-      color: var(--muted);
+      margin: 9px 0 0;
+      font-size: 10.5px;
+      line-height: 1.4;
+      font-weight: 600;
+      color: var(--muted-2);
+      opacity: .85;
+    }
+
+    /* Краткая подсказка для новичков под рынком */
+    .trm-howto {
+      margin-top: 12px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+    }
+    .trm-howto-head {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13.5px; font-weight: 900; color: var(--text); letter-spacing: normal;
+    }
+    .trm-howto-head svg { width: 16px; height: 16px; color: var(--tg-blue); flex: 0 0 auto; }
+    .trm-howto ol {
+      margin: 10px 0 0; padding: 0; list-style: none;
+      display: grid; gap: 8px; counter-reset: howto;
+    }
+    .trm-howto li {
+      position: relative; padding-left: 30px;
+      font-size: 12.5px; font-weight: 650; line-height: 1.4; color: var(--muted);
+      counter-increment: howto;
+    }
+    .trm-howto li::before {
+      content: counter(howto);
+      position: absolute; left: 0; top: 0;
+      width: 20px; height: 20px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 11px; font-weight: 900; color: #fff;
+      background: var(--tg-blue);
     }
 
     /* Кнопки направления (липкий CTA) */
@@ -2669,8 +2705,8 @@
     }
     .trm-dir {
       display: grid;
-      gap: 6px;
-      padding: 13px clamp(11px, 3.4vw, 14px);
+      gap: 3px;
+      padding: 12px clamp(11px, 3.4vw, 14px);
       border-radius: var(--radius);
       color: #fff;
       text-align: left;
@@ -2711,14 +2747,14 @@
       font-variant-numeric: tabular-nums;
     }
     .trm-dir-payout {
-      font-size: 12px;
-      font-weight: 800;
-      color: rgba(255, 255, 255, .85);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, .72);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .trm-dir-payout b { color: #fff; font-weight: 950; font-variant-numeric: tabular-nums; }
+    .trm-dir-payout b { color: #fff; font-weight: 900; font-variant-numeric: tabular-nums; }
     /* Большая кнопка «Вывести средства» вместо Вверх/Вниз (после истечения) */
     .trm-dir-cashout {
       grid-column: 1 / -1;
@@ -3096,7 +3132,7 @@
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="50" style="fill:#30A1F5"/><path d="M60.41 26.75H39.59c-2.772 0-4.159 0-5.413.388a8.691 8.691 0 0 0-3.028 1.653c-1.005.846-1.754 2.012-3.254 4.344L21.277 43.43c-.99 1.54-1.486 2.311-1.62 3.122-.119.715-.04 1.45.228 2.123.304.764.951 1.411 2.247 2.707l24.59 24.59c1.148 1.148 1.721 1.722 2.383 1.936.582.19 1.208.19 1.79 0 .661-.214 1.235-.788 2.382-1.935l24.591-24.591c1.296-1.296 1.943-1.943 2.247-2.707a3.982 3.982 0 0 0 .228-2.123c-.134-.81-.63-1.581-1.62-3.122l-6.618-10.295c-1.5-2.332-2.25-3.498-3.254-4.344a8.692 8.692 0 0 0-3.028-1.653c-1.255-.388-2.64-.388-5.414-.388z" style="fill:#fff"/><path d="M56.469 34.871c.338-.914 1.631-.914 1.97 0l2.337 6.317c.14.38.44.679.819.82l6.317 2.337c.914.338.914 1.63 0 1.97l-6.317 2.337c-.38.14-.679.44-.82.818l-2.337 6.317c-.338.915-1.631.915-1.97 0l-2.337-6.317c-.14-.379-.44-.678-.819-.818l-6.316-2.338c-.915-.338-.915-1.631 0-1.97l6.316-2.337c.38-.14.679-.44.82-.819l2.337-6.317z" style="fill:#30A1F5"/></svg>
         </div>
         <div class="rebrand-text">
-          <strong>Ребрендинг: TON&nbsp;→&nbsp;GRAM</strong>
+          <strong>Ребрендинг: TON&nbsp;<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:.85em;height:.85em;display:inline-block;vertical-align:-1px;"><path d="M5 12h14M13 6l6 6-6 6"/></svg>&nbsp;GRAM</strong>
           <span>Монета блокчейна TON теперь называется GRAM. Сеть осталась прежней.</span>
         </div>
       </div>
@@ -3197,18 +3233,24 @@
         <!-- Проверка и результат закрытого рынка -->
         <section class="trm-market-result" id="terminalMarketResult" aria-live="polite"></section>
 
+        <!-- Баннер заморозки приёма ставок (последние 90с раунда) -->
+        <div id="trmFreezeBanner" style="display:none;margin:0 0 10px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);font-size:13px;font-weight:800;color:var(--amber);line-height:1.35;align-items:center;justify-content:center;gap:6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Приём ставок закрыт — раунд завершается
+        </div>
+
         <!-- Сумма -->
         <section class="trm-amount" id="terminalTradeForm">
           <div class="trm-amount-head">
             <label for="tradeAmount">Сумма сделки</label>
-            <span class="trm-available" onclick="toggleBalancePrivacy()" style="cursor:pointer">Доступно: <b id="trmAvailable">$0.00</b></span>
+            <span class="trm-available" id="trmAvailableWrap" onclick="toggleBalancePrivacy()" style="cursor:pointer">Доступно: <b id="trmAvailable">$0.00</b></span>
           </div>
           <div class="trm-amount-input">
-            <span class="trm-cur">$</span>
+            <span class="trm-cur" id="trmCur">$</span>
             <input id="tradeAmount" inputmode="decimal" value="50" oninput="renderSharesPreview()" aria-label="Сумма сделки" />
             <button type="button" class="trm-max" onclick="setTradeAmount('max')">Макс</button>
           </div>
-          <div class="trm-chips">
+          <div class="trm-chips" id="trmChips">
             <button type="button" onclick="setTradeAmount(1)">$1</button>
             <button type="button" onclick="setTradeAmount(25)">$25</button>
             <button type="button" onclick="setTradeAmount(50)">$50</button>
@@ -3218,6 +3260,19 @@
 
         <!-- Пул раунда (parimutuel) -->
         <div class="trm-pool" id="poolPanel" aria-label="Пул раунда"></div>
+
+        <!-- Краткая подсказка для новичков -->
+        <div class="trm-howto" aria-label="Как это работает">
+          <div class="trm-howto-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Как это работает
+          </div>
+          <ol>
+            <li>Реши, куда пойдёт цена за время раунда — <b>Вверх</b> или <b>Вниз</b>.</li>
+            <li>Укажи сумму ставки и подтверди — она уходит в общий банк раунда.</li>
+            <li>Угадал к закрытию — забираешь выплату: победители делят весь банк. Не угадал — ставка остаётся в банке.</li>
+          </ol>
+        </div>
 
       </section>
     </section>
@@ -3247,6 +3302,19 @@
       <div class="pnl-chart card" style="padding:0" id="balanceChartContainer">
         <div class="pnl-chart-info" id="balanceChartInfo"></div>
         <svg id="balanceChart" viewBox="0 0 360 170" role="img" aria-label="График баланса">
+          <g class="balance-grid" aria-hidden="true">
+            <line x1="8" y1="12" x2="352" y2="12"></line>
+            <line x1="8" y1="48" x2="352" y2="48"></line>
+            <line x1="8" y1="84" x2="352" y2="84"></line>
+            <line x1="8" y1="120" x2="352" y2="120"></line>
+            <line x1="8" y1="156" x2="352" y2="156"></line>
+            <line x1="8" y1="12" x2="8" y2="156"></line>
+            <line x1="76.8" y1="12" x2="76.8" y2="156"></line>
+            <line x1="145.6" y1="12" x2="145.6" y2="156"></line>
+            <line x1="214.4" y1="12" x2="214.4" y2="156"></line>
+            <line x1="283.2" y1="12" x2="283.2" y2="156"></line>
+            <line x1="352" y1="12" x2="352" y2="156"></line>
+          </g>
           <path id="balanceArea" d="" fill="url(#balanceAreaGradient)"></path>
           <path id="balanceLine" d="" fill="none" stroke="var(--tg-blue)" stroke-width="4" stroke-linecap="round"></path>
           <line id="balanceCrosshair" x1="0" y1="0" x2="0" y2="170"></line>
@@ -3378,7 +3446,7 @@
         <img id="shareImage" alt="Карточка позиции" />
       </div>
       <div class="share-actions">
-        <button class="secondary" type="button" onclick="closeShareModal()">Закрыть</button>
+        <button class="ghost" type="button" onclick="closeShareModal()">Закрыть</button>
         <button class="primary" type="button" onclick="shareShareImage()">Поделиться</button>
       </div>
     </div>
@@ -3726,6 +3794,26 @@
       return (n < 0 ? "-$" : "$") + abs;
     }
 
+    // Форматирует сумму в TON: "1.50 TON", "0.50 TON" и т.д.
+    function formatTon(value) {
+      const n = Number(value || 0);
+      const abs = Math.abs(n);
+      const formatted = abs < 10
+        ? abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : abs.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      return (n < 0 ? "-" : "") + formatted + " TON";
+    }
+
+    // Унифицированный форматтер: TON для on-chain, $ для демо.
+    function amountLabel(value) {
+      return onchainActive() ? formatTon(value) : money(value);
+    }
+
+    // Минимальная ставка в зависимости от режима.
+    function minBet() {
+      return onchainActive() ? OPTON_CONFIG.minBetTon : MIN_BET_USD;
+    }
+
     function cents(value) {
       return Math.max(1, Math.min(99, Math.round(value))) + "¢";
     }
@@ -4032,6 +4120,22 @@
     }
     const nanoToTon = (n) => Number(n) / 1e9;
 
+    // Pyth-цена on-chain хранится как мантисса (int64) + экспонента (int32):
+    // реальная цена = price * 10^expo. Возвращает Number или NaN.
+    function onchainPriceToNumber(price, expo) {
+      const p = Number(price);
+      const e = Number(expo);
+      if (!Number.isFinite(p) || !Number.isFinite(e)) return NaN;
+      return p * Math.pow(10, e);
+    }
+
+    // Конвертирует on-chain winner (1=UP, 2=DOWN, 0=none) в строку UI.
+    function onchainWinnerToSide(winner) {
+      if (Number(winner) === 1) return "UP";
+      if (Number(winner) === 2) return "DOWN";
+      return null;
+    }
+
     // Кэш раундов фабрики (~20с), чтобы не дёргать RPC на каждый рендер.
     async function liveRounds(force = false) {
       if (!chainReady()) return [];
@@ -4072,9 +4176,6 @@
     async function syncTerminalPools() {
       if (!onchainEnabled()) return;
       const market = getMarket(state.currentMarketId);
-      // Первая загрузка пулов из сети может быть долгой — показываем сплэш.
-      const firstLoad = !onchainPoolsLoadedOnce;
-      if (firstLoad) showSplash("Загружаем данные раунда…", 8000);
       try {
         const round = await liveCurrentRound(market);
         if (!round) return; // pusher ещё не создал текущий раунд
@@ -4085,21 +4186,82 @@
         ms.poolDown = Math.max(0, nanoToTon(info.totalDown));
         ms.onchainAddress = round.address.toString();
         ms.onchainState = info.state;
+        ms.onchainSynced = true;        // пулы/объём — настоящие из контракта
+
+        // Авторитетная цена открытия (целевая) и финал берутся ИЗ КОНТРАКТА, а не
+        // из локального стрима Binance — иначе график и расчёт по нему разойдутся
+        // с реальным сеттлментом контракта (риск обвинения в скаме).
+        const STATE = window.OptonChain.STATE;
+        const interval = (market.minutes || 15) * 60;
+        const onchainWindow = {
+          openedAt: round.openTimestamp * 1000,
+          closesAt: (round.openTimestamp + interval) * 1000,
+        };
+        const record = getTerminalMarketRecord(market, onchainWindow);
+        const openPrice = onchainPriceToNumber(info.openPrice, info.openPriceExpo);
+        if (Number.isFinite(openPrice)) {
+          record.targetPrice = openPrice;          // целевая линия графика = open контракта
+          record.poolUp = ms.poolUp;
+          record.poolDown = ms.poolDown;
+        }
+        if (info.state === STATE.RESOLVED) {
+          const closePrice = onchainPriceToNumber(info.closePrice, info.closePriceExpo);
+          if (Number.isFinite(closePrice)) record.closePrice = closePrice;
+          const side = onchainWinnerToSide(info.winner);
+          if (side) record.winner = side;
+          record.cancelled = false;
+          record.closedAt = onchainWindow.closesAt;
+        } else if (info.state === STATE.CANCELLED) {
+          record.cancelled = true;
+          record.closedAt = onchainWindow.closesAt;
+        }
+        saveState();
+
         onchainPoolsLoadedOnce = true;
         renderTerminal();
       } catch (e) { console.warn("[opton] syncTerminalPools", e); }
-      finally { if (firstLoad) hideSplash(); }
+    }
+
+    // Подтянуть реальные пулы (= объёмы) текущего раунда ДЛЯ ВСЕХ рынков, чтобы
+    // карточки в списках показывали настоящий on-chain объём, а не демо-сид.
+    let allPoolsSyncing = false;
+    async function syncAllMarketPools() {
+      if (!onchainEnabled() || allPoolsSyncing) return;
+      allPoolsSyncing = true;
+      try {
+        const rounds = await liveRounds();
+        const client = liveClient();
+        let any = false;
+        for (const m of markets) {
+          try {
+            const assetId = await window.OptonChain.assetIdFromSymbol(onchainSymbolFor(m.asset));
+            const interval = (m.minutes || 15) * 60;
+            const now = Math.floor(Date.now() / 1000);
+            const boundary = now - (now % interval);
+            const round = rounds.find(r =>
+              r.asset === assetId && r.interval === interval && r.openTimestamp === boundary);
+            if (!round) continue;
+            const info = await window.OptonChain.readMarketInfo(client, round.address);
+            if (!info) continue;
+            const ms = getMarketState(m.id);
+            ms.poolUp = Math.max(0, nanoToTon(info.totalUp));
+            ms.poolDown = Math.max(0, nanoToTon(info.totalDown));
+            ms.onchainSynced = true;
+            any = true;
+          } catch (e) { /* пропускаем рынок, не валим весь цикл */ }
+        }
+        if (any) renderMarkets();
+      } catch (e) { console.warn("[opton] syncAllMarketPools", e); }
+      finally { allPoolsSyncing = false; }
     }
 
     // Отправить Bet через TON Connect. amount в TON.
     async function placeBetOnChain(market, side, amountTon) {
-      // Чтение текущего раунда из сети — долгая операция (до открытия кошелька).
-      showSplash("Загружаем текущий раунд…");
       let round;
       try {
         round = await liveCurrentRound(market);
-      } finally {
-        hideSplash();
+      } catch (e) {
+        console.warn("[opton] placeBetOnChain: liveCurrentRound failed", e);
       }
       if (!round) {
         showToast("Раунд не найден", "Текущий раунд ещё не создан на блокчейне (его создаёт pusher). Попробуйте чуть позже.");
@@ -4107,6 +4269,10 @@
       }
       const refund = walletRawAddress();
       if (!refund) { showToast("Нет кошелька", "Подключите TON-кошелёк."); return false; }
+      if (amountTon < OPTON_CONFIG.minBetTon) {
+        showToast("Слишком маленькая ставка", `Минимум ${OPTON_CONFIG.minBetTon} TON.`);
+        return false;
+      }
       const tx = window.OptonChain.buildBetTx({
         marketAddress: round.address.toString(),
         side: side === "UP" ? window.OptonChain.SIDE.UP : window.OptonChain.SIDE.DOWN,
@@ -4127,10 +4293,14 @@
       const interval = (market.minutes || 15) * 60;
       const ms = getMarketState(market.id);
       const quote = window.OptonChain && quoteParimutuel(amountTon, ms.poolUp, ms.poolDown, side);
+      // Целевая цена позиции = снапшот цены открытия из контракта (round.openPriceSnapshot),
+      // а не локальная цена Binance — иначе PnL и карточка позиции разойдутся с контрактом.
+      const onchainTarget = onchainPriceToNumber(round.openPriceSnapshot, round.openPriceExpo);
       state.positions.unshift({
         id: "pos_" + now, marketId: market.id, asset: market.asset, expiry: market.expiry,
         side, amount: amountTon, onchain: true, marketAddress: round.address.toString(),
         entryMultiplier: quote ? quote.multiplier : 0, entryProb: quote ? quote.impliedProb : 0.5,
+        targetPrice: Number.isFinite(onchainTarget) ? onchainTarget : undefined,
         candleOpenedAt: round.openTimestamp * 1000, openedAt: now,
         expiresAt: (round.openTimestamp + interval) * 1000, status: "open",
       });
@@ -4373,6 +4543,8 @@
       // Resume the chart loop when entering the terminal (it pauses itself
       // whenever the terminal isn't the active screen).
       if (screen === "terminal") startTerminalChartLoop();
+      // Тянем реальные объёмы рынков при входе на списки/главную.
+      if ((screen === "markets" || screen === "home") && onchainEnabled()) syncAllMarketPools();
       document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
       document.getElementById("screen-" + screen).classList.add("active");
       document.querySelectorAll(".nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.nav === screen || (screen === "terminal" && btn.dataset.nav === "markets")));
@@ -4400,6 +4572,19 @@
       state.filterExpiry = 'fav';
       saveState();
       go('markets');
+    }
+
+    // Возврат с терминала к списку рынков по жесту «назад»: без haptic, со
+    // слайд-анимацией въезда экрана рынков слева (как iOS back).
+    function goBackToMarkets() {
+      go("markets");
+      const el = document.getElementById("screen-markets");
+      if (el) {
+        el.classList.remove("screen-anim-back");
+        void el.offsetWidth; // рестарт анимации
+        el.classList.add("screen-anim-back");
+        el.addEventListener("animationend", () => el.classList.remove("screen-anim-back"), { once: true });
+      }
     }
 
     function syncMarketFilter(isInit = false) {
@@ -4538,7 +4723,11 @@
       const checking = terminalMarketChecks[key]
         ? Date.now() - terminalMarketChecks[key] < 1800
         : false;
-      return { closed: true, checking, record };
+      // Отмена раунда: авторитетный флаг из записи (on-chain) либо ничья по цене.
+      const cancelled = typeof record.cancelled === "boolean"
+        ? record.cancelled
+        : (Number.isFinite(record.closePrice) && record.closePrice === Number(record.targetPrice));
+      return { closed: true, checking, cancelled, record };
     }
 
     function goToNextTerminalMarket() {
@@ -4741,6 +4930,17 @@
       }
     }
 
+    // Объём раунда на карточке = размер пула (up+down). При on-chain — настоящий
+    // из контракта (после sync), до загрузки показываем «…». В демо — сид-пул в $.
+    function marketVolumeText(m) {
+      const ms = getMarketState(m.id);
+      const total = (Number(ms.poolUp) || 0) + (Number(ms.poolDown) || 0);
+      if (onchainEnabled()) {
+        return ms.onchainSynced ? formatTon(total) : "…";
+      }
+      return money(total);
+    }
+
     function marketCardHtml(m, isHome = false) {
       const up = getSidePrice(m.id, "UP");
       const down = getSidePrice(m.id, "DOWN");
@@ -4768,7 +4968,7 @@
               </div>
               <div style="min-width: 0; flex: 1;">
                 <h4>${m.asset} · ${m.expiry}</h4>
-                <span>Объем: ${m.vol || '0'}</span>
+                <span>Объем: ${marketVolumeText(m)}</span>
               </div>
             </div>
             <div class="badge-row">
@@ -4872,6 +5072,27 @@
         return;
       }
 
+      // Отменённый раунд: победителя нет, ставки возвращены — не показываем сторону.
+      if (result.cancelled) {
+        resultEl.className = "trm-market-result show";
+        resultEl.innerHTML = `
+          <div class="trm-result-head">
+            <div class="trm-result-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0M9 9l6 6M15 9l-6 6"/></svg>
+            </div>
+            <div class="trm-result-copy">
+              <strong>Раунд отменён</strong>
+              <span>Ставки в одну сторону или ничья — средства возвращены</span>
+            </div>
+          </div>
+          <div class="trm-result-values">
+            <div><span>Целевая цена</span><strong>${marketPriceText(targetPrice)}</strong></div>
+            <div><span>Цена закрытия</span><strong>${marketPriceText(result.record.closePrice)}</strong></div>
+          </div>`;
+        nextButton.style.display = "";
+        return;
+      }
+
       const winnerUp = result.record.winner === "UP";
       const winnerLabel = winnerUp ? "Вверх" : "Вниз";
       const winnerIcon = winnerUp
@@ -4905,6 +5126,38 @@
       });
     }
 
+    // Переключает UI формы ставки в зависимости от режима (on-chain TON vs демо $).
+    // Вызывается из renderTerminal при каждом рендере.
+    function renderTradeFormMode() {
+      const isOnchain = onchainActive();
+
+      // Символ валюты
+      const curEl = document.getElementById("trmCur");
+      if (curEl) curEl.textContent = isOnchain ? "TON" : "$";
+
+      // Быстрые чипы — TON для on-chain, $ для демо
+      const chipsEl = document.getElementById("trmChips");
+      if (chipsEl) {
+        if (isOnchain) {
+          chipsEl.innerHTML = `
+            <button type="button" onclick="setTradeAmount(0.5)">0.5</button>
+            <button type="button" onclick="setTradeAmount(1)">1</button>
+            <button type="button" onclick="setTradeAmount(5)">5</button>
+            <button type="button" onclick="setTradeAmount(10)">10</button>`;
+        } else {
+          chipsEl.innerHTML = `
+            <button type="button" onclick="setTradeAmount(1)">$1</button>
+            <button type="button" onclick="setTradeAmount(25)">$25</button>
+            <button type="button" onclick="setTradeAmount(50)">$50</button>
+            <button type="button" onclick="setTradeAmount(100)">$100</button>`;
+        }
+      }
+
+      // Метка "Доступно" — для on-chain убираем кликабельность (нет state.balance)
+      const wrapEl = document.getElementById("trmAvailableWrap");
+      if (wrapEl) wrapEl.style.cursor = isOnchain ? "default" : "pointer";
+    }
+
     function renderTerminal() {
       const market = getMarket(state.currentMarketId);
       const ms = getMarketState(market.id);
@@ -4934,13 +5187,28 @@
 
       updateTerminalCandleChange(displayPrice, targetPrice);
       renderTerminalMarketResult(marketResult, targetPrice);
-      setTerminalTradingLocked(marketResult.closed);
+      // Freeze-баннер: последние 90 сек раунда — приём ставок уже закрыт в контракте.
+      const freezeBanner = document.getElementById("trmFreezeBanner");
+      const isInFreeze = isTerminalMarketInFreeze();
+      if (freezeBanner) freezeBanner.style.display = isInFreeze ? "flex" : "none";
 
-      // Доступный баланс
+      // Переключаем форму с учётом freeze и закрытия рынка.
+      setTerminalTradingLocked(marketResult.closed || isInFreeze);
+
+      // Обновляем валюту/чипы формы в зависимости от режима (on-chain vs демо).
+      renderTradeFormMode();
+
+      // Доступный баланс: для on-chain пишем подсказку (реальный баланс в кошельке),
+      // для демо показываем state.balance в $.
       const availableEl = document.getElementById("trmAvailable");
       if (availableEl) {
-        availableEl.textContent = money(state.balance);
-        availableEl.classList.toggle("hidden-value", !!state.balanceHidden);
+        if (onchainActive()) {
+          availableEl.textContent = `мин. ${OPTON_CONFIG.minBetTon} TON`;
+          availableEl.classList.remove("hidden-value");
+        } else {
+          availableEl.textContent = money(state.balance);
+          availableEl.classList.toggle("hidden-value", !!state.balanceHidden);
+        }
       }
 
       // Кнопка избранного
@@ -5007,12 +5275,14 @@
       // Кнопки показывают множитель и выплату при выигрыше.
       setText("upButtonPrice", formatMultiplier(upQuote.multiplier));
       setText("downButtonPrice", formatMultiplier(downQuote.multiplier));
-      setText("upButtonReturn", money(amount > 0 ? upQuote.payout : 0));
-      setText("downButtonReturn", money(amount > 0 ? downQuote.payout : 0));
+      setText("upButtonReturn", amountLabel(amount > 0 ? upQuote.payout : 0));
+      setText("downButtonReturn", amountLabel(amount > 0 ? downQuote.payout : 0));
 
-      // Подсветка поля красным при некорректной сумме: пустое поле,
-      // нечисловое значение, меньше минимума ($1) или больше доступного баланса.
-      const invalidAmount = rawAmount === "" || !isFinite(amount) || amount < 1 || amount > state.balance;
+      // Подсветка поля: пустое / нечисловое / меньше минимума.
+      // Для on-chain не проверяем state.balance (реальный баланс в кошельке).
+      const tooSmall = amount < minBet();
+      const overBalance = !onchainActive() && amount > state.balance;
+      const invalidAmount = rawAmount === "" || !isFinite(amount) || tooSmall || overBalance;
       if (amountInput) amountInput.parentElement.classList.toggle("invalid", invalidAmount);
     }
 
@@ -5026,18 +5296,19 @@
       const total = up + down;
       const upPct = total > 0 ? Math.round((up / total) * 100) : 50;
       const downPct = 100 - upPct;
+      const fmt = (v) => amountLabel(v);
       el.innerHTML = `
         <div class="trm-pool-head">
           <strong>Пул раунда</strong>
-          <em>${money(total)} всего</em>
+          <em>${fmt(total)} всего</em>
         </div>
         <div class="trm-pool-bar">
           <span class="up" style="width:${upPct}%"></span>
           <span class="down" style="width:${downPct}%"></span>
         </div>
         <div class="trm-pool-legend">
-          <div class="up"><b>Вверх ${upPct}%</b><span>${money(up)}</span></div>
-          <div class="down"><b>Вниз ${downPct}%</b><span>${money(down)}</span></div>
+          <div class="up"><b>Вверх ${upPct}%</b><span>${fmt(up)}</span></div>
+          <div class="down"><b>Вниз ${downPct}%</b><span>${fmt(down)}</span></div>
         </div>
         <p class="trm-pool-note">Победители делят весь банк пропорционально своим ставкам. Чем меньше людей выбрало вашу сторону — тем выше выплата.</p>`;
     }
@@ -5046,7 +5317,8 @@
       const changeEl = document.getElementById("terminalChange");
       if (!changeEl) return;
       const change = marketCandleChange(currentPrice, openPrice);
-      changeEl.textContent = `${change.className === "up" ? "▲" : "▼"} ${change.text}`;
+      const arrowPath = change.className === "up" ? "M12 19V5M5 12l7-7 7 7" : "M12 5v14M5 12l7 7 7-7";
+      changeEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;display:inline-block;vertical-align:-1px;"><path d="${arrowPath}"/></svg> ${change.text}`;
       changeEl.className = "trm-change " + change.className;
     }
 
@@ -5114,16 +5386,29 @@
       return Date.now() >= getTerminalMarketWindow(market).closesAt;
     }
 
+    // Ставки закрываются за CUTOFF_GRACE_SECONDS (90с) до конца раунда —
+    // зеркалит константу контракта, чтобы не отправлять транзакцию которую
+    // контракт всё равно отклонит и вернёт как refund.
+    const CUTOFF_GRACE_MS = 90 * 1000;
+    function isTerminalMarketInFreeze() {
+      if (isTerminalMarketClosed()) return false;
+      const market = getMarket(state.currentMarketId);
+      const closesAt = getTerminalMarketWindow(market).closesAt;
+      return Date.now() >= closesAt - CUTOFF_GRACE_MS;
+    }
+
     function setTradeAmount(value) {
       const input = document.getElementById("tradeAmount");
       if (!input) return;
       if (value === "max") {
-        input.value = Math.floor(state.balance);
+        // On-chain: реальный баланс в кошельке неизвестен — ставим 10 TON как разумный дефолт.
+        // Демо: берём весь доступный баланс.
+        input.value = onchainActive() ? 10 : Math.floor(state.balance);
       } else {
-        // Чипы прибавляют сумму к уже введённой, не превышая баланс
         const current = Number(input.value || 0);
         const next = current + value;
-        input.value = state.balance > 0 ? Math.min(next, Math.floor(state.balance)) : next;
+        // Демо: ограничиваем балансом. On-chain: без ограничения сверху (кошелёк сам откажет).
+        input.value = (!onchainActive() && state.balance > 0) ? Math.min(next, Math.floor(state.balance)) : next;
       }
       renderSharesPreview();
       haptic("selection");
@@ -5579,13 +5864,18 @@
         showToast("Рынок закрыт", "Перейдите к новому рынку, чтобы сделать прогноз.");
         return;
       }
-      const market = getMarket(state.currentMarketId);
-      const amount = Number(document.getElementById("tradeAmount").value || 0);
-      if (!amount || amount < 1) {
-        showToast("Проверьте сумму", "Минимальная сумма сделки — $1.");
+      if (isTerminalMarketInFreeze()) {
+        showToast("Приём ставок закрыт", "До конца раунда менее 90 секунд — новые ставки не принимаются.");
         return;
       }
-      if (amount > state.balance) {
+      const market = getMarket(state.currentMarketId);
+      const amount = Number(document.getElementById("tradeAmount").value || 0);
+      if (!amount || amount < minBet()) {
+        const minLabel = onchainActive() ? `${OPTON_CONFIG.minBetTon} TON` : "$1";
+        showToast("Проверьте сумму", `Минимальная ставка — ${minLabel}.`);
+        return;
+      }
+      if (!onchainActive() && amount > state.balance) {
         showToast("Недостаточно средств", "На балансе нет такой суммы.");
         return;
       }
@@ -5605,18 +5895,19 @@
         `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);">` +
         `<span style="color:var(--muted);font-weight:800;">${label}</span>` +
         `<strong style="font-weight:950;${color ? `color:${color};` : ""}">${value}</strong></div>`;
+      const fmtAmt = amountLabel(amount);
+      const fmtPay = amountLabel(payout);
       document.getElementById("modalTitle").textContent = "Подтверждение ставки";
       document.getElementById("modalText").innerHTML =
         `<div style="text-align:left;">` +
         row("Рынок", `${market.asset} · ${market.expiry}`) +
         row("Направление", dir, dirColor) +
-        row("Ставка", money(amount)) +
+        row("Ставка", fmtAmt) +
         row("Множитель (оценка)", formatMultiplier(quote.multiplier)) +
         row("Шанс по рынку", `${Math.round(quote.impliedProb * 100)}%`) +
         `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0 0;">` +
-        `<span style="color:var(--muted);font-weight:800;">Выплата при выигрыше</span>` +
-        `<strong style="font-weight:950;color:var(--green);">${money(payout)}</strong></div>` +
-        `<p style="margin:10px 0 0;color:var(--muted);font-size:12px;line-height:1.45;font-weight:700;">Множитель ориентировочный: к закрытию свечи пулы могут измениться. При одностороннем пуле или ничьей раунд отменяется и ставка возвращается.</p>` +
+        `<span style="color:var(--muted);font-weight:800;">Выплата</span>` +
+        `<strong style="font-weight:950;color:var(--green);">${fmtPay}</strong></div>` +
         `</div>`;
       document.getElementById("modalActions").innerHTML =
         `<button class="ghost" type="button" onclick="cancelOrder()">Отмена</button>` +
@@ -5640,7 +5931,7 @@
       if (!pendingOrder) return;
       const { side, amount } = pendingOrder;
       pendingOrder = null;
-      if (amount > state.balance) {
+      if (!onchainActive() && amount > state.balance) {
         showToast("Недостаточно средств", "На балансе нет такой суммы.");
         return;
       }
@@ -5651,6 +5942,10 @@
       if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы торговать.")) return;
       if (isTerminalMarketClosed()) {
         showToast("Рынок закрыт", "Заявка не может быть исполнена после закрытия рынка.");
+        return;
+      }
+      if (isTerminalMarketInFreeze()) {
+        showToast("Приём ставок закрыт", "До конца раунда менее 90 секунд.");
         return;
       }
       // On-chain путь: реальный кошелёк → ставка уходит транзакцией в контракт.
@@ -6233,9 +6528,12 @@
       const prize = union - fee;
 
       // Отмена раунда (как в контракте): односторонний пул или ничья по цене.
+      // Для on-chain раундов приоритет у авторитетного флага из записи (contract).
       const oneSided = finalUp <= 0 || finalDown <= 0;
       const tie = expired && Number.isFinite(resultPrice) && resultPrice === targetPrice;
-      const cancelled = expired && (oneSided || tie);
+      const cancelled = typeof marketRecord?.cancelled === "boolean"
+        ? marketRecord.cancelled
+        : (expired && (oneSided || tie));
 
       const winningSide = marketRecord?.winner || (resultPrice >= targetPrice ? "UP" : "DOWN");
       const winningPool = winningSide === "UP" ? finalUp : finalDown;
@@ -6443,10 +6741,10 @@
       const sign = pnl >= 0 ? "+" : "";
       const displayedPayout = result.payout;
       const payoutClass = expired && !result.cancelled && displayedPayout <= 0 ? " neutral" : "";
-      const payoutLabel = expired ? (result.cancelled ? "возврат" : "выплата") : "если выиграете";
+      const payoutLabel = expired ? (result.cancelled ? "возврат" : "получено") : "итого";
       const profitStat = expired
         ? `<div class="trm-pos-stat"><span>Доходность</span><strong class="${pnlClass}">${sign}${money(pnl)}<small>(${sign}${pct.toFixed(1)}%)</small></strong></div>`
-        : `<div class="trm-pos-stat"><span>Если выиграете</span><strong class="up">+${money(result.payout - p.amount)}</strong></div>`;
+        : `<div class="trm-pos-stat"><span>Выигрыш</span><strong class="up">+${money(result.payout - p.amount)}</strong></div>`;
       // В parimutuel досрочного выхода нет: до закрытия позиция зафиксирована,
       // после закрытия — кнопка получения выплаты (Claim).
       const cashoutBtn = expired
@@ -6506,18 +6804,18 @@
 
       // Досрочного выхода в parimutuel нет: кнопка только для Claim после закрытия.
       const closeBtn = (p.status === "open" && expired)
-        ? `<button class="position-close-btn expired" type="button" onclick="cashOutPosition('${p.id}')">Получить выплату</button>`
+        ? `<button class="position-close-btn expired" type="button" onclick="event.stopPropagation(); cashOutPosition('${p.id}')">Получить выплату</button>`
         : "";
 
       return `
-        <article class="card position">
+        <article class="card position" style="cursor:pointer" onclick="openTerminal('${p.marketId}')">
           <div class="pf-pos-head">
             <div class="asset-icon ${market.iconClass}" style="width:38px; height:38px; border-radius:var(--radius-sm);">${market.icon}</div>
             <div class="pf-pos-info">
               <strong class="pf-pos-title">${p.asset}</strong>
               <span class="pf-pos-sub">${schedule}</span>
             </div>
-            <button class="pf-share-btn" type="button" onclick="sharePosition('${p.id}')" aria-label="Поделиться">
+            <button class="pf-share-btn" type="button" onclick="event.stopPropagation(); sharePosition('${p.id}')" aria-label="Поделиться">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 16V3"/><path d="m7 8 5-5 5 5"/></svg>
             </button>
           </div>
@@ -6548,6 +6846,30 @@
       ctx.arcTo(x, y + h, x, y, rr);
       ctx.arcTo(x, y, x + w, y, rr);
       ctx.closePath();
+    }
+
+    // Рисует стрелку-иконку в стиле приложения (line-icon) на canvas.
+    // type: 'up' | 'down' | 'right'. (cx, cy) — центр, size — габарит.
+    function drawArrowIcon(ctx, type, cx, cy, size, color) {
+      const s = size / 2;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(2, size * 0.14);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      if (type === "up") {
+        ctx.moveTo(cx, cy + s); ctx.lineTo(cx, cy - s);
+        ctx.moveTo(cx - s * 0.62, cy - s * 0.08); ctx.lineTo(cx, cy - s); ctx.lineTo(cx + s * 0.62, cy - s * 0.08);
+      } else if (type === "down") {
+        ctx.moveTo(cx, cy - s); ctx.lineTo(cx, cy + s);
+        ctx.moveTo(cx - s * 0.62, cy + s * 0.08); ctx.lineTo(cx, cy + s); ctx.lineTo(cx + s * 0.62, cy + s * 0.08);
+      } else { // right
+        ctx.moveTo(cx - s, cy); ctx.lineTo(cx + s, cy);
+        ctx.moveTo(cx + s * 0.12, cy - s * 0.6); ctx.lineTo(cx + s, cy); ctx.lineTo(cx + s * 0.12, cy + s * 0.6);
+      }
+      ctx.stroke();
+      ctx.restore();
     }
 
     function svgViewBox(svg) {
@@ -6592,7 +6914,6 @@
       const market = getMarket(p.marketId);
       const result = getPositionResult(p);
       const dir = p.side === "UP" ? "Вверх" : "Вниз";
-      const arrow = p.side === "UP" ? "▲" : "▼";
       const win = result.pnl >= 0;
       const sideColor = p.side === "UP" ? "#1FC977" : "#F0584F";
       const accent = win ? "#1FC977" : "#F0584F";
@@ -6608,11 +6929,11 @@
       const dateStr = new Date(openedAt).toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: tz });
       const schedule = `${dateStr}, ${fmtT(openedAt)}–${fmtT(p.expiresAt)}`;
 
-      const inviteLink = getReferralLink().replace(/^https:\/\//, "");
-      const reward = OPTON_CONFIG.referralPoints || 100;
+      const botName = "@" + (OPTON_CONFIG.botUsername || "OptonAppBot");
+      const refCode = ensureReferralCode();
 
       const W = 1080, H = 1080, pad = 80, cx = W / 2;
-      const FONT = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+      const FONT = "'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
       const canvas = document.createElement("canvas");
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
@@ -6627,8 +6948,9 @@
       glow = ctx.createRadialGradient(cx, -120, 60, cx, -120, 760);
       glow.addColorStop(0, "rgba(34,158,217,0.20)"); glow.addColorStop(1, "rgba(34,158,217,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+      // Синяя рамка — как акцент в header приложения (--tg-blue).
       roundRectPath(ctx, 22, 22, W - 44, H - 44, 46);
-      ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = "rgba(34,158,217,0.60)"; ctx.lineWidth = 4; ctx.stroke();
 
       // ── Header: Opton logo tile + wordmark (left), asset pill (right) ─────
       const logoBox = 80;
@@ -6658,71 +6980,88 @@
       ctx.fillStyle = "#DCE6EF"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(pillText, W - pad - pillW / 2, pad + 8 + 31);
 
-      // From here the composition is centered.
-      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-
-      // Coin icon (centered)
-      const iconSize = 130;
+      // ── Asset cluster (LEFT): иконка монеты + название + направление + дата ─
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      const clTop = 180;
+      const iconSize = 104;
       const icon = await svgToImage(market.icon, iconSize);
-      drawContain(ctx, icon, cx - iconSize / 2, 185, iconSize, iconSize);
-
-      // Coin name
-      ctx.fillStyle = "#fff"; ctx.font = `900 56px ${FONT}`;
-      ctx.fillText(coin, cx, 398);
-
-      // Direction badge (arrow + Вверх/Вниз)
-      ctx.font = `800 34px ${FONT}`;
-      const badgeText = `${arrow} ${dir}`;
-      const badgeW = ctx.measureText(badgeText).width + 52;
-      const badgeH = 60, badgeY = 430;
-      roundRectPath(ctx, cx - badgeW / 2, badgeY, badgeW, badgeH, 30);
+      drawContain(ctx, icon, pad, clTop, iconSize, iconSize);
+      const tx = pad + iconSize + 26;
+      // Название монеты
+      ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
+      ctx.fillText(coin, tx, clTop + 42);
+      // Бейдж направления (иконка-стрелка + Вверх/Вниз)
+      ctx.font = `800 27px ${FONT}`;
+      const arrIco = 22, arrGap = 10;
+      const dirW = ctx.measureText(dir).width;
+      const dbW = 20 + arrIco + arrGap + dirW + 20;
+      const dbH = 46, dbY = clTop + 60;
+      roundRectPath(ctx, tx, dbY, dbW, dbH, 23);
       ctx.fillStyle = `rgba(${sideRgb},0.16)`; ctx.fill();
-      ctx.fillStyle = sideColor; ctx.textBaseline = "middle";
-      ctx.fillText(badgeText, cx, badgeY + badgeH / 2 + 1);
+      const dbCy = dbY + dbH / 2;
+      drawArrowIcon(ctx, p.side === "UP" ? "up" : "down", tx + 20 + arrIco / 2, dbCy, arrIco, sideColor);
+      ctx.fillStyle = sideColor; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+      ctx.fillText(dir, tx + 20 + arrIco + arrGap, dbCy + 1);
+      // Дата рядом с направлением
+      ctx.fillStyle = "#8298AC"; ctx.font = `600 24px ${FONT}`;
+      ctx.fillText(schedule, tx + dbW + 18, dbCy + 1);
       ctx.textBaseline = "alphabetic";
 
-      // Schedule
-      ctx.fillStyle = "#8298AC"; ctx.font = `600 27px ${FONT}`;
-      ctx.fillText(schedule, cx, 548);
+      // ── Hero: крупный процент доходности ──────────────────────────────────
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#7E93A6"; ctx.font = `800 25px ${FONT}`;
+      ctx.fillText("ДОХОДНОСТЬ", cx, 392);
+      ctx.fillStyle = accent; ctx.font = `900 132px ${FONT}`;
+      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, cx, 510);
 
-      // Giant PnL
-      ctx.fillStyle = accent; ctx.font = `900 138px ${FONT}`;
-      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, cx, 712);
-      // Payout
-      ctx.fillStyle = "#fff"; ctx.font = `800 42px ${FONT}`;
-      ctx.fillText(`Выплата ${money(result.payout)}`, cx, 772);
+      // ── Ставка → Выплата (красивый блок-трансформация) ────────────────────
+      const spY = 556, spH = 132;
+      roundRectPath(ctx, pad, spY, W - pad * 2, spH, 28);
+      ctx.fillStyle = "rgba(255,255,255,0.045)"; ctx.fill();
+      ctx.strokeStyle = `rgba(${accentRgb},0.30)`; ctx.lineWidth = 2; ctx.stroke();
+      // Ставка (слева)
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#8094A6"; ctx.font = `800 23px ${FONT}`;
+      ctx.fillText("СТАВКА", W * 0.30, spY + 50);
+      ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
+      ctx.fillText(money(p.amount), W * 0.30, spY + 100);
+      // Стрелка-иконка (центр)
+      drawArrowIcon(ctx, "right", cx, spY + spH / 2, 46, accent);
+      // Выплата (справа)
+      ctx.fillStyle = "#8094A6"; ctx.font = `800 23px ${FONT}`;
+      ctx.fillText("ВЫПЛАТА", W * 0.70, spY + 50);
+      ctx.fillStyle = accent; ctx.font = `900 46px ${FONT}`;
+      ctx.fillText(money(result.payout), W * 0.70, spY + 100);
 
+      // ── Доп. показатели: множитель и шанс (проценты) ──────────────────────
       ctx.textAlign = "left";
-
-      // ── Stat boxes ───────────────────────────────────────────────────────
       const boxes = [
         { label: "МНОЖИТЕЛЬ", value: formatMultiplier(p.entryMultiplier || result.multiplier) },
-        { label: "ШАНС", value: `${Math.round((p.entryProb ?? result.impliedProb) * 100)}%` },
-        { label: "СТАВКА", value: money(p.amount) }
+        { label: "ШАНС ВХОДА", value: `${Math.round((p.entryProb ?? result.impliedProb) * 100)}%` },
       ];
-      const boxY = 816, boxH = 128, gap = 26;
-      const boxW = (W - pad * 2 - gap * 2) / 3;
+      const boxY = 718, boxH = 110, gap = 26;
+      const boxW = (W - pad * 2 - gap) / 2;
       boxes.forEach((b, i) => {
         const bx = pad + i * (boxW + gap);
-        roundRectPath(ctx, bx, boxY, boxW, boxH, 26);
+        roundRectPath(ctx, bx, boxY, boxW, boxH, 24);
         ctx.fillStyle = "rgba(255,255,255,0.045)"; ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = "#8094A6"; ctx.font = `800 24px ${FONT}`;
-        ctx.fillText(b.label, bx + 26, boxY + 50);
+        ctx.fillStyle = "#8094A6"; ctx.font = `800 23px ${FONT}`;
+        ctx.fillText(b.label, bx + 26, boxY + 44);
         ctx.fillStyle = "#fff"; ctx.font = `900 42px ${FONT}`;
-        ctx.fillText(b.value, bx + 26, boxY + 100);
+        ctx.fillText(b.value, bx + 26, boxY + 90);
       });
 
-      // ── Invite footer: brand-tinted panel with the user's referral link ───
-      const fY = 980, fH = 80;
-      roundRectPath(ctx, pad, fY, W - pad * 2, fH, 26);
+      // ── Футер: только имя бота и реферальный код ──────────────────────────
+      const fY = 866, fH = 80;
+      roundRectPath(ctx, pad, fY, W - pad * 2, fH, 24);
       ctx.fillStyle = "rgba(34,158,217,0.10)"; ctx.fill();
-      ctx.strokeStyle = "rgba(34,158,217,0.24)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = "rgba(34,158,217,0.30)"; ctx.lineWidth = 2; ctx.stroke();
       ctx.textAlign = "center";
-      ctx.fillStyle = "#9DB7CC"; ctx.font = `600 23px ${FONT}`;
-      ctx.fillText(`Играй со мной — получай поинты за прогнозы`, cx, fY + 32);
-      ctx.fillStyle = "#34B6E6"; ctx.font = `800 29px ${FONT}`;
-      ctx.fillText(inviteLink, cx, fY + 65);
+      ctx.fillStyle = "#9DB7CC"; ctx.font = `600 22px ${FONT}`;
+      ctx.fillText("Играй со мной — получай поинты за прогнозы", cx, fY + 32);
+      ctx.fillStyle = "#34B6E6"; ctx.font = `800 28px ${FONT}`;
+      ctx.fillText(`${botName} · код ${refCode}`, cx, fY + 64);
       ctx.textAlign = "left";
 
       return canvas;
@@ -6919,8 +7258,8 @@
       const high = max + pad;
 
       const coords = points.map((p, i) => {
-        const x = 14 + (i / (points.length - 1)) * 332;
-        const y = 150 - ((p.value - low) / (high - low)) * 126;
+        const x = 8 + (i / (points.length - 1)) * 344;
+        const y = 156 - ((p.value - low) / (high - low)) * 144;
         return [x, y];
       });
 
@@ -7132,7 +7471,7 @@
 
     function shareReferralLink() {
       const link = getReferralLink();
-      const text = "Торгуй прогнозами на Opton и забери приветственный бонус 🚀";
+      const text = "Торгуй прогнозами на Opton и забери приветственный бонус";
       haptic("selection");
       try {
         if (tg?.openTelegramLink) {
@@ -7151,7 +7490,7 @@
       if (card) {
         const u = getTelegramUser();
         const name = u ? [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || "Без имени" : "Гость";
-        const handle = u?.username ? "@" + u.username : "Гостевой режим";
+        const handle = u?.username ? "@" + u.username : "";
         const meta = u?.id ? "Telegram ID · " + u.id : "Локальный профиль";
         const initials = (name.match(/\p{L}/gu) || ["G"]).slice(0, 1).join("").toUpperCase()
           + ((name.split(/\s+/)[1] || "").match(/\p{L}/u)?.[0] || "").toUpperCase();
@@ -7162,7 +7501,7 @@
           <div class="account-avatar">${avatar}</div>
           <div class="account-info">
             <b>${escHtml(name)}</b>
-            <span>${escHtml(handle)}</span>
+            ${handle ? `<span>${escHtml(handle)}</span>` : ""}
             <i>${escHtml(meta)}</i>
           </div>
           ${u ? `<span class="account-badge">Telegram</span>` : ""}`;
@@ -7450,7 +7789,7 @@
       const root = document.documentElement;
       const threshold = 142;
       const refreshPull = 116;
-      const settleMs = 860;
+      const settleMs = 560;
       let startX = 0;
       let startY = 0;
       let lastPull = 0;
@@ -7758,8 +8097,7 @@
         const dy = Math.abs(t.clientY - swipeStart.y);
         if (dx > 60 && dy < dx * 0.6) {
           swipeStart = null;
-          go("markets");
-          haptic("impact");
+          goBackToMarkets();   // без haptic, с анимацией слайда
         }
       }, { passive: true });
       document.addEventListener("touchend", () => { swipeStart = null; }, { passive: true });
@@ -7824,8 +8162,13 @@
       const changed = processLimitOrders();
       refreshMarketCardQuotes();
       const onTerminal = document.getElementById("screen-terminal").classList.contains("active");
+      const onMarketsOrHome = document.getElementById("screen-markets").classList.contains("active")
+        || document.getElementById("screen-home").classList.contains("active");
       // Каждые ~15с тянем реальные пулы текущего раунда, когда открыт терминал.
-      if (onTerminal && onchainEnabled() && (_liveTick++ % 15 === 0)) syncTerminalPools();
+      if (onTerminal && onchainEnabled() && (_liveTick % 15 === 0)) syncTerminalPools();
+      // Каждые ~30с обновляем реальные объёмы всех рынков на списках/главной.
+      if (onMarketsOrHome && onchainEnabled() && (_liveTick % 30 === 0)) syncAllMarketPools();
+      _liveTick++;
       if (onTerminal) {
         renderTerminal();
       } else if (document.getElementById("screen-portfolio").classList.contains("active")) {
