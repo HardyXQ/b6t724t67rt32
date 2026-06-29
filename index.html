@@ -7260,126 +7260,132 @@
       const bg = ctx.createLinearGradient(0, 0, 0, H);
       bg.addColorStop(0, "#0C131C"); bg.addColorStop(1, "#151E29");
       ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      // Large Opton watermark from the header logo, without the square tile.
+      // Drawn before glows/frame/content so it stays on the deepest layer.
+      const logoEl = document.querySelector(".logo svg");
+      if (logoEl) {
+        const logoSvg = logoEl.outerHTML.replace(/currentColor/g, "#ffffff");
+        const watermark = await svgToImage(logoSvg, 560);
+        if (watermark) {
+          ctx.save();
+          ctx.globalAlpha = 0.025;
+          drawContain(ctx, watermark, cx - 280, 250, 560, 560);
+          ctx.restore();
+        }
+      }
+
       let glow = ctx.createRadialGradient(cx, 620, 80, cx, 620, 620);
       glow.addColorStop(0, `rgba(${accentRgb},0.22)`); glow.addColorStop(1, `rgba(${accentRgb},0)`);
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
       glow = ctx.createRadialGradient(cx, -120, 60, cx, -120, 760);
       glow.addColorStop(0, "rgba(34,158,217,0.20)"); glow.addColorStop(1, "rgba(34,158,217,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
       // Синяя рамка — как акцент в header приложения (--tg-blue).
       roundRectPath(ctx, 22, 22, W - 44, H - 44, 46);
       ctx.strokeStyle = "rgba(34,158,217,0.60)"; ctx.lineWidth = 4; ctx.stroke();
 
-      // ── Header: Opton logo tile + wordmark (left), asset pill (right) ─────
-      const logoBox = 80;
-      roundRectPath(ctx, pad, pad, logoBox, logoBox, 21);
-      const lg = ctx.createLinearGradient(pad, pad, pad + logoBox, pad + logoBox);
-      lg.addColorStop(0, "#2BB2EC"); lg.addColorStop(1, "#1B7FB0");
-      ctx.fillStyle = lg; ctx.fill();
-      const logoEl = document.querySelector(".logo svg");
-      if (logoEl) {
-        const logoSvg = logoEl.outerHTML.replace(/currentColor/g, "#ffffff");
-        const logoImg = await svgToImage(logoSvg, 120);
-        const lpad = 21;
-        drawContain(ctx, logoImg, pad + lpad, pad + lpad, logoBox - lpad * 2, logoBox - lpad * 2);
-      }
-      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
-      ctx.fillStyle = "#fff"; ctx.font = `800 44px ${FONT}`;
-      ctx.fillText("Opton", pad + 100, pad + 34);
-      ctx.fillStyle = "#8298AC"; ctx.font = `600 25px ${FONT}`;
-      ctx.fillText("Прогнозы в Telegram", pad + 100, pad + 68);
-
-      ctx.font = `800 28px ${FONT}`;
-      const pillText = `${p.asset} · ${p.expiry}`;
-      const pillW = ctx.measureText(pillText).width + 52;
-      roundRectPath(ctx, W - pad - pillW, pad + 8, pillW, 60, 30);
-      ctx.fillStyle = "rgba(255,255,255,0.08)"; ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = "#DCE6EF"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(pillText, W - pad - pillW / 2, pad + 8 + 31);
-
-      // ── Asset cluster (LEFT): иконка монеты + название + направление + дата ─
+      // ── Header: asset only. No logo/wordmark on share card. ──────────────
       ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-      const clTop = 180;
-      const iconSize = 104;
+      const clTop = 88;
+      const iconSize = 118;
       const icon = await svgToImage(market.icon, iconSize);
       drawContain(ctx, icon, pad, clTop, iconSize, iconSize);
-      const tx = pad + iconSize + 26;
-      // Название монеты
-      ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
-      ctx.fillText(coin, tx, clTop + 42);
-      // Бейдж направления (иконка-стрелка + Вверх/Вниз)
-      ctx.font = `800 27px ${FONT}`;
-      const arrIco = 22, arrGap = 10;
+      const tx = pad + iconSize + 28;
+
+      ctx.fillStyle = "#fff"; ctx.font = `900 54px ${FONT}`;
+      ctx.fillText(coin, tx, clTop + 50);
+      const coinW = ctx.measureText(coin).width;
+
+      // Direction is text-only and placed next to the coin name.
+      ctx.font = `900 28px ${FONT}`;
       const dirW = ctx.measureText(dir).width;
-      const dbW = 20 + arrIco + arrGap + dirW + 20;
-      const dbH = 46, dbY = clTop + 60;
-      roundRectPath(ctx, tx, dbY, dbW, dbH, 23);
+      const dbW = dirW + 48;
+      const dbH = 48;
+      const dbX = tx + coinW + 22;
+      const dbY = clTop + 8;
+      roundRectPath(ctx, dbX, dbY, dbW, dbH, 24);
       ctx.fillStyle = `rgba(${sideRgb},0.16)`; ctx.fill();
-      const dbCy = dbY + dbH / 2;
-      drawArrowIcon(ctx, p.side === "UP" ? "up" : "down", tx + 20 + arrIco / 2, dbCy, arrIco, sideColor);
-      ctx.fillStyle = sideColor; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-      ctx.fillText(dir, tx + 20 + arrIco + arrGap, dbCy + 1);
-      // Дата рядом с направлением
-      ctx.fillStyle = "#8298AC"; ctx.font = `600 24px ${FONT}`;
-      ctx.fillText(schedule, tx + dbW + 18, dbCy + 1);
+      ctx.fillStyle = sideColor; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      ctx.fillText(dir, dbX + dbW / 2, dbY + dbH / 2 + 1);
+      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+
+      ctx.fillStyle = "#8298AC"; ctx.font = `700 26px ${FONT}`;
+      ctx.fillText(schedule, tx, clTop + 90);
+
+      ctx.font = `800 28px ${FONT}`;
+      const pairText = `${p.asset} · ${p.expiry}`;
+      const pairW = ctx.measureText(pairText).width + 52;
+      roundRectPath(ctx, W - pad - pairW, clTop + 8, pairW, 60, 30);
+      ctx.fillStyle = "rgba(255,255,255,0.08)"; ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#DCE6EF";
+      ctx.fillText(pairText, W - pad - 26, clTop + 39);
       ctx.textBaseline = "alphabetic";
 
-      // ── Hero: крупный процент доходности ──────────────────────────────────
+      // ── Hero: percent only, moved higher. ────────────────────────────────
       ctx.textAlign = "center";
-      ctx.fillStyle = "#7E93A6"; ctx.font = `800 25px ${FONT}`;
-      ctx.fillText("ДОХОДНОСТЬ", cx, 392);
-      ctx.fillStyle = accent; ctx.font = `900 132px ${FONT}`;
-      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, cx, 510);
+      ctx.fillStyle = accent; ctx.font = `900 146px ${FONT}`;
+      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, cx, 420);
 
-      // ── Ставка → Выплата (красивый блок-трансформация) ────────────────────
-      const spY = 556, spH = 132;
-      roundRectPath(ctx, pad, spY, W - pad * 2, spH, 28);
+      // ── Stake → payout, cleaner and with a proper compact arrow. ─────────
+      const spY = 526, spH = 142;
+      roundRectPath(ctx, pad, spY, W - pad * 2, spH, 30);
       ctx.fillStyle = "rgba(255,255,255,0.045)"; ctx.fill();
       ctx.strokeStyle = `rgba(${accentRgb},0.30)`; ctx.lineWidth = 2; ctx.stroke();
-      // Ставка (слева)
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#8094A6"; ctx.font = `800 23px ${FONT}`;
-      ctx.fillText("СТАВКА", W * 0.30, spY + 50);
-      ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
-      ctx.fillText(money(p.amount), W * 0.30, spY + 100);
-      // Стрелка-иконка (центр)
-      drawArrowIcon(ctx, "right", cx, spY + spH / 2, 46, accent);
-      // Выплата (справа)
-      ctx.fillStyle = "#8094A6"; ctx.font = `800 23px ${FONT}`;
-      ctx.fillText("ВЫПЛАТА", W * 0.70, spY + 50);
-      ctx.fillStyle = accent; ctx.font = `900 46px ${FONT}`;
-      ctx.fillText(money(result.payout), W * 0.70, spY + 100);
 
-      // ── Доп. показатели: множитель и шанс (проценты) ──────────────────────
+      const leftCx = pad + 210;
+      const rightCx = W - pad - 210;
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#8094A6"; ctx.font = `900 23px ${FONT}`;
+      ctx.fillText("СТАВКА", leftCx, spY + 50);
+      ctx.fillStyle = "#fff"; ctx.font = `900 48px ${FONT}`;
+      ctx.fillText(money(p.amount), leftCx, spY + 104);
+
+      // Circle arrow avoids the stretched look from a long line icon.
+      const arrowCx = cx, arrowCy = spY + spH / 2;
+      roundRectPath(ctx, arrowCx - 35, arrowCy - 35, 70, 70, 35);
+      ctx.fillStyle = `rgba(${accentRgb},0.14)`; ctx.fill();
+      ctx.strokeStyle = `rgba(${accentRgb},0.36)`; ctx.lineWidth = 2; ctx.stroke();
+      drawArrowIcon(ctx, "right", arrowCx, arrowCy, 30, accent);
+
+      ctx.fillStyle = "#8094A6"; ctx.font = `900 23px ${FONT}`;
+      ctx.fillText("ВЫПЛАТА", rightCx, spY + 50);
+      ctx.fillStyle = accent; ctx.font = `900 48px ${FONT}`;
+      ctx.fillText(money(result.payout), rightCx, spY + 104);
+
+      // ── Extra metrics: neater two-column blocks. ─────────────────────────
       ctx.textAlign = "left";
       const boxes = [
         { label: "МНОЖИТЕЛЬ", value: formatMultiplier(p.entryMultiplier || result.multiplier) },
         { label: "ШАНС ВХОДА", value: `${Math.round((p.entryProb ?? result.impliedProb) * 100)}%` },
       ];
-      const boxY = 718, boxH = 110, gap = 26;
+      const boxY = 704, boxH = 124, gap = 26;
       const boxW = (W - pad * 2 - gap) / 2;
       boxes.forEach((b, i) => {
         const bx = pad + i * (boxW + gap);
-        roundRectPath(ctx, bx, boxY, boxW, boxH, 24);
+        roundRectPath(ctx, bx, boxY, boxW, boxH, 26);
         ctx.fillStyle = "rgba(255,255,255,0.045)"; ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = "#8094A6"; ctx.font = `800 23px ${FONT}`;
-        ctx.fillText(b.label, bx + 26, boxY + 44);
-        ctx.fillStyle = "#fff"; ctx.font = `900 42px ${FONT}`;
-        ctx.fillText(b.value, bx + 26, boxY + 90);
+        ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = "#8094A6"; ctx.font = `900 22px ${FONT}`;
+        ctx.fillText(b.label, bx + 28, boxY + 46);
+        ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
+        ctx.fillText(b.value, bx + 28, boxY + 98);
       });
 
-      // ── Футер: только имя бота и реферальный код ──────────────────────────
-      const fY = 866, fH = 80;
-      roundRectPath(ctx, pad, fY, W - pad * 2, fH, 24);
+      // ── Footer: stronger invitation copy. ────────────────────────────────
+      const fY = 870, fH = 94;
+      roundRectPath(ctx, pad, fY, W - pad * 2, fH, 26);
       ctx.fillStyle = "rgba(34,158,217,0.10)"; ctx.fill();
       ctx.strokeStyle = "rgba(34,158,217,0.30)"; ctx.lineWidth = 2; ctx.stroke();
       ctx.textAlign = "center";
-      ctx.fillStyle = "#9DB7CC"; ctx.font = `600 22px ${FONT}`;
-      ctx.fillText("Играй со мной — получай поинты за прогнозы", cx, fY + 32);
-      ctx.fillStyle = "#34B6E6"; ctx.font = `800 28px ${FONT}`;
-      ctx.fillText(`${botName} · код ${refCode}`, cx, fY + 64);
+      ctx.fillStyle = "#D7E7F4"; ctx.font = `800 25px ${FONT}`;
+      ctx.fillText("Залетай в прогнозы: угадывай рынок и забирай поинты", cx, fY + 38);
+      ctx.fillStyle = "#34B6E6"; ctx.font = `900 29px ${FONT}`;
+      ctx.fillText(`${botName} · код ${refCode}`, cx, fY + 73);
       ctx.textAlign = "left";
 
       return canvas;
