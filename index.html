@@ -1546,6 +1546,97 @@
     .share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .share-close { width: 100%; }
 
+    /* ── Account screen: profile, referral, settings entry ──────────────── */
+    #screen-account > .card,
+    #screen-account > .account-action { margin-top: 12px; }
+    #screen-account > .account-user { margin-top: 16px; }
+    .account-user { display: flex; align-items: center; gap: 14px; }
+    .account-avatar {
+      flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
+      display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 21px;
+      background: linear-gradient(145deg, #2BB2EC, #1B7FB0);
+      box-shadow: 0 8px 22px rgba(34,158,217,.32);
+    }
+    .account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .account-info { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+    .account-info b {
+      font-size: 17px; font-weight: 900; letter-spacing: normal;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .account-info span { font-size: 13px; font-weight: 800; color: var(--tg-blue); }
+    .account-info i { font-size: 11.5px; font-style: normal; font-weight: 700; color: var(--muted); }
+    .account-badge {
+      flex: 0 0 auto; align-self: center; font-size: 11px; font-weight: 850; color: var(--tg-blue);
+      background: color-mix(in srgb, var(--tg-blue) 12%, transparent); padding: 6px 11px; border-radius: 999px;
+    }
+
+    .referral-card { display: grid; gap: 14px; }
+    .referral-head { display: flex; gap: 12px; align-items: center; }
+    .referral-gift {
+      flex: 0 0 auto; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+      color: var(--tg-blue); background: color-mix(in srgb, var(--tg-blue) 12%, transparent);
+    }
+    .referral-gift svg { width: 22px; height: 22px; }
+    .referral-head b { display: block; font-size: 15px; font-weight: 900; letter-spacing: normal; }
+    .referral-head span { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 700; color: var(--muted); line-height: 1.4; }
+    .referral-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .referral-stats > div {
+      background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 10px;
+      display: grid; gap: 3px; text-align: center;
+    }
+    .referral-stats b { font-size: 22px; font-weight: 950; line-height: 1; }
+    .referral-stats span { font-size: 11px; font-weight: 800; color: var(--muted); }
+    .referral-link {
+      display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+      background: var(--surface-2); border: 1px dashed color-mix(in srgb, var(--tg-blue) 35%, var(--line));
+      border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer;
+      font: inherit; color: var(--text); -webkit-tap-highlight-color: transparent;
+    }
+    .referral-link:active { transform: scale(.99); }
+    .referral-link span {
+      flex: 1 1 auto; min-width: 0; font-size: 12.5px; font-weight: 800; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .referral-link svg { flex: 0 0 auto; width: 17px; height: 17px; color: var(--tg-blue); stroke: currentColor; }
+    .referral-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .account-action {
+      display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+      cursor: pointer; font: inherit; color: var(--text); -webkit-tap-highlight-color: transparent;
+    }
+    .account-action:active { transform: scale(.992); }
+    .account-action-ic {
+      flex: 0 0 auto; width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center;
+      color: var(--text); background: var(--surface-2);
+    }
+    .account-action-ic svg { width: 21px; height: 21px; }
+    .account-action-body { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+    .account-action-body b { font-size: 15px; font-weight: 900; letter-spacing: normal; }
+    .account-action-body i { font-size: 12px; font-style: normal; font-weight: 700; color: var(--muted); }
+    .account-action-chev { flex: 0 0 auto; color: var(--muted-2); display: grid; place-items: center; }
+    .account-action-chev svg { width: 18px; height: 18px; }
+
+    /* Settings modal */
+    .settings-sheet {
+      width: min(100%, 380px); max-height: 86vh; display: flex; flex-direction: column;
+      border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--line);
+      box-shadow: 0 20px 60px rgba(0,0,0,.3); overflow: hidden;
+      opacity: 0; transform: scale(0.9) translateY(10px);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+    }
+    .modal.show .settings-sheet { opacity: 1; transform: scale(1) translateY(0); }
+    .settings-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px 10px;
+    }
+    .settings-head h3 { margin: 0; font-size: 19px; font-weight: 950; letter-spacing: normal; }
+    .settings-close {
+      flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+      color: var(--muted); background: var(--surface-2);
+    }
+    .settings-close svg { width: 18px; height: 18px; }
+    .settings-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 20px 22px; }
+
     /* Deposit Modal Styles */
     .deposit-wrap { display: grid; gap: 20px; margin-top: 4px; }
     .deposit-asset-sel { display: flex; gap: 8px; }
@@ -2924,7 +3015,7 @@
     </div>
     <div class="splash-text">
       <div class="splash-title">Opton</div>
-      <div class="splash-sub">Рынок прогнозов в Telegram</div>
+      <div class="splash-sub" id="splashSub">Рынок прогнозов в Telegram</div>
     </div>
     <div class="splash-bar"><span></span></div>
   </div>
@@ -3193,54 +3284,24 @@
     </section>
 
     <section class="screen" id="screen-account">
-      <div class="section-title" style="margin-top:8px">
-        <h3>Аккаунт</h3>
-        <span>Настройки приложения</span>
-      </div>
+      <!-- Карточка Telegram-профиля -->
+      <div class="account-user card" id="accountUserCard"></div>
 
-      <div class="setting-block">
-        <div class="setting-row">
-          <h4>Тема интерфейса</h4>
-          <p>Смена темы находится здесь, а не в верхней панели.</p>
-          <div class="segmented three" id="themeSegments">
-            <div class="seg-glider"></div>
-            <button class="seg" type="button" onclick="setThemeMode('system', this)">System</button>
-            <button class="seg" type="button" onclick="setThemeMode('light', this)">Light</button>
-            <button class="seg" type="button" onclick="setThemeMode('dark', this)">Dark</button>
-          </div>
-        </div>
+      <!-- Реферальная программа -->
+      <div class="referral-card card" id="referralCard"></div>
 
-        <div class="setting-row">
-          <h4>Часовой пояс</h4>
-          <p>Выберите часовой пояс для отображения времени экспирации.</p>
-          <div class="segmented four" id="timezoneSegments">
-            <div class="seg-glider"></div>
-            <button class="seg" type="button" onclick="setTimezone('UTC', this)">UTC</button>
-            <button class="seg" type="button" onclick="setTimezone('GMT+3', this)">GMT+3</button>
-            <button class="seg" type="button" onclick="setTimezone('GMT+4', this)">GMT+4</button>
-            <button class="seg" type="button" onclick="setTimezone('GMT+8', this)">GMT+8</button>
-          </div>
-        </div>
-
-
-        <div class="setting-row">
-          <h4>Демо-данные</h4>
-          <p>Сделки, позиции, история баланса и локальный demo wallet хранятся в localStorage.</p>
-          <div class="two-col">
-            <button class="ghost" type="button" onclick="resetPortfolio()">Сброс портфеля</button>
-            <button class="danger" type="button" onclick="resetAll()">Сброс всего</button>
-          </div>
-        </div>
-
-        <div class="setting-row">
-          <h4>Демо кошелёк (эмуляция TonConnect)</h4>
-          <p>При включении приложение считает демо-кошелёк подключённым и открывает торговлю и портфель.</p>
-          <div class="two-col">
-            <button class="primary" type="button" onclick="toggleDemoWallet()">Вкл/Выкл Демо</button>
-            <button class="ghost" type="button" onclick="showToast('Демо адрес', 'EQDe...demo_address_active')">Инфо</button>
-          </div>
-        </div>
-      </div>
+      <!-- Вход в настройки -->
+      <button class="account-action card" type="button" onclick="openSettingsModal()">
+        <span class="account-action-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </span>
+        <span class="account-action-body">
+          <b>Настройки</b>
+        </span>
+        <span class="account-action-chev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </button>
     </section>
   </main>
 
@@ -3323,6 +3384,62 @@
     </div>
   </div>
 
+  <!-- Настройки приложения -->
+  <div class="modal" id="settingsModal" onclick="hideSettingsModal(event)">
+    <div class="settings-sheet" role="dialog" aria-modal="true">
+      <div class="settings-head">
+        <h3>Настройки</h3>
+        <button class="settings-close" type="button" onclick="closeSettingsModal()" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="settings-body">
+        <div class="setting-block">
+          <div class="setting-row">
+            <h4>Тема интерфейса</h4>
+            <p>Смена темы находится здесь, а не в верхней панели.</p>
+            <div class="segmented three" id="themeSegments">
+              <div class="seg-glider"></div>
+              <button class="seg" type="button" onclick="setThemeMode('system', this)">System</button>
+              <button class="seg" type="button" onclick="setThemeMode('light', this)">Light</button>
+              <button class="seg" type="button" onclick="setThemeMode('dark', this)">Dark</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <h4>Часовой пояс</h4>
+            <p>Выберите часовой пояс для отображения времени экспирации.</p>
+            <div class="segmented four" id="timezoneSegments">
+              <div class="seg-glider"></div>
+              <button class="seg" type="button" onclick="setTimezone('UTC', this)">UTC</button>
+              <button class="seg" type="button" onclick="setTimezone('GMT+3', this)">GMT+3</button>
+              <button class="seg" type="button" onclick="setTimezone('GMT+4', this)">GMT+4</button>
+              <button class="seg" type="button" onclick="setTimezone('GMT+8', this)">GMT+8</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <h4>Демо-данные</h4>
+            <p>Сделки, позиции, история баланса и локальный demo wallet хранятся в localStorage.</p>
+            <div class="two-col">
+              <button class="ghost" type="button" onclick="resetPortfolio()">Сброс портфеля</button>
+              <button class="danger" type="button" onclick="resetAll()">Сброс всего</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <h4>Демо кошелёк (эмуляция TonConnect)</h4>
+            <p>При включении приложение считает демо-кошелёк подключённым и открывает торговлю и портфель.</p>
+            <div class="two-col">
+              <button class="primary" type="button" onclick="toggleDemoWallet()">Вкл/Выкл Демо</button>
+              <button class="ghost" type="button" onclick="showToast('Демо адрес', 'EQDe...demo_address_active')">Инфо</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const tg = window.Telegram?.WebApp;
     const storageKey = "opton_v3_state";
@@ -3359,6 +3476,10 @@
       minBetTon: 0.5,
       betGasTon: 0.15,
       claimGasTon: 0.1,
+      // Telegram-бот мини-аппа (для реферальных ссылок t.me/<bot>?startapp=...).
+      botUsername: "opton_market_bot",
+      // Реферальная программа: поинты пригласившему за каждого друга (демо).
+      referralPoints: 100,
       // Pyth Hermes price-update endpoint (mirrors pusher HERMES_ENDPOINT)
       hermesEndpoint: "https://hermes.pyth.network",
       // Assets supported by the backend, with their Pyth feed IDs (mainnet).
@@ -3415,7 +3536,9 @@
       portfolioTab: "positions",
       lastMarketScreen: "markets",
       balanceHidden: false,
-      timezone: "GMT+3"
+      timezone: "GMT+3",
+      // Реферальная программа (демо, локально). code генерируется лениво.
+      referral: { code: "", invited: [], earned: 0, referredBy: "" }
     });
 
     let state = loadState();
@@ -3945,9 +4068,13 @@
     }
 
     // Подтянуть реальные пулы текущего раунда в состояние терминала.
+    let onchainPoolsLoadedOnce = false;
     async function syncTerminalPools() {
       if (!onchainEnabled()) return;
       const market = getMarket(state.currentMarketId);
+      // Первая загрузка пулов из сети может быть долгой — показываем сплэш.
+      const firstLoad = !onchainPoolsLoadedOnce;
+      if (firstLoad) showSplash("Загружаем данные раунда…", 8000);
       try {
         const round = await liveCurrentRound(market);
         if (!round) return; // pusher ещё не создал текущий раунд
@@ -3958,13 +4085,22 @@
         ms.poolDown = Math.max(0, nanoToTon(info.totalDown));
         ms.onchainAddress = round.address.toString();
         ms.onchainState = info.state;
+        onchainPoolsLoadedOnce = true;
         renderTerminal();
       } catch (e) { console.warn("[opton] syncTerminalPools", e); }
+      finally { if (firstLoad) hideSplash(); }
     }
 
     // Отправить Bet через TON Connect. amount в TON.
     async function placeBetOnChain(market, side, amountTon) {
-      const round = await liveCurrentRound(market);
+      // Чтение текущего раунда из сети — долгая операция (до открытия кошелька).
+      showSplash("Загружаем текущий раунд…");
+      let round;
+      try {
+        round = await liveCurrentRound(market);
+      } finally {
+        hideSplash();
+      }
       if (!round) {
         showToast("Раунд не найден", "Текущий раунд ещё не создан на блокчейне (его создаёт pusher). Попробуйте чуть позже.");
         return false;
@@ -6472,101 +6608,91 @@
       const dateStr = new Date(openedAt).toLocaleDateString("ru-RU", { day: "numeric", month: "short", timeZone: tz });
       const schedule = `${dateStr}, ${fmtT(openedAt)}–${fmtT(p.expiresAt)}`;
 
-      const W = 1080, H = 1080, pad = 84;
+      const inviteLink = getReferralLink().replace(/^https:\/\//, "");
+      const reward = OPTON_CONFIG.referralPoints || 100;
+
+      const W = 1080, H = 1080, pad = 80, cx = W / 2;
       const FONT = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
       const canvas = document.createElement("canvas");
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
 
-      // ── Background: dark gradient + brand glow on top, result-tinted glow
-      //    on the bottom so a win/loss reads at a glance even muted ──────────
+      // ── Background: deep gradient + result-tinted glow behind the number ──
       const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, "#0D141E"); bg.addColorStop(1, "#161F2A");
+      bg.addColorStop(0, "#0C131C"); bg.addColorStop(1, "#151E29");
       ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-      let glow = ctx.createRadialGradient(W * 0.5, -120, 60, W * 0.5, -120, 900);
-      glow.addColorStop(0, "rgba(34,158,217,0.26)"); glow.addColorStop(1, "rgba(34,158,217,0)");
+      let glow = ctx.createRadialGradient(cx, 620, 80, cx, 620, 620);
+      glow.addColorStop(0, `rgba(${accentRgb},0.22)`); glow.addColorStop(1, `rgba(${accentRgb},0)`);
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
-      glow = ctx.createRadialGradient(W * 0.5, H + 180, 80, W * 0.5, H + 180, 780);
-      glow.addColorStop(0, `rgba(${accentRgb},0.20)`); glow.addColorStop(1, `rgba(${accentRgb},0)`);
+      glow = ctx.createRadialGradient(cx, -120, 60, cx, -120, 760);
+      glow.addColorStop(0, "rgba(34,158,217,0.20)"); glow.addColorStop(1, "rgba(34,158,217,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
-
-      // Inner hairline frame for a finished, framed look
       roundRectPath(ctx, 22, 22, W - 44, H - 44, 46);
       ctx.strokeStyle = "rgba(255,255,255,0.06)"; ctx.lineWidth = 2; ctx.stroke();
 
-      // ── Header: Opton logo tile + wordmark, asset pill on the right ───────
-      const logoBox = 84;
-      roundRectPath(ctx, pad, pad, logoBox, logoBox, 22);
+      // ── Header: Opton logo tile + wordmark (left), asset pill (right) ─────
+      const logoBox = 80;
+      roundRectPath(ctx, pad, pad, logoBox, logoBox, 21);
       const lg = ctx.createLinearGradient(pad, pad, pad + logoBox, pad + logoBox);
-      lg.addColorStop(0, "#229ED9"); lg.addColorStop(1, "#1B7FB0");
+      lg.addColorStop(0, "#2BB2EC"); lg.addColorStop(1, "#1B7FB0");
       ctx.fillStyle = lg; ctx.fill();
       const logoEl = document.querySelector(".logo svg");
       if (logoEl) {
         const logoSvg = logoEl.outerHTML.replace(/currentColor/g, "#ffffff");
         const logoImg = await svgToImage(logoSvg, 120);
-        const lpad = 22;
+        const lpad = 21;
         drawContain(ctx, logoImg, pad + lpad, pad + lpad, logoBox - lpad * 2, logoBox - lpad * 2);
       }
-      ctx.textBaseline = "alphabetic";
-      ctx.fillStyle = "#fff"; ctx.font = `800 46px ${FONT}`;
-      ctx.fillText("Opton", pad + 104, pad + 36);
-      ctx.fillStyle = "#8FA3B5"; ctx.font = `600 26px ${FONT}`;
-      ctx.fillText("Прогнозы в Telegram", pad + 104, pad + 72);
+      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left";
+      ctx.fillStyle = "#fff"; ctx.font = `800 44px ${FONT}`;
+      ctx.fillText("Opton", pad + 100, pad + 34);
+      ctx.fillStyle = "#8298AC"; ctx.font = `600 25px ${FONT}`;
+      ctx.fillText("Прогнозы в Telegram", pad + 100, pad + 68);
 
-      ctx.font = `800 29px ${FONT}`;
+      ctx.font = `800 28px ${FONT}`;
       const pillText = `${p.asset} · ${p.expiry}`;
-      const pillW = ctx.measureText(pillText).width + 54;
-      roundRectPath(ctx, W - pad - pillW, pad + 10, pillW, 62, 31);
+      const pillW = ctx.measureText(pillText).width + 52;
+      roundRectPath(ctx, W - pad - pillW, pad + 8, pillW, 60, 30);
       ctx.fillStyle = "rgba(255,255,255,0.08)"; ctx.fill();
       ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.fillStyle = "#DCE6EF"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(pillText, W - pad - pillW / 2, pad + 10 + 32);
-      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      ctx.fillText(pillText, W - pad - pillW / 2, pad + 8 + 31);
 
-      // ── Asset row: coin icon, name, direction badge, schedule ────────────
-      const icon = await svgToImage(market.icon, 132);
-      drawContain(ctx, icon, pad, 246, 132, 132);
-      ctx.fillStyle = "#fff"; ctx.font = `900 60px ${FONT}`;
-      ctx.fillText(coin, pad + 168, 318);
-      const coinW = ctx.measureText(coin).width;
+      // From here the composition is centered.
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
 
-      // Direction badge (arrow + Вверх/Вниз) in the side color
+      // Coin icon (centered)
+      const iconSize = 130;
+      const icon = await svgToImage(market.icon, iconSize);
+      drawContain(ctx, icon, cx - iconSize / 2, 185, iconSize, iconSize);
+
+      // Coin name
+      ctx.fillStyle = "#fff"; ctx.font = `900 56px ${FONT}`;
+      ctx.fillText(coin, cx, 398);
+
+      // Direction badge (arrow + Вверх/Вниз)
       ctx.font = `800 34px ${FONT}`;
       const badgeText = `${arrow} ${dir}`;
-      const badgeW = ctx.measureText(badgeText).width + 44;
-      const badgeH = 58, badgeX = pad + 168 + coinW + 28, badgeY = 318 - 47;
-      roundRectPath(ctx, badgeX, badgeY, badgeW, badgeH, 29);
+      const badgeW = ctx.measureText(badgeText).width + 52;
+      const badgeH = 60, badgeY = 430;
+      roundRectPath(ctx, cx - badgeW / 2, badgeY, badgeW, badgeH, 30);
       ctx.fillStyle = `rgba(${sideRgb},0.16)`; ctx.fill();
-      ctx.fillStyle = sideColor; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(badgeText, badgeX + badgeW / 2, badgeY + badgeH / 2 + 1);
-      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = sideColor; ctx.textBaseline = "middle";
+      ctx.fillText(badgeText, cx, badgeY + badgeH / 2 + 1);
+      ctx.textBaseline = "alphabetic";
 
-      ctx.fillStyle = "#8FA3B5"; ctx.font = `600 29px ${FONT}`;
-      ctx.fillText(schedule, pad + 168, 370);
+      // Schedule
+      ctx.fillStyle = "#8298AC"; ctx.font = `600 27px ${FONT}`;
+      ctx.fillText(schedule, cx, 548);
 
-      // ── PnL hero panel: accent-tinted card with a side bar ───────────────
-      const panelX = pad, panelY = 452, panelW = W - pad * 2, panelH = 292;
-      roundRectPath(ctx, panelX, panelY, panelW, panelH, 36);
-      ctx.fillStyle = `rgba(${accentRgb},0.10)`; ctx.fill();
-      ctx.strokeStyle = `rgba(${accentRgb},0.34)`; ctx.lineWidth = 2; ctx.stroke();
-      roundRectPath(ctx, panelX + 32, panelY + 42, 8, panelH - 84, 4);
-      ctx.fillStyle = accent; ctx.fill();
-      const textX = panelX + 66;
-      ctx.fillStyle = "#9DB0C2"; ctx.font = `700 32px ${FONT}`;
-      ctx.fillText("Доходность", textX, panelY + 78);
-      // result tag on the right of the panel
-      ctx.font = `800 28px ${FONT}`;
-      const tag = win ? "ПРИБЫЛЬ" : "УБЫТОК";
-      const tagW = ctx.measureText(tag).width + 44;
-      roundRectPath(ctx, panelX + panelW - 32 - tagW, panelY + 40, tagW, 52, 26);
-      ctx.fillStyle = `rgba(${accentRgb},0.18)`; ctx.fill();
-      ctx.fillStyle = accent; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(tag, panelX + panelW - 32 - tagW / 2, panelY + 40 + 27);
-      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-      ctx.fillStyle = accent; ctx.font = `900 132px ${FONT}`;
-      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, textX, panelY + 206);
+      // Giant PnL
+      ctx.fillStyle = accent; ctx.font = `900 138px ${FONT}`;
+      ctx.fillText(`${pnlSign}${result.pct.toFixed(2)}%`, cx, 712);
+      // Payout
       ctx.fillStyle = "#fff"; ctx.font = `800 42px ${FONT}`;
-      ctx.fillText(`Выплата ${money(result.payout)}`, textX, panelY + 262);
+      ctx.fillText(`Выплата ${money(result.payout)}`, cx, 772);
+
+      ctx.textAlign = "left";
 
       // ── Stat boxes ───────────────────────────────────────────────────────
       const boxes = [
@@ -6574,23 +6700,29 @@
         { label: "ШАНС", value: `${Math.round((p.entryProb ?? result.impliedProb) * 100)}%` },
         { label: "СТАВКА", value: money(p.amount) }
       ];
-      const boxY = 794, boxH = 162, gap = 28;
+      const boxY = 816, boxH = 128, gap = 26;
       const boxW = (W - pad * 2 - gap * 2) / 3;
       boxes.forEach((b, i) => {
         const bx = pad + i * (boxW + gap);
-        roundRectPath(ctx, bx, boxY, boxW, boxH, 28);
+        roundRectPath(ctx, bx, boxY, boxW, boxH, 26);
         ctx.fillStyle = "rgba(255,255,255,0.045)"; ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = "#8094A6"; ctx.font = `800 25px ${FONT}`;
-        ctx.fillText(b.label, bx + 28, boxY + 58);
-        ctx.fillStyle = "#fff"; ctx.font = `900 46px ${FONT}`;
-        ctx.fillText(b.value, bx + 28, boxY + 118);
+        ctx.fillStyle = "#8094A6"; ctx.font = `800 24px ${FONT}`;
+        ctx.fillText(b.label, bx + 26, boxY + 50);
+        ctx.fillStyle = "#fff"; ctx.font = `900 42px ${FONT}`;
+        ctx.fillText(b.value, bx + 26, boxY + 100);
       });
 
-      // ── Footer ───────────────────────────────────────────────────────────
-      ctx.fillStyle = "#5E7186"; ctx.font = `600 27px ${FONT}`;
+      // ── Invite footer: brand-tinted panel with the user's referral link ───
+      const fY = 980, fH = 80;
+      roundRectPath(ctx, pad, fY, W - pad * 2, fH, 26);
+      ctx.fillStyle = "rgba(34,158,217,0.10)"; ctx.fill();
+      ctx.strokeStyle = "rgba(34,158,217,0.24)"; ctx.lineWidth = 2; ctx.stroke();
       ctx.textAlign = "center";
-      ctx.fillText("Opton · торгуй прогнозами в Telegram", W / 2, H - 54);
+      ctx.fillStyle = "#9DB7CC"; ctx.font = `600 23px ${FONT}`;
+      ctx.fillText(`Играй со мной — получай поинты за прогнозы`, cx, fY + 32);
+      ctx.fillStyle = "#34B6E6"; ctx.font = `800 29px ${FONT}`;
+      ctx.fillText(inviteLink, cx, fY + 65);
       ctx.textAlign = "left";
 
       return canvas;
@@ -6839,6 +6971,7 @@
       renderTerminal();
       renderPortfolio(noAnimate);
       renderHome();
+      renderAccount();
     }
 
     function resetPortfolio() {
@@ -6895,6 +7028,177 @@
 
     function hideModal(event) {
       if (event.target.id === "modal") closeModal();
+    }
+
+    // ── Splash / loader overlay, reused for long operations ────────────────
+    const SPLASH_DEFAULT_SUB = "Рынок прогнозов в Telegram";
+    let splashSafetyTimer = 0;
+    function showSplash(message, safetyMs = 12000) {
+      const el = document.getElementById("splash");
+      if (!el) return;
+      const sub = document.getElementById("splashSub");
+      if (sub) sub.textContent = message || SPLASH_DEFAULT_SUB;
+      el.classList.remove("hide");
+      // Never let the overlay get stuck if a promise never settles.
+      clearTimeout(splashSafetyTimer);
+      splashSafetyTimer = setTimeout(() => hideSplash(), safetyMs);
+    }
+    function hideSplash() {
+      const el = document.getElementById("splash");
+      if (!el) return;
+      clearTimeout(splashSafetyTimer);
+      el.classList.add("hide");
+      const sub = document.getElementById("splashSub");
+      if (sub) sub.textContent = SPLASH_DEFAULT_SUB;
+    }
+
+    function escHtml(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // ── Settings modal (вынесены из экрана «Аккаунт») ──────────────────────
+    function openSettingsModal() {
+      const m = document.getElementById("settingsModal");
+      if (!m) return;
+      m.classList.add("show");
+      document.body.classList.add("no-scroll");
+      // Подсветить активные значения и выровнять глайдеры, когда модалка видима.
+      applyTheme(true);
+      applyTimezone(true);
+      requestAnimationFrame(() => {
+        syncGlider(document.getElementById("themeSegments"), true);
+        syncGlider(document.getElementById("timezoneSegments"), true);
+      });
+      haptic("selection");
+    }
+    function closeSettingsModal() {
+      const m = document.getElementById("settingsModal");
+      if (!m) return;
+      m.classList.remove("show");
+      document.body.classList.remove("no-scroll");
+    }
+    function hideSettingsModal(event) {
+      if (event.target.id === "settingsModal") closeSettingsModal();
+    }
+
+    // ── Telegram-профиль + реферальная программа ───────────────────────────
+    function getTelegramUser() {
+      const u = tg?.initDataUnsafe?.user;
+      if (u && (u.id || u.first_name || u.username)) return u;
+      return null;
+    }
+
+    function ensureReferralCode() {
+      if (!state.referral) state.referral = { code: "", invited: [], earned: 0, referredBy: "" };
+      if (!state.referral.code) {
+        const u = getTelegramUser();
+        state.referral.code = u && u.id
+          ? "U" + Number(u.id).toString(36).toUpperCase()
+          : "G" + Math.random().toString(36).slice(2, 8).toUpperCase();
+        saveState();
+      }
+      return state.referral.code;
+    }
+
+    function getReferralLink() {
+      const bot = OPTON_CONFIG.botUsername || "OptonAppBot";
+      return `https://t.me/${bot}?startapp=ref_${ensureReferralCode()}`;
+    }
+
+    // Запоминаем, что пользователь пришёл по чьей-то ссылке (демо).
+    function captureInboundReferral() {
+      const sp = tg?.initDataUnsafe?.start_param || "";
+      const m = /^ref_([A-Za-z0-9]+)$/.exec(sp);
+      if (!m) return;
+      if (!state.referral) state.referral = { code: "", invited: [], earned: 0, referredBy: "" };
+      ensureReferralCode();
+      const code = m[1];
+      if (code === state.referral.code || state.referral.referredBy) return;
+      state.referral.referredBy = code;
+      saveState();
+      showToast("Добро пожаловать!", "Вы пришли по приглашению друга.");
+    }
+
+    function copyReferralLink() {
+      const link = getReferralLink();
+      const ok = () => { showToast("Ссылка скопирована", "Отправьте её друзьям."); haptic("success"); };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(link).then(ok).catch(() => showToast("Ваша ссылка", link));
+      } else {
+        showToast("Ваша ссылка", link);
+      }
+    }
+
+    function shareReferralLink() {
+      const link = getReferralLink();
+      const text = "Торгуй прогнозами на Opton и забери приветственный бонус 🚀";
+      haptic("selection");
+      try {
+        if (tg?.openTelegramLink) {
+          tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
+          return;
+        }
+      } catch (e) { /* fall through */ }
+      try {
+        if (navigator.share) { navigator.share({ title: "Opton", text, url: link }); return; }
+      } catch (e) { /* fall through */ }
+      copyReferralLink();
+    }
+
+    function renderAccount() {
+      const card = document.getElementById("accountUserCard");
+      if (card) {
+        const u = getTelegramUser();
+        const name = u ? [u.first_name, u.last_name].filter(Boolean).join(" ").trim() || "Без имени" : "Гость";
+        const handle = u?.username ? "@" + u.username : "Гостевой режим";
+        const meta = u?.id ? "Telegram ID · " + u.id : "Локальный профиль";
+        const initials = (name.match(/\p{L}/gu) || ["G"]).slice(0, 1).join("").toUpperCase()
+          + ((name.split(/\s+/)[1] || "").match(/\p{L}/u)?.[0] || "").toUpperCase();
+        const avatar = u?.photo_url
+          ? `<img src="${escHtml(u.photo_url)}" alt="" referrerpolicy="no-referrer">`
+          : `<span>${escHtml(initials || "G")}</span>`;
+        card.innerHTML = `
+          <div class="account-avatar">${avatar}</div>
+          <div class="account-info">
+            <b>${escHtml(name)}</b>
+            <span>${escHtml(handle)}</span>
+            <i>${escHtml(meta)}</i>
+          </div>
+          ${u ? `<span class="account-badge">Telegram</span>` : ""}`;
+      }
+
+      const el = document.getElementById("referralCard");
+      if (el) {
+        ensureReferralCode();
+        const ref = state.referral;
+        const link = getReferralLink();
+        const invited = (ref.invited || []).length;
+        const earned = Number(ref.earned || 0);
+        const reward = OPTON_CONFIG.referralPoints || 100;
+        el.innerHTML = `
+          <div class="referral-head">
+            <span class="referral-gift">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+            </span>
+            <div>
+              <b>Приглашайте друзей</b>
+              <span>Дарим ${reward} поинтов за каждого друга, который начнёт торговать.</span>
+            </div>
+          </div>
+          <div class="referral-stats">
+            <div><b>${invited}</b><span>Приглашено</span></div>
+            <div><b>${earned.toFixed(0)}</b><span>Поинтов</span></div>
+          </div>
+          <button class="referral-link" type="button" onclick="copyReferralLink()" aria-label="Скопировать ссылку">
+            <span>${escHtml(link.replace(/^https:\/\//, ""))}</span>
+            ${copyIcon}
+          </button>
+          <div class="referral-actions">
+            <button class="ghost" type="button" onclick="copyReferralLink()">Скопировать</button>
+            <button class="primary" type="button" onclick="shareReferralLink()">Пригласить</button>
+          </div>`;
+      }
     }
 
     function initChartScrubbing() {
@@ -7484,6 +7788,7 @@
     });
     window.addEventListener("resize", restartTerminalChartLoop, { passive: true });
     initTelegram();
+    captureInboundReferral();
     lockPortraitOrientation();
     applyTheme();
     initBottomEdgeSpring();
@@ -7501,19 +7806,16 @@
       const BOOT_AT = performance.now();
       const MIN_VISIBLE = 900;
       let hidden = false;
-      const hideSplash = () => {
+      const doHide = () => {
         if (hidden) return;
         hidden = true;
         const wait = Math.max(0, MIN_VISIBLE - (performance.now() - BOOT_AT));
-        setTimeout(() => {
-          splash.classList.add("hide");
-          setTimeout(() => splash.remove(), 600);
-        }, wait);
+        setTimeout(() => hideSplash(), wait);
       };
-      if (document.readyState === "complete") requestAnimationFrame(hideSplash);
-      else window.addEventListener("load", () => requestAnimationFrame(hideSplash), { once: true });
+      if (document.readyState === "complete") requestAnimationFrame(doHide);
+      else window.addEventListener("load", () => requestAnimationFrame(doHide), { once: true });
       // Жёсткий фолбэк, чтобы сплэш никогда не «залип».
-      setTimeout(hideSplash, 4000);
+      setTimeout(doHide, 4000);
     })();
 
     let _liveTick = 0;
