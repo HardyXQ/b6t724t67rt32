@@ -8077,10 +8077,18 @@
     document.addEventListener("touchend", event => {
       const tap = fastTap;
       fastTap = null;
-      if (!tap || tap.moved || performance.now() - tap.startedAt > 600) return;
-      if (!tap.target.isConnected || tap.target.disabled || tap.target.getAttribute("aria-disabled") === "true") return;
+      if (!tap || tap.moved || performance.now() - tap.startedAt > 800) return;
+      // Тап во время инерционного скролла: исходный элемент мог «отвалиться»
+      // от DOM (список перерисовался) — находим живую цель под пальцем заново.
+      let target = tap.target;
+      if (!target.isConnected) {
+        const hit = document.elementFromPoint(tap.x, tap.y);
+        target = hit?.closest?.(fastTapSelector) || null;
+      }
+      if (!target || target.disabled || target.getAttribute("aria-disabled") === "true") return;
+      // Гасим инерцию скролла и сразу выполняем нажатие, не дожидаясь остановки.
       if (event.cancelable) event.preventDefault();
-      tap.target.click();
+      target.click();
     }, { passive: false, capture: true });
 
     document.addEventListener("touchcancel", () => {
