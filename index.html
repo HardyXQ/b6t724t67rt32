@@ -1596,14 +1596,11 @@
       align-items: center;
       gap: 8px;
     }
-    .account-legal a {
+    .account-legal-links span {
       font-size: 12px;
       font-weight: 700;
       color: var(--muted);
-      text-decoration: none;
-      cursor: pointer;
     }
-    .account-legal a:active { opacity: .6; }
     .account-legal-dot { font-size: 12px; font-weight: 700; color: var(--muted); }
     .account-legal-meta {
       font-size: 12px;
@@ -1615,7 +1612,6 @@
       flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
       display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 21px;
       background: linear-gradient(145deg, #2BB2EC, #1B7FB0);
-      box-shadow: 0 8px 22px rgba(34,158,217,.32);
     }
     .account-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .account-info { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
@@ -1637,17 +1633,19 @@
       border-color: rgba(34,158,217,.18) !important;
       overflow: hidden; position: relative;
     }
+    .referral-card > * { min-width: 0; }
     .referral-card::before {
       content: "";
       position: absolute; inset: 0; pointer-events: none;
       background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(34,158,217,.18) 0%, transparent 65%);
     }
     .referral-banner {
-      position: relative; padding: 20px 18px 16px;
+      position: relative; padding: 18px 18px 14px;
       display: flex; gap: 14px; align-items: flex-start;
     }
     .referral-gift {
-      flex: 0 0 auto; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+      flex: 0 0 auto; align-self: flex-start; margin-top: 2px;
+      width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
       background: linear-gradient(135deg, #229ED9 0%, #1a7dab 100%);
       box-shadow: 0 6px 18px rgba(34,158,217,.38);
     }
@@ -1665,6 +1663,7 @@
       background: rgba(34,158,217,.18); border: 1px solid rgba(34,158,217,.32);
       border-radius: 999px; padding: 4px 11px;
       font-size: 11.5px; font-weight: 900; color: #3ab7f5;
+      max-width: 100%; overflow: hidden;
     }
     .referral-reward-badge svg { width: 13px; height: 13px; }
     .referral-divider {
@@ -1674,10 +1673,10 @@
       display: grid; grid-template-columns: 1fr 1fr;
       position: relative; padding: 14px 18px;
     }
-    .referral-stats > div { display: grid; gap: 2px; }
+    .referral-stats > div { display: grid; gap: 2px; min-width: 0; }
     .referral-stats > div:first-child { border-right: 1px solid rgba(255,255,255,.07); }
-    .referral-stats b { font-size: 24px; font-weight: 950; line-height: 1; color: #fff; }
-    .referral-stats span { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.4); margin-top: 2px; }
+    .referral-stats b { font-size: 24px; font-weight: 950; line-height: 1; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .referral-stats span { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.4); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .referral-link {
       display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
       background: rgba(255,255,255,.06); border: 1px dashed rgba(34,158,217,.4);
@@ -3546,6 +3545,34 @@
       <!-- Реферальная программа -->
       <div class="referral-card card" id="referralCard"></div>
 
+      <!-- Поддержка -->
+      <button class="account-action card" type="button" onclick="openSupportLink()">
+        <span class="account-action-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span class="account-action-body">
+          <b>Поддержка</b>
+          <i>Написать в техподдержку</i>
+        </span>
+        <span class="account-action-chev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </button>
+
+      <!-- Официальный канал -->
+      <button class="account-action card" type="button" onclick="openChannelLink()">
+        <span class="account-action-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+        </span>
+        <span class="account-action-body">
+          <b>Официальный канал</b>
+          <i>Новости и обновления</i>
+        </span>
+        <span class="account-action-chev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
+      </button>
+
       <!-- Вход в настройки -->
       <button class="account-action card" type="button" onclick="openSettingsModal()">
         <span class="account-action-ic">
@@ -3562,9 +3589,9 @@
       <!-- Правовые ссылки, копирайт, версия -->
       <div class="account-legal">
         <div class="account-legal-links">
-          <a onclick="openLegalLink('privacy')">Политика конфиденциальности</a>
+          <span>Политика конфиденциальности</span>
           <span class="account-legal-dot">·</span>
-          <a onclick="openLegalLink('terms')">Условия использования</a>
+          <span>Условия использования</span>
         </div>
         <div class="account-legal-meta">© 2026 Opton · v1.0</div>
       </div>
@@ -7790,6 +7817,18 @@
     }
 
     // ── Правовые ссылки ─────────────────────────────────────────────────────
+    function openSupportLink() {
+      const tg = window.Telegram?.WebApp;
+      const url = "https://t.me/opton_support";
+      if (tg?.openLink) tg.openLink(url);
+      else window.open(url, "_blank");
+    }
+    function openChannelLink() {
+      const tg = window.Telegram?.WebApp;
+      const url = "https://t.me/opton_market";
+      if (tg?.openLink) tg.openLink(url);
+      else window.open(url, "_blank");
+    }
     function openLegalLink(type) {
       const urls = {
         privacy: location.origin + "/privacy",
