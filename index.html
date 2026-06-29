@@ -114,6 +114,7 @@
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
     *::-webkit-scrollbar { display: none; }
     html {
@@ -232,6 +233,7 @@
       overflow-y: auto;
       overscroll-behavior-y: none;
       -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
     }
 
     body.no-scroll .app {
@@ -342,15 +344,18 @@
       width: 38px;
       height: 38px;
       border-radius: 11px;
-      display: grid;
-      place-items: center;
+      position: relative;
       color: #fff;
       background: linear-gradient(135deg, var(--tg-blue), var(--tg-blue-dark));
       box-shadow: none;
     }
     .logo svg {
-      width: 56%;
-      height: 56%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
       display: block;
     }
     .brand h1 {
@@ -1574,9 +1579,37 @@
     .share-close { width: 100%; }
 
     /* ── Account screen: profile, referral, settings entry ──────────────── */
+    #screen-account.active { display: flex; flex-direction: column; }
     #screen-account > .card,
     #screen-account > .account-action { margin-top: 12px; }
     #screen-account > .account-user { margin-top: 28px; }
+    .account-legal {
+      margin-top: auto;
+      padding-top: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .account-legal-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .account-legal a {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .account-legal a:active { opacity: .6; }
+    .account-legal-dot { font-size: 12px; font-weight: 700; color: var(--muted); }
+    .account-legal-meta {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
     .account-user { display: flex; align-items: center; gap: 14px; }
     .account-avatar {
       flex: 0 0 auto; width: 58px; height: 58px; border-radius: 50%; overflow: hidden;
@@ -1599,6 +1632,7 @@
 
     .referral-card {
       display: grid; gap: 0;
+      padding: 0 !important;
       background: linear-gradient(135deg, #0f2a3d 0%, #0d1f2e 55%, #0a1929 100%) !important;
       border-color: rgba(34,158,217,.18) !important;
       overflow: hidden; position: relative;
@@ -1659,13 +1693,42 @@
     .referral-link svg { flex: 0 0 auto; width: 16px; height: 16px; color: #3ab7f5; }
     .referral-footer {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-      padding: 0 18px 18px;
+      padding: 10px 18px 18px;
     }
     .referral-footer .ghost {
-      border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.7);
+      background: transparent; border-color: rgba(255,255,255,.15); color: rgba(255,255,255,.7);
     }
     .referral-footer .ghost:active { background: rgba(255,255,255,.08); }
     .referral-link-wrap { padding: 0 18px 12px; }
+    .referral-enter-code { padding: 0 18px 14px; }
+    .referral-enter-code label {
+      display: block; font-size: 11px; font-weight: 800; color: rgba(255,255,255,.45);
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px;
+    }
+    .referral-code-row { display: flex; gap: 8px; }
+    .referral-code-input {
+      flex: 1 1 auto; min-width: 0;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(34,158,217,.3);
+      border-radius: var(--radius-sm); padding: 10px 13px;
+      font: inherit; font-size: 13px; font-weight: 800; color: #fff; letter-spacing: .5px;
+      outline: none; transition: border-color .18s;
+    }
+    .referral-code-input::placeholder { color: rgba(255,255,255,.3); font-weight: 700; letter-spacing: 0; }
+    .referral-code-input:focus { border-color: rgba(34,158,217,.65); }
+    .referral-code-apply {
+      flex: 0 0 auto; padding: 0 16px;
+      background: linear-gradient(135deg, #229ED9, #1a7dab);
+      border: none; border-radius: var(--radius-sm);
+      font: inherit; font-size: 13px; font-weight: 900; color: #fff;
+      cursor: pointer; transition: opacity .18s; -webkit-tap-highlight-color: transparent;
+    }
+    .referral-code-apply:active { opacity: .8; }
+    .referral-entered-by {
+      padding: 10px 18px 14px; display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 800; color: rgba(255,255,255,.6);
+    }
+    .referral-entered-by svg { flex: 0 0 auto; width: 15px; height: 15px; color: #3ab7f5; }
+    .referral-entered-by span { color: #3ab7f5; }
 
     .account-action {
       display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
@@ -1674,7 +1737,7 @@
     .account-action:active { transform: scale(.992); }
     .account-action-ic {
       flex: 0 0 auto; width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center;
-      color: var(--text); background: var(--surface-2);
+      color: var(--tg-blue); background: color-mix(in srgb, var(--tg-blue) 14%, transparent);
     }
     .account-action-ic svg { width: 21px; height: 21px; }
     .account-action-body { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
@@ -2699,7 +2762,7 @@
       gap: 12px;
       margin-top: 10px;
     }
-    .trm-pool-legend > div { display: flex; flex-direction: column; gap: 2px; }
+    .trm-pool-legend > div { display: flex; flex-direction: column; gap: 7px; }
     .trm-pool-legend .down { text-align: right; }
     .trm-pool-legend b { font-size: 13px; font-weight: 950; }
     .trm-pool-legend .up b { color: var(--green); }
@@ -2775,10 +2838,10 @@
     .trm-accordion-content li::before {
       content: counter(howto);
       position: absolute; left: 0; top: 0;
-      width: 20px; height: 20px; border-radius: 50%;
+      width: 20px; height: 20px; border-radius: 6px;
       display: grid; place-items: center;
-      font-size: 11px; font-weight: 900; color: #fff;
-      background: var(--tg-blue);
+      font-size: 11px; font-weight: 900; color: var(--muted);
+      background: var(--surface-2);
     }
     /* Краткая подпись под заголовком (видна всегда) */
     .trm-accordion-sub {
@@ -3096,13 +3159,17 @@
     .splash.hide { opacity: 0; visibility: hidden; }
     .splash-logo {
       position: relative; width: 112px; height: 112px; border-radius: 31px;
-      display: grid; place-items: center;
       background: linear-gradient(145deg, #2BB2EC, #1B7FB0);
       box-shadow: 0 24px 64px rgba(34,158,217,.45), inset 0 1px 0 rgba(255,255,255,.28);
       animation: splashPop .65s cubic-bezier(.2,.85,.25,1) both, splashFloat 3s ease-in-out .65s infinite;
     }
     .splash-logo svg {
-      width: 52px; height: 54px; fill: #fff;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: block;
+      width: 53px; height: 53px; fill: #fff;
       filter: drop-shadow(0 4px 9px rgba(0,0,0,.18));
     }
     .splash-logo::after {
@@ -3381,8 +3448,8 @@
             <div class="trm-accordion-inner">
               <div class="trm-accordion-content">
                 <p id="terminalAssetDescText" style="margin:12px 0 16px;"></p>
-                <div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px;">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--tg-blue);flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <div style="font-size:12px;font-weight:900;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--tg-blue);flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                   Как это работает
                 </div>
                 <ol>
@@ -3491,6 +3558,16 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </span>
       </button>
+
+      <!-- Правовые ссылки, копирайт, версия -->
+      <div class="account-legal">
+        <div class="account-legal-links">
+          <a onclick="openLegalLink('privacy')">Политика конфиденциальности</a>
+          <span class="account-legal-dot">·</span>
+          <a onclick="openLegalLink('terms')">Условия использования</a>
+        </div>
+        <div class="account-legal-meta">© 2026 Opton · v1.0</div>
+      </div>
     </section>
   </main>
 
@@ -3584,17 +3661,6 @@
       </div>
       <div class="settings-body">
         <div class="setting-block">
-          <div class="setting-row">
-            <h4>Тема интерфейса</h4>
-            <p>Смена темы находится здесь, а не в верхней панели.</p>
-            <div class="segmented three" id="themeSegments">
-              <div class="seg-glider"></div>
-              <button class="seg" type="button" onclick="setThemeMode('system', this)">System</button>
-              <button class="seg" type="button" onclick="setThemeMode('light', this)">Light</button>
-              <button class="seg" type="button" onclick="setThemeMode('dark', this)">Dark</button>
-            </div>
-          </div>
-
           <div class="setting-row">
             <h4>Часовой пояс</h4>
             <p>Выберите часовой пояс для отображения времени экспирации.</p>
@@ -4726,7 +4792,9 @@
     // Переход на вкладку «Рынки» с восстановлением последнего под-состояния
     // (списка рынков или открытого терминала по паре).
     function goMarkets() {
-      if (state.lastMarketScreen === "terminal" && state.currentMarketId) {
+      if (document.body.dataset.screen === "terminal") {
+        go("markets");
+      } else if (state.lastMarketScreen === "terminal" && state.currentMarketId) {
         go("terminal");
       } else {
         go("markets");
@@ -5565,8 +5633,9 @@
       const showDir = !hasExpiredOpen;
       upBtn.style.display = showDir ? "" : "none";
       downBtn.style.display = showDir ? "" : "none";
-      upBtn.disabled = marketClosed;
-      downBtn.disabled = marketClosed;
+      const tradingLocked = marketClosed || isTerminalMarketInFreeze();
+      upBtn.disabled = tradingLocked;
+      downBtn.disabled = tradingLocked;
     }
 
     function isTerminalMarketClosed() {
@@ -7720,6 +7789,18 @@
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
     }
 
+    // ── Правовые ссылки ─────────────────────────────────────────────────────
+    function openLegalLink(type) {
+      const urls = {
+        privacy: location.origin + "/privacy",
+        terms:   location.origin + "/terms",
+      };
+      const url = urls[type];
+      const tg = window.Telegram?.WebApp;
+      if (tg?.openLink) tg.openLink(url);
+      else window.open(url, "_blank");
+    }
+
     // ── Settings modal (вынесены из экрана «Аккаунт») ──────────────────────
     function openSettingsModal() {
       const m = document.getElementById("settingsModal");
@@ -7793,9 +7874,32 @@
       }
     }
 
+    function applyReferralCode() {
+      const input = document.getElementById("refCodeInput");
+      if (!input) return;
+      const code = input.value.trim().toUpperCase();
+      if (!code) { showToast("Введите код", "Поле не может быть пустым."); return; }
+      if (!/^[UG][A-Z0-9]{4,12}$/.test(code)) {
+        showToast("Неверный код", "Код должен начинаться с U или G и содержать 5–13 символов.");
+        return;
+      }
+      if (!state.referral) state.referral = { code: "", invited: [], earned: 0, referredBy: "" };
+      ensureReferralCode();
+      if (code === state.referral.code) { showToast("Ошибка", "Нельзя использовать собственный код."); return; }
+      if (state.referral.referredBy) { showToast("Уже применён", "Вы уже использовали реферальный код."); return; }
+      state.referral.referredBy = code;
+      saveState();
+      haptic("success");
+      showToast("Код применён!", "Спасибо! Реферальный код сохранён.");
+      renderAccount();
+    }
+
     function shareReferralLink() {
       const link = getReferralLink();
-      const text = "Торгуй прогнозами на Opton и забери приветственный бонус";
+      const text =
+        "🔮 Угадай движение рынка — и заработай на этом.\n\n" +
+        "Я торгую прогнозами на Opton: выбираешь актив, ставишь на рост или падение, и если угадал — забираешь пул.\n\n" +
+        "Заходи по моей ссылке и получишь приветственный бонус 🎁";
       haptic("selection");
       try {
         if (tg?.openTelegramLink) {
@@ -7804,7 +7908,7 @@
         }
       } catch (e) { /* fall through */ }
       try {
-        if (navigator.share) { navigator.share({ title: "Opton", text, url: link }); return; }
+        if (navigator.share) { navigator.share({ title: "Opton — торгуй прогнозами", text, url: link }); return; }
       } catch (e) { /* fall through */ }
       copyReferralLink();
     }
@@ -7828,7 +7932,7 @@
             ${handle ? `<span>${escHtml(handle)}</span>` : ""}
             <i>${escHtml(meta)}</i>
           </div>
-          ${u ? `<span class="account-badge">Telegram</span>` : ""}`;
+`;
       }
 
       const el = document.getElementById("referralCard");
@@ -7848,7 +7952,6 @@
               <b>Пригласите друга</b>
               <span>Получите ${reward} поинтов за каждого друга, который начнёт торговать на Opton.</span>
               <div class="referral-reward-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 +${reward} поинтов за друга
               </div>
             </div>
@@ -7866,12 +7969,25 @@
           </div>
           <div class="referral-divider"></div>
           <div class="referral-link-wrap">
-            <button class="referral-link" type="button" onclick="copyReferralLink()" aria-label="Скопировать ссылку" style="margin-top:12px">
+            <button class="referral-link" type="button" onclick="copyReferralLink()" aria-label="Скопировать ссылку">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               <span>${escHtml(link.replace(/^https:\/\//, ""))}</span>
               ${copyIcon}
             </button>
           </div>
+          ${ref.referredBy
+            ? `<div class="referral-entered-by">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Вы пришли по коду <span>${escHtml(ref.referredBy)}</span>
+              </div>`
+            : `<div class="referral-enter-code">
+                <label>Есть реферальный код?</label>
+                <div class="referral-code-row">
+                  <input class="referral-code-input" type="text" id="refCodeInput" placeholder="Введите код" maxlength="16" autocomplete="off">
+                  <button class="referral-code-apply" type="button" onclick="applyReferralCode()">Применить</button>
+                </div>
+              </div>`
+          }
           <div class="referral-footer">
             <button class="ghost" type="button" onclick="copyReferralLink()">Скопировать</button>
             <button class="primary" type="button" onclick="shareReferralLink()">Пригласить</button>
