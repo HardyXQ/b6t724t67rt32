@@ -117,24 +117,24 @@
     }
     *::-webkit-scrollbar { display: none; }
     html {
+      height: 100%;
       min-height: 100%;
       background: var(--bg);
-      /* contain (а не none) сохраняет нативный iOS-отскок на краях скролла,
-         но не даёт жесту «протечь» в Telegram и закрыть мини-апп. */
       overscroll-behavior-x: none;
-      overscroll-behavior-y: contain;
+      overscroll-behavior-y: none;
     }
     body {
+      height: 100%;
       min-height: 100%;
       min-height: 100dvh;
       margin: 0;
       color: var(--text);
       overscroll-behavior-x: none;
-      overscroll-behavior-y: contain;
+      overscroll-behavior-y: none;
       background: var(--bg);
       -webkit-font-smoothing: antialiased;
       text-rendering: geometricPrecision;
-      overflow-x: hidden;
+      overflow: hidden;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -223,24 +223,31 @@
 
     .app {
       width: min(100%, var(--app-max));
+      height: 100vh;
+      height: 100dvh;
       min-height: 100vh;
       min-height: 100dvh;
       margin: 0 auto;
       padding: 0 var(--page-gutter) calc(var(--nav-height) + 18px + var(--safe-bottom));
+      overflow-y: auto;
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    body.no-scroll .app {
+      overflow: hidden;
     }
 
     body.ptr-active .app,
     body.ptr-settling .app,
     body.ptr-refreshing .app {
-      transform: translate3d(0, var(--ptr-pull, 0px), 0);
-      will-change: transform;
+      transform: none;
     }
 
     body.ptr-active .topbar,
     body.ptr-settling .topbar,
     body.ptr-refreshing .topbar {
-      transform: translate3d(0, calc(var(--ptr-pull, 0px) * -1), 0);
-      will-change: transform;
+      transform: none;
     }
     body.ptr-settling .app {
       transition: transform .5s cubic-bezier(.22, .61, .36, 1);
@@ -256,7 +263,7 @@
       z-index: 80;
       width: 54px;
       height: 54px;
-      display: grid;
+      display: none;
       place-items: center;
       opacity: var(--ptr-opacity, 0);
       pointer-events: none;
@@ -3547,10 +3554,13 @@
       // TON Connect). При реальном кошельке торговля идёт on-chain; демо-кошелёк
       // всегда остаётся в локальном демо-режиме.
       onchain: true,
-      // Параметры ставок on-chain (нативный TON). Контракт: мин. ставка 0.5 TON.
-      minBetTon: 0.5,
-      betGasTon: 0.15,
-      claimGasTon: 0.1,
+      // On-chain settlement: USDT Jetton via per-user UserProxy. TON is gas only.
+      minBetUsd: 1,
+      usdtDecimals: 6,
+      userProxyAddress: "",
+      userUsdtJettonWalletAddress: "",
+      proxyBetGasTon: 0.2,
+      proxyClaimGasTon: 0.2,
       // Telegram-бот мини-аппа (для реферальных ссылок t.me/<bot>?startapp=...).
       botUsername: "opton_market_bot",
       // Реферальная программа: поинты пригласившему за каждого друга (демо).
@@ -3801,24 +3811,24 @@
       return (n < 0 ? "-$" : "$") + abs;
     }
 
-    // Форматирует сумму в TON: "1.50 TON", "0.50 TON" и т.д.
-    function formatTon(value) {
+    // Форматирует сумму в USDT для on-chain settlement.
+    function formatUsdt(value) {
       const n = Number(value || 0);
       const abs = Math.abs(n);
       const formatted = abs < 10
         ? abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : abs.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-      return (n < 0 ? "-" : "") + formatted + " TON";
+      return (n < 0 ? "-" : "") + formatted + " USDT";
     }
 
-    // Унифицированный форматтер: TON для on-chain, $ для демо.
+    // Унифицированный форматтер: USDT для on-chain, $ для демо.
     function amountLabel(value) {
-      return onchainActive() ? formatTon(value) : money(value);
+      return onchainActive() ? formatUsdt(value) : money(value);
     }
 
     // Минимальная ставка в зависимости от режима.
     function minBet() {
-      return onchainActive() ? OPTON_CONFIG.minBetTon : MIN_BET_USD;
+      return onchainActive() ? OPTON_CONFIG.minBetUsd : MIN_BET_USD;
     }
 
     function cents(value) {
@@ -3834,7 +3844,7 @@
     // assets/templates/parimutuel.ts). Ставка добавляется в пул своей стороны;
     // выигрыш = доля в объединённом пуле минус комиссия. Никаких «долей»,
     // «цены за долю», стакана и лимитных заявок — это понятия CLOB, которых
-    // в parimutuel нет. В демо суммы в $, on-chain — в nanoTON.
+    // в parimutuel нет. В демо суммы в $, on-chain — в USDT Jetton units.
     // ─────────────────────────────────────────────────────────────────────
     const FEE_BPS = 700;        // 7% комиссия платформы (как в контракте)
     const MIN_BET_USD = 1;      // минимальная ставка в демо
@@ -4126,6 +4136,9 @@
       return connectedTonWallet?.account?.address || null;
     }
     const nanoToTon = (n) => Number(n) / 1e9;
+    const usdtUnitsToUsd = (n) => window.OptonChain
+      ? window.OptonChain.unitsToUsdt(n, OPTON_CONFIG.usdtDecimals || 6)
+      : Number(n) / 1e6;
 
     // Pyth-цена on-chain хранится как мантисса (int64) + экспонента (int32):
     // реальная цена = price * 10^expo. Возвращает Number или NaN.
@@ -4174,8 +4187,17 @@
       const now = Math.floor(Date.now() / 1000);
       const boundary = now - (now % interval);
       const rounds = await liveRounds();
-      return rounds.find(r =>
-        r.asset === assetId && r.interval === interval && r.openTimestamp === boundary) || null;
+      const persistentMarket = rounds.find(r => r.asset === assetId && r.interval === interval) || null;
+      if (!persistentMarket) return null;
+      const info = await window.OptonChain.readRoundInfo(liveClient(), persistentMarket.address, boundary);
+      if (!info || info.openTimestamp !== boundary) return null;
+      return {
+        ...persistentMarket,
+        ...info,
+        address: persistentMarket.address,
+        openPriceSnapshot: info.openPrice,
+        openPriceExpo: info.openPriceExpo,
+      };
     }
 
     // Подтянуть реальные пулы текущего раунда в состояние терминала.
@@ -4186,11 +4208,11 @@
       try {
         const round = await liveCurrentRound(market);
         if (!round) return; // pusher ещё не создал текущий раунд
-        const info = await window.OptonChain.readMarketInfo(liveClient(), round.address);
+        const info = await window.OptonChain.readRoundInfo(liveClient(), round.address, round.openTimestamp);
         if (!info) return;
         const ms = getMarketState(market.id);
-        ms.poolUp = Math.max(0, nanoToTon(info.totalUp));
-        ms.poolDown = Math.max(0, nanoToTon(info.totalDown));
+        ms.poolUp = Math.max(0, usdtUnitsToUsd(info.totalUp));
+        ms.poolDown = Math.max(0, usdtUnitsToUsd(info.totalDown));
         ms.onchainAddress = round.address.toString();
         ms.onchainState = info.state;
         ms.onchainSynced = true;        // пулы/объём — настоящие из контракта
@@ -4245,14 +4267,13 @@
             const interval = (m.minutes || 15) * 60;
             const now = Math.floor(Date.now() / 1000);
             const boundary = now - (now % interval);
-            const round = rounds.find(r =>
-              r.asset === assetId && r.interval === interval && r.openTimestamp === boundary);
-            if (!round) continue;
-            const info = await window.OptonChain.readMarketInfo(client, round.address);
+            const persistentMarket = rounds.find(r => r.asset === assetId && r.interval === interval);
+            if (!persistentMarket) continue;
+            const info = await window.OptonChain.readRoundInfo(client, persistentMarket.address, boundary);
             if (!info) continue;
             const ms = getMarketState(m.id);
-            ms.poolUp = Math.max(0, nanoToTon(info.totalUp));
-            ms.poolDown = Math.max(0, nanoToTon(info.totalDown));
+            ms.poolUp = Math.max(0, usdtUnitsToUsd(info.totalUp));
+            ms.poolDown = Math.max(0, usdtUnitsToUsd(info.totalDown));
             ms.onchainSynced = true;
             any = true;
           } catch (e) { /* пропускаем рынок, не валим весь цикл */ }
@@ -4262,8 +4283,8 @@
       finally { allPoolsSyncing = false; }
     }
 
-    // Отправить Bet через TON Connect. amount в TON.
-    async function placeBetOnChain(market, side, amountTon) {
+    // Отправить Bet через UserProxy. amount в USDT/USD, TON используется только на gas.
+    async function placeBetOnChain(market, side, amountUsd) {
       let round;
       try {
         round = await liveCurrentRound(market);
@@ -4276,16 +4297,22 @@
       }
       const refund = walletRawAddress();
       if (!refund) { showToast("Нет кошелька", "Подключите TON-кошелёк."); return false; }
-      if (amountTon < OPTON_CONFIG.minBetTon) {
-        showToast("Слишком маленькая ставка", `Минимум ${OPTON_CONFIG.minBetTon} TON.`);
+      if (!OPTON_CONFIG.userProxyAddress) {
+        showToast("Proxy не настроен", "Укажите UserProxy address в OPTON_CONFIG.");
         return false;
       }
-      const tx = window.OptonChain.buildBetTx({
+      if (amountUsd < OPTON_CONFIG.minBetUsd) {
+        showToast("Слишком маленькая ставка", `Минимум ${OPTON_CONFIG.minBetUsd} USDT.`);
+        return false;
+      }
+      const amountUnits = window.OptonChain.usdtToUnits(amountUsd, OPTON_CONFIG.usdtDecimals || 6);
+      const tx = window.OptonChain.buildProxyPlaceBetTx({
+        proxyAddress: OPTON_CONFIG.userProxyAddress,
         marketAddress: round.address.toString(),
+        openTimestamp: round.openTimestamp,
         side: side === "UP" ? window.OptonChain.SIDE.UP : window.OptonChain.SIDE.DOWN,
-        amountTon,
-        gasTon: OPTON_CONFIG.betGasTon,
-        refundAddress: refund,
+        amountUnits,
+        gasTon: OPTON_CONFIG.proxyBetGasTon,
       });
       try {
         await tonConnectUI.sendTransaction({
@@ -4299,13 +4326,13 @@
       const now = Date.now();
       const interval = (market.minutes || 15) * 60;
       const ms = getMarketState(market.id);
-      const quote = window.OptonChain && quoteParimutuel(amountTon, ms.poolUp, ms.poolDown, side);
+      const quote = window.OptonChain && quoteParimutuel(amountUsd, ms.poolUp, ms.poolDown, side);
       // Целевая цена позиции = снапшот цены открытия из контракта (round.openPriceSnapshot),
       // а не локальная цена Binance — иначе PnL и карточка позиции разойдутся с контрактом.
       const onchainTarget = onchainPriceToNumber(round.openPriceSnapshot, round.openPriceExpo);
       state.positions.unshift({
         id: "pos_" + now, marketId: market.id, asset: market.asset, expiry: market.expiry,
-        side, amount: amountTon, onchain: true, marketAddress: round.address.toString(),
+        side, amount: amountUsd, onchain: true, marketAddress: round.address.toString(),
         entryMultiplier: quote ? quote.multiplier : 0, entryProb: quote ? quote.impliedProb : 0.5,
         targetPrice: Number.isFinite(onchainTarget) ? onchainTarget : undefined,
         candleOpenedAt: round.openTimestamp * 1000, openedAt: now,
@@ -4314,10 +4341,10 @@
       state.history.unshift({
         id: "hist_" + now, type: "BUY",
         text: `${side === "UP" ? "Вверх" : "Вниз"} · ${market.asset} ${market.expiry}`,
-        amount: 0, time: now, meta: `on-chain · ставка ${amountTon} TON`,
+        amount: 0, time: now, meta: `on-chain · ставка ${amountUsd} USDT`,
       });
       saveState(); renderAll();
-      showToast("Ставка отправлена", `${amountTon} TON · ${side === "UP" ? "Вверх" : "Вниз"}. Подтвердите в кошельке.`);
+        showToast("Ставка отправлена", `${amountUsd} USDT · ${side === "UP" ? "Вверх" : "Вниз"}. Подтвердите комиссию в кошельке.`);
       haptic("success");
       setTimeout(() => syncTerminalPools(), 6000);
       return true;
@@ -4326,8 +4353,16 @@
     // Отправить Claim через TON Connect (выплата вернётся на кошелёк).
     async function claimOnChain(position) {
       if (!position?.marketAddress) return false;
-      const tx = window.OptonChain.buildClaimTx({
-        marketAddress: position.marketAddress, gasTon: OPTON_CONFIG.claimGasTon,
+      if (!OPTON_CONFIG.userProxyAddress) {
+        showToast("Proxy не настроен", "Укажите UserProxy address в OPTON_CONFIG.");
+        return false;
+      }
+      const openTimestamp = Math.floor((position.candleOpenedAt || (position.expiresAt - (getMarket(position.marketId).minutes || 15) * 60000)) / 1000);
+      const tx = window.OptonChain.buildProxyClaimTx({
+        proxyAddress: OPTON_CONFIG.userProxyAddress,
+        marketAddress: position.marketAddress,
+        openTimestamp,
+        gasTon: OPTON_CONFIG.proxyClaimGasTon,
       });
       try {
         await tonConnectUI.sendTransaction({
@@ -4943,7 +4978,7 @@
       const ms = getMarketState(m.id);
       const total = (Number(ms.poolUp) || 0) + (Number(ms.poolDown) || 0);
       if (onchainEnabled()) {
-        return ms.onchainSynced ? formatTon(total) : "…";
+        return ms.onchainSynced ? formatUsdt(total) : "…";
       }
       return money(total);
     }
@@ -5133,24 +5168,24 @@
       });
     }
 
-    // Переключает UI формы ставки в зависимости от режима (on-chain TON vs демо $).
+    // Переключает UI формы ставки в зависимости от режима (on-chain USDT vs демо $).
     // Вызывается из renderTerminal при каждом рендере.
     function renderTradeFormMode() {
       const isOnchain = onchainActive();
 
       // Символ валюты
       const curEl = document.getElementById("trmCur");
-      if (curEl) curEl.textContent = isOnchain ? "TON" : "$";
+      if (curEl) curEl.textContent = isOnchain ? "USDT" : "$";
 
-      // Быстрые чипы — TON для on-chain, $ для демо
+      // Быстрые чипы — USDT для on-chain, $ для демо
       const chipsEl = document.getElementById("trmChips");
       if (chipsEl) {
         if (isOnchain) {
           chipsEl.innerHTML = `
-            <button type="button" onclick="setTradeAmount(0.5)">0.5</button>
             <button type="button" onclick="setTradeAmount(1)">1</button>
-            <button type="button" onclick="setTradeAmount(5)">5</button>
-            <button type="button" onclick="setTradeAmount(10)">10</button>`;
+            <button type="button" onclick="setTradeAmount(10)">10</button>
+            <button type="button" onclick="setTradeAmount(25)">25</button>
+            <button type="button" onclick="setTradeAmount(100)">100</button>`;
         } else {
           chipsEl.innerHTML = `
             <button type="button" onclick="setTradeAmount(1)">$1</button>
@@ -5210,7 +5245,7 @@
       const availableEl = document.getElementById("trmAvailable");
       if (availableEl) {
         if (onchainActive()) {
-          availableEl.textContent = `мин. ${OPTON_CONFIG.minBetTon} TON`;
+          availableEl.textContent = `мин. ${OPTON_CONFIG.minBetUsd} USDT`;
           availableEl.classList.remove("hidden-value");
         } else {
           availableEl.textContent = money(state.balance);
@@ -5408,7 +5443,7 @@
       const input = document.getElementById("tradeAmount");
       if (!input) return;
       if (value === "max") {
-        // On-chain: реальный баланс в кошельке неизвестен — ставим 10 TON как разумный дефолт.
+        // On-chain: реальный proxy USDT balance может быть не загружен — ставим 10 USDT как дефолт.
         // Демо: берём весь доступный баланс.
         input.value = onchainActive() ? 10 : Math.floor(state.balance);
       } else {
@@ -5878,7 +5913,7 @@
       const market = getMarket(state.currentMarketId);
       const amount = Number(document.getElementById("tradeAmount").value || 0);
       if (!amount || amount < minBet()) {
-        const minLabel = onchainActive() ? `${OPTON_CONFIG.minBetTon} TON` : "$1";
+        const minLabel = onchainActive() ? `${OPTON_CONFIG.minBetUsd} USDT` : "$1";
         showToast("Проверьте сумму", `Минимальная ставка — ${minLabel}.`);
         return;
       }
@@ -5955,11 +5990,10 @@
         showToast("Приём ставок закрыт", "До конца раунда менее 90 секунд.");
         return;
       }
-      // On-chain путь: реальный кошелёк → ставка уходит транзакцией в контракт.
-      // Сумма трактуется как TON; минимум — OPTON_CONFIG.minBetTon (контракт: 0.5).
+      // On-chain путь: ставка уходит через UserProxy в USDT; TON нужен только на gas.
       if (onchainActive()) {
-        if (amount < OPTON_CONFIG.minBetTon) {
-          showToast("Мелкая ставка", `Минимальная ставка on-chain — ${OPTON_CONFIG.minBetTon} TON.`);
+        if (amount < OPTON_CONFIG.minBetUsd) {
+          showToast("Мелкая ставка", `Минимальная ставка on-chain — ${OPTON_CONFIG.minBetUsd} USDT.`);
           return;
         }
         placeBetOnChain(getMarket(state.currentMarketId), side, amount);
@@ -6202,9 +6236,34 @@
       haptic("success");
     }
 
-    function demoDeposit() {
+    async function demoDeposit() {
       if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы пополнить портфель.")) return;
       const depositAmount = 1000;
+      if (onchainActive()) {
+        if (!OPTON_CONFIG.userProxyAddress || !OPTON_CONFIG.userUsdtJettonWalletAddress) {
+          showToast("USDT proxy не настроен", "Укажите userProxyAddress и userUsdtJettonWalletAddress в OPTON_CONFIG.");
+          return;
+        }
+        const tx = window.OptonChain.buildJettonTransferTx({
+          jettonWalletAddress: OPTON_CONFIG.userUsdtJettonWalletAddress,
+          destination: OPTON_CONFIG.userProxyAddress,
+          amountUnits: window.OptonChain.usdtToUnits(depositAmount, OPTON_CONFIG.usdtDecimals || 6),
+          responseDestination: walletRawAddress(),
+          gasTon: 0.15,
+        });
+        try {
+          await tonConnectUI.sendTransaction({
+            validUntil: Math.floor(Date.now() / 1000) + 300,
+            messages: [{ address: tx.address, amount: tx.amount, payload: tx.payload }],
+          });
+        } catch (e) {
+          showToast("Транзакция отменена", "Депозит USDT не отправлен.");
+          return;
+        }
+        showToast("Депозит отправлен", `${depositAmount} USDT будет зачислено в UserProxy после подтверждения.`);
+        closeModal();
+        return;
+      }
       state.balance += depositAmount;
       state.initialBalance += depositAmount;
       state.history.unshift({
@@ -6244,14 +6303,16 @@
     function openDepositModal() {
       if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы пополнить портфель.")) return;
       document.getElementById("modalTitle").textContent = "Депозит криптовалюты";
-      document.getElementById("modalText").textContent = "Выберите актив и сеть для пополнения демо-счета.";
+      document.getElementById("modalText").textContent = onchainActive()
+        ? "Пополнение идёт в UserProxy через USDT Jetton transfer."
+        : "Выберите актив и сеть для пополнения демо-счета.";
 
       const content = `
         <div class="deposit-wrap">
           <div class="segmented two" id="depositAssetSeg">
             <div class="seg-glider"></div>
-            <button class="seg active" type="button" onclick="selectDepositAsset('TON', this)"><div class="seg-icon-wrap">${tonIcon}</div> GRAM</button>
-            <button class="seg" type="button" onclick="selectDepositAsset('USDT', this)"><div class="seg-icon-wrap">${usdtIcon}</div> USDT</button>
+            <button class="seg active" type="button" onclick="selectDepositAsset('USDT', this)"><div class="seg-icon-wrap">${usdtIcon}</div> USDT</button>
+            <button class="seg" type="button" onclick="selectDepositAsset('TON', this)"><div class="seg-icon-wrap">${tonIcon}</div> GRAM</button>
           </div>
           <div class="qr-placeholder">
             <svg viewBox="0 0 100 100">
@@ -6271,14 +6332,14 @@
               <div class="icon-inner check-svg">${checkIcon}</div>
             </div>
           </div>
-          <p style="font-size:11px; margin:0; text-align:center; color:var(--muted)">Отправьте только GRAM на этот адрес. Зачисление произойдет после подтверждения сети.</p>
+          <p style="font-size:11px; margin:0; text-align:center; color:var(--muted)">${onchainActive() ? "Будет отправлен USDT Jetton transfer в UserProxy. GRAM нужен только для комиссии." : "Демо-зачисление произойдет после подтверждения."}</p>
         </div>
       `;
 
       document.getElementById("modalText").innerHTML = content;
       document.getElementById("modalActions").innerHTML = `
         <button class="ghost" type="button" onclick="closeModal()">Отмена</button>
-        <button class="primary" type="button" onclick="demoDeposit()">Отправлено</button>
+        <button class="primary" type="button" onclick="demoDeposit()">${onchainActive() ? "Пополнить 1000 USDT" : "Отправлено"}</button>
       `;
       showModal();
       setTimeout(() => syncGlider(document.getElementById('depositAssetSeg'), true), 0);
@@ -6297,7 +6358,7 @@
       const val = Number(input.value);
       const errorEl = document.getElementById("withdrawError");
       const availableEl = document.getElementById("withdrawAvailable");
-      if (val > state.balance) {
+      if (!onchainActive() && val > state.balance) {
         if (!input.classList.contains('invalid')) {
           input.classList.add('invalid');
           haptic("error");
@@ -6314,7 +6375,7 @@
     function setMaxWithdraw() {
       const input = document.getElementById("withdrawAmountInput");
       if (input) {
-        input.value = state.balance;
+        input.value = onchainActive() ? 100 : state.balance;
         validateWithdrawAmount(input);
         haptic("selection");
       }
@@ -6322,36 +6383,38 @@
 
     function openWithdrawModal() {
       if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
-      if (state.balance <= 0) {
+      if (!onchainActive() && state.balance <= 0) {
         showToast("Вывод недоступен", "На вашем балансе 0. Чтобы вывести средства, сначала пополните баланс.");
         return;
       }
 
       document.getElementById("modalTitle").textContent = "Вывод средств";
-      document.getElementById("modalText").textContent = "Укажите сумму и адрес для вывода (демо).";
+      document.getElementById("modalText").textContent = onchainActive()
+        ? "Укажите сумму USDT для вывода из UserProxy."
+        : "Укажите сумму и адрес для вывода (демо).";
 
       const content = `
         <div class="deposit-wrap">
           <div class="segmented two" id="withdrawAssetSeg">
             <div class="seg-glider"></div>
-            <button class="seg active" type="button" onclick="selectWithdrawAsset('TON', this)"><div class="seg-icon-wrap">${tonIcon}</div> GRAM</button>
-            <button class="seg" type="button" onclick="selectWithdrawAsset('USDT', this)"><div class="seg-icon-wrap">${usdtIcon}</div> USDT</button>
+            <button class="seg active" type="button" onclick="selectWithdrawAsset('USDT', this)"><div class="seg-icon-wrap">${usdtIcon}</div> USDT</button>
+            <button class="seg" type="button" onclick="selectWithdrawAsset('TON', this)"><div class="seg-icon-wrap">${tonIcon}</div> GRAM</button>
           </div>
           <div class="field full">
-            <label>Сумма вывода (USD)</label>
+            <label id="withdrawAmountLabel">Сумма вывода (USDT)</label>
             <div style="position: relative;">
-              <input class="input" id="withdrawAmountInput" type="number" value="${Math.min(100, state.balance)}" max="${state.balance}" step="10" oninput="validateWithdrawAmount(this)" style="padding-right: 50px;" />
+              <input class="input" id="withdrawAmountInput" type="number" value="${onchainActive() ? 100 : Math.min(100, state.balance)}" max="${onchainActive() ? "" : state.balance}" step="10" oninput="validateWithdrawAmount(this)" style="padding-right: 50px;" />
               <button class="input-max-btn" type="button" onclick="setMaxWithdraw()">Макс</button>
             </div>
             <div id="withdrawError" style="margin-top:4px; font-size:11px; color:var(--red); display:none; font-weight:900;">Недостаточный баланс</div>
             <div id="withdrawAvailable" class="${state.balanceHidden ? 'hidden-value' : ''}" style="margin-top:4px; font-size:11px; color:var(--muted)">Доступно: ${money(state.balance)}</div>
           </div>
           <div class="field full">
-            <label id="withdrawAddrLabel">Адрес получателя (GRAM)</label>
-            <input class="input" id="withdrawAddressInput" type="text" placeholder="UQ..." value="UQDe...demo_withdraw_addr" />
+            <label id="withdrawAddrLabel">Адрес получателя (USDT)</label>
+            <input class="input" id="withdrawAddressInput" type="text" placeholder="UQ..." value="${walletRawAddress() || "UQ..."}" />
           </div>
           <div class="notice">
-            Внимание: это демонстрационный вывод. Средства будут списаны с вашего демо-баланса, но реальная транзакция в блокчейне не произойдет.
+            ${onchainActive() ? "UserProxy отправит USDT Jetton на owner wallet. GRAM спишется только как комиссия." : "Внимание: это демонстрационный вывод. Реальная транзакция в блокчейне не произойдет."}
           </div>
         </div>
       `;
@@ -6372,20 +6435,48 @@
       button.classList.add("active");
       syncGlider(container);
 
+      const displayAsset = asset === "TON" ? "GRAM" : asset;
+      const amountLabel = document.getElementById("withdrawAmountLabel");
+      if (amountLabel) amountLabel.textContent = `Сумма вывода (${displayAsset})`;
+
       const label = document.getElementById("withdrawAddrLabel");
-      if (label) label.textContent = `Адрес получателя (${asset})`;
+      if (label) label.textContent = `Адрес получателя (${displayAsset})`;
 
       const input = document.getElementById("withdrawAddressInput");
-      if (input) input.value = asset === "TON" ? "UQDe...demo_withdraw_addr" : "0xDe...demo_usdt_addr";
+      if (input) input.value = asset === "TON" ? "UQDe...demo_gram_addr" : (walletRawAddress() || "UQ...");
 
       haptic("selection");
     }
 
-    function confirmWithdraw() {
+    async function confirmWithdraw() {
       if (!requireTonWallet("Подключите свой TON-кошелёк, чтобы вывести средства.")) return;
       const amount = Number(document.getElementById("withdrawAmountInput")?.value || 0);
-      if (amount <= 0 || amount > state.balance) {
+      if (amount <= 0 || (!onchainActive() && amount > state.balance)) {
         showToast("Ошибка", "Некорректная сумма вывода.");
+        return;
+      }
+
+      if (onchainActive()) {
+        if (!OPTON_CONFIG.userProxyAddress) {
+          showToast("Proxy не настроен", "Укажите UserProxy address в OPTON_CONFIG.");
+          return;
+        }
+        const tx = window.OptonChain.buildProxyWithdrawTx({
+          proxyAddress: OPTON_CONFIG.userProxyAddress,
+          amountUnits: window.OptonChain.usdtToUnits(amount, OPTON_CONFIG.usdtDecimals || 6),
+          gasTon: 0.2,
+        });
+        try {
+          await tonConnectUI.sendTransaction({
+            validUntil: Math.floor(Date.now() / 1000) + 300,
+            messages: [{ address: tx.address, amount: tx.amount, payload: tx.payload }],
+          });
+        } catch (e) {
+          showToast("Транзакция отменена", "Вывод USDT не отправлен.");
+          return;
+        }
+        closeModal();
+        showToast("Вывод отправлен", `${amount} USDT будет отправлено из UserProxy на ваш кошелёк.`);
         return;
       }
 
